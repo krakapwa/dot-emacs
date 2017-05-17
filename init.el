@@ -143,6 +143,7 @@ Repeated invocations toggle between the two most recently open buffers."
   (evil-mode t)
   :config
   (add-hook 'git-commit-mode-hook 'evil-insert-state)
+  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
 
   ;; Relative line numbering
   (use-package linum-relative
@@ -153,7 +154,18 @@ Repeated invocations toggle between the two most recently open buffers."
       (linum-mode)
       (linum-relative-mode)
       (setq linum-relative-current-symbol "")))
+  ;; Relative line numbering
+  (use-package highlight-indent-guides
+    :ensure t
+    :init
+    (progn
+      (setq linum-relative-format "%3s ")
+      (linum-mode)
+      (linum-relative-mode)
+      (setq highlight-indent-guides-method 'column)))
   )
+
+
 
 (use-package evil-anzu)
 
