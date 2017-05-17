@@ -32,17 +32,10 @@
 
   (defun python-add-breakpoint ()
     "Add a break point"
-    ;(interactive)
-    ;(beginning-of-line)
-    ;(indent-according-to-mode)
     (interactive)
-    (move-beginning-of-line nil)
-    (newline-and-indent)
-    (forward-line -1)
-    (indent-according-to-mode)
-
-    ;(smart-open-line-above)
-    (insert "import pdb; pdb.set_trace()\n")
+    (evil-open-above 1)
+    (insert "import pdb; pdb.set_trace()")
+    (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
   (defun my-elpy-shell-send-region-or-buffer (&optional arg)
