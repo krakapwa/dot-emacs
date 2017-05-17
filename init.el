@@ -71,6 +71,14 @@ Repeated invocations toggle between the two most recently open buffers."
   (switch-to-buffer (other-buffer (current-buffer) 1)))
 
 ;; packages used in init
+(use-package page-break-lines)
+(use-package dashboard)
+
+(use-package dashboard
+  :config
+  (dashboard-setup-startup-hook))
+
+
 (use-package dash)
 (use-package f)
 
@@ -130,20 +138,30 @@ Repeated invocations toggle between the two most recently open buffers."
 (setq compilation-ask-about-save nil
       compilation-always-kill t)
 
+
+(global-linum-mode t)
+
+
 ;;; bindings
 ;; evil
 (use-package evil
   :defines evil-disable-insert-state-bindings
   :init
-  (setq evil-want-C-u-scroll t
-        evil-want-fine-undo 'no
+    (evil-mode t)
+  (setq evil-want-fine-undo 'no
+        evil-want-C-u-scroll t
         evil-cross-lines t
         evil-disable-insert-state-bindings t)
-  (define-key Info-mode-map "g" nil)
-  (evil-mode t)
+        (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+    (define-key Info-mode-map "g" nil)
   :config
-  (add-hook 'git-commit-mode-hook 'evil-insert-state)
-  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+    (add-hook 'git-commit-mode-hook 'evil-insert-state)
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+  ;; Relative line numbering
+  (use-package rainbow-delimiters
+    :ensure t
+    :init)
 
   ;; Relative line numbering
   (use-package linum-relative
@@ -151,10 +169,8 @@ Repeated invocations toggle between the two most recently open buffers."
     :init
     (progn
       (setq linum-relative-format "%3s ")
-      (linum-mode)
-      (linum-relative-mode)
       (setq linum-relative-current-symbol "")))
-  ;; Relative line numbering
+  ;; Highlight indent
   (use-package highlight-indent-guides
     :ensure t
     :init
@@ -163,18 +179,24 @@ Repeated invocations toggle between the two most recently open buffers."
       (linum-mode)
       (linum-relative-mode)
       (setq highlight-indent-guides-method 'column)))
+  (use-package hlinum
+    :ensure t
+    :init
+    (hlinum-activate)
   )
-
-
+  (use-package paren
+    :ensure t
+    :init
+    (progn
+      (setq show-paren-style 'parenthesis)
+      (show-paren-mode +1)
+      )))
 
 (use-package evil-anzu)
 
 (use-package evil-commentary
   :diminish evil-commentary-mode
   :config (evil-commentary-mode))
-
-(use-package evil-easymotion
-  :config (evilem-default-keybindings "<SPC>"))
 
 (use-package ediff
   :ensure nil
@@ -265,6 +287,7 @@ Repeated invocations toggle between the two most recently open buffers."
   )
 
 ;(setq color-themes '())
+;(load-file "~/.emacs.d/themes/monokai-theme.el")
 (load-file "~/.emacs.d/themes/monokai-theme.el")
 
 ;;; behavior
@@ -639,7 +662,7 @@ Repeated invocations toggle between the two most recently open buffers."
         org-export-backends '(html beamer ascii latex md)))
 
 
-(set-face-attribute 'default nil :font "Source code pro-11" )
+(set-face-attribute 'default nil :font "liberation Mono-11" )
 ;(set-frame-font FONT nil t)
 
 
@@ -655,9 +678,6 @@ Repeated invocations toggle between the two most recently open buffers."
 (general-evil-setup t)
 
 (menu-bar-mode -1)
-
-
-
 
 
 (define-key helm-map (kbd "C-j") 'helm-next-line)
@@ -706,7 +726,7 @@ Repeated invocations toggle between the two most recently open buffers."
 
 (global-hl-line-mode +1)
 (blink-cursor-mode 0)
-(set-cursor-color "#ffff00")
+(set-cursor-color "#f4d942")
 
 ;;; provide init package
 (provide 'init)
@@ -722,7 +742,7 @@ Repeated invocations toggle between the two most recently open buffers."
     ("721bb3cb432bb6be7c58be27d583814e9c56806c06b4077797074b009f322509" "3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" "73a13a70fd111a6cd47f3d4be2260b1e4b717dbf635a9caee6442c949fad41cd" "003a9aa9e4acb50001a006cfde61a6c3012d373c4763b48ceb9d523ceba66829" "b59d7adea7873d58160d368d42828e7ac670340f11f36f67fa8071dbf957236a" default)))
  '(package-selected-packages
    (quote
-    (window-purpose dedicated latex-mode latex tex git-timemachine airline-themes ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers color-theme-solarized cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine airline-themes ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers color-theme-solarized cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 (custom-set-faces

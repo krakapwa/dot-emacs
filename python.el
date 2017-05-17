@@ -118,7 +118,7 @@
   :defer t
   :general
   (:keymaps 'python-mode-map
-    :states '(normal insert emacs)
+    :states '(normal emacs)
     :major-mode 'python-mode
     :prefix "SPC"
     :which-key "Python"
