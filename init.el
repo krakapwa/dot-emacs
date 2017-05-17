@@ -192,6 +192,23 @@ Repeated invocations toggle between the two most recently open buffers."
       (show-paren-mode +1)
       )))
 
+(defun evil-shift-left-visual ()
+  (interactive)
+  (evil-shift-left (region-beginning) (region-end))
+  (evil-normal-state)
+  (evil-visual-restore))
+
+(defun evil-shift-right-visual ()
+  (interactive)
+  (evil-shift-right (region-beginning) (region-end))
+  (evil-normal-state)
+(evil-visual-restore))
+
+(define-key evil-visual-state-map (kbd ">") 'evil-shift-right-visual)
+(define-key evil-visual-state-map (kbd "<") 'evil-shift-left-visual)
+(define-key evil-visual-state-map [tab] 'evil-shift-right-visual)
+(define-key evil-visual-state-map [S-tab] 'evil-shift-left-visual)
+
 (use-package evil-anzu)
 
 (use-package evil-commentary
