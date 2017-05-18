@@ -38,8 +38,8 @@
     (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-  (defun my-elpy-shell-send-region-or-buffer (&optional arg)
-    "Send the active region or the buffer to the Python shell.
+    (defun my-elpy-shell-send-region-or-buffer (&optional arg)
+      "Send the active region or the buffer to the Python shell.
 
     If there is an active region, send that. Otherwise, send the
     whole buffer.
@@ -48,24 +48,35 @@
     escape the Python idiom of if __name__ == '__main__' to be false
     to avoid accidental execution of code. With prefix argument, this
     code is executed."
-    (interactive "P")
-    ;; Ensure process exists
-    (elpy-shell-get-or-create-process)
-    (let ((if-main-regex "^if +__name__ +== +[\"']__main__[\"'] *:")
-          (has-if-main nil))
-      (if (region-active-p)
-          (let ((region (elpy-region-without-indentation
-                        (region-beginning) (region-end))))
-            (setq has-if-main (string-match if-main-regex region))
-            (python-shell-send-string region))
-        (save-excursion
-          (goto-char (point-min))
-          (setq has-if-main (re-search-forward if-main-regex nil t)))
-        (python-shell-send-buffer arg))
-      (display-buffer (process-buffer (elpy-shell-get-or-create-process)))
-      (when has-if-main
-        (message (concat "Removed if __main__ == '__main__' construct, "
-                        "use a prefix argument to evaluate.")))))
+      (interactive "P")
+      ;; Ensure process exists
+      (elpy-shell-get-or-create-process)
+      (let ((if-main-regex "^if +__name__ +== +[\"']__main__[\"'] *:")
+            (has-if-main nil))
+        (if (use-region-p)
+            (let ((region (elpy-shell--region-without-indentation
+                           (region-beginning) (region-end))))
+              (setq has-if-main (string-match if-main-regex region))
+              (when (string-match "\t" region)
+                (message "Region contained tabs, this might cause weird errors"))
+              (python-shell-send-string region)
+              (elpy-shell-switch-to-shell)
+              (end-of-buffer)
+              (evil-escape)
+              (elpy-shell-switch-to-buffer))
+          (save-excursion
+            (goto-char (point-min))
+            (setq has-if-main (re-search-forward if-main-regex nil t)))
+          (python-shell-send-buffer arg)
+          (elpy-shell-switch-to-shell)
+          (end-of-buffer)
+          (evil-escape)
+          (elpy-shell-switch-to-buffer)
+          )
+        (elpy-shell-display-buffer)
+        (when has-if-main
+          (message (concat "Removed if __main__ == '__main__' construct, "
+                           "use a prefix argument to evaluate.")))))
 
   (defun ha/elpy-goto-definition ()
     (interactive)
@@ -111,13 +122,13 @@
   :defer t
   :general
   (:keymaps 'python-mode-map
-    :states '(normal emacs)
+    :states '(normal visual emacs)
     :major-mode 'python-mode
     :prefix "SPC"
     :which-key "Python"
     "mv" 'pyenv-mode-set
-    ;"mb" 'my-elpy-shell-send-region-or-buffer
-    "mb" 'elpy-shell-send-region-or-buffer
+    "mb" 'my-elpy-shell-send-region-or-buffer
+    ;"mb" 'elpy-shell-send-region-or-buffer
     "md" 'python-add-breakpoint
     "mg" 'anaconda-mode-find-assignments
     "mf" 'elpy-yapf-fix-code
