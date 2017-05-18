@@ -42,33 +42,39 @@
   "Load a file in current user's configuration directory"
   (load-file (expand-file-name file user-init-dir)))
 
-(setq skippable-buffers '("*Messages*" "*scratch*" "*Help*"))
 
-(defun my-next-buffer ()
+(setq my-regex-buffer "^\*")
+(setq notskipped-buffers '("*Python*")) ;Those contain a star but won't be skipped
+
+(defun my-next-user-buffer ()
   (interactive)
   (let (( bread-crumb (buffer-name) ))
     (next-buffer)
     (while
         (and
-         (string-match-p "^\*" (buffer-name))
-         (not ( equal bread-crumb (buffer-name) )) )
+        ( not (member (buffer-name) notskipped-buffers))
+          (and
+          (string-match-p my-regex-buffer (buffer-name))
+          (not ( equal bread-crumb (buffer-name) )) )
+
+        )
+
       (next-buffer))))
 
-(defun my-prev-buffer ()
+(defun my-previous-user-buffer ()
   (interactive)
   (let (( bread-crumb (buffer-name) ))
-    (previous-buffer)
+    (next-buffer)
     (while
         (and
-         (string-match-p "^\*" (buffer-name))
-         (not ( equal bread-crumb (buffer-name) )) )
-      (previous-buffer))))
+        ( not (member (buffer-name) notskipped-buffers))
+          (and
+          (string-match-p my-regex-buffer (buffer-name))
+          (not ( equal bread-crumb (buffer-name) )) )
 
-(defun switch-to-previous-buffer ()
-  "Switch to previously open buffer.
-Repeated invocations toggle between the two most recently open buffers."
-  (interactive)
-  (switch-to-buffer (other-buffer (current-buffer) 1)))
+        )
+
+      (next-buffer))))
 
 ;; packages used in init
 (use-package page-break-lines)
@@ -720,8 +726,8 @@ Repeated invocations toggle between the two most recently open buffers."
        "s" 'ace-window
        "bb" 'helm-mini
        "bd" 'kill-this-buffer
-       "bn" 'my-next-buffer
-       "bp" 'my-prev-buffer
+       "k" 'my-next-user-buffer
+       "j" 'my-previous-user-buffer
        "ar" 'ranger
        "gs" 'magit-status
        "gtt" 'git-timemachine-toggle

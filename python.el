@@ -58,7 +58,7 @@
                            (region-beginning) (region-end))))
               (setq has-if-main (string-match if-main-regex region))
               (when (string-match "\t" region)
-                (message "Region contained tabs, this might cause weird errors"))
+                (message "Region contained tabs, this might cause weird errors")))
               (python-shell-send-string region)
               (elpy-shell-switch-to-shell)
               (end-of-buffer)
