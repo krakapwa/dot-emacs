@@ -318,15 +318,6 @@
 ;(load-file "~/.emacs.d/themes/monokai-theme.el")
 (load-file "~/.emacs.d/themes/monokai-theme.el")
 
-;;; behavior
-;; smooth scrolling
-(use-package smooth-scroll
-  :if (display-graphic-p)
-  :diminish smooth-scroll-mode
-  :config
-  (setq smooth-scroll/vscroll-step-size 8)
-  (smooth-scroll-mode))
-
 ;; more context when scrolling
 (setq next-screen-context-lines 4)
 
@@ -715,6 +706,20 @@
 (define-key helm-map (kbd "C-j") 'helm-next-line)
 (define-key helm-map (kbd "C-k") 'helm-previous-line)
 
+;;Load external files
+(load-user-file "python.el")
+
+(load-user-file "tex.el")
+
+
+(use-package iflipb
+  :general
+  (
+    :states '(normal)
+    :prefix "SPC"
+    "j" 'iflipb-next-buffer
+    "k" 'iflipb-previous-buffer))
+
 (general-define-key
  :states 'normal
  :prefix "SPC"
@@ -726,8 +731,8 @@
        "s" 'ace-window
        "bb" 'helm-mini
        "bd" 'kill-this-buffer
-       "k" 'my-next-user-buffer
-       "j" 'my-previous-user-buffer
+       ;"k" 'my-next-user-buffer
+       ;"j" 'my-previous-user-buffer
        "ar" 'ranger
        "gs" 'magit-status
        "gtt" 'git-timemachine-toggle
@@ -746,9 +751,6 @@
     :which-key "org"
     "me" 'org-export-dispatch))
 
-;;Load external files
-(load-user-file "python.el")
-(load-user-file "tex.el")
 
 ;;Maximize on startup
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
@@ -775,7 +777,7 @@
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine airline-themes ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers color-theme-solarized cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine airline-themes ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers color-theme-solarized cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 (custom-set-faces

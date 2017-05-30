@@ -84,8 +84,6 @@
         (elpy-goto-definition)
       ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
 
-  :bind (:map elpy-mode-map ([remap elpy-goto-definition] .
-                             ha/elpy-goto-definition)))
 
 (use-package pyenv-mode
   :defer t
