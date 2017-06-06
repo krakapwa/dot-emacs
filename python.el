@@ -125,7 +125,7 @@
     :prefix "SPC"
     :which-key "Python"
     "mv" 'pyenv-mode-set
-    "mb" 'my-elpy-shell-send-region-or-buffer
+    "mb" 'elpy-shell-send-region-or-buffer
     ;"mb" 'elpy-shell-send-region-or-buffer
     "md" 'python-add-breakpoint
     "mg" 'anaconda-mode-find-assignments

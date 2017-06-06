@@ -717,11 +717,11 @@
   (
     :states '(normal)
     :prefix "SPC"
-    "j" 'iflipb-next-buffer
-    "k" 'iflipb-previous-buffer))
+    "k" 'iflipb-next-buffer
+    "j" 'iflipb-previous-buffer))
 
 (general-define-key
- :states 'normal
+ :states '(normal visual)
  :prefix "SPC"
        "TAB" 'switch-to-previous-buffer
        "ff" 'helm-find-files ; save windows layout
