@@ -61,6 +61,11 @@
 
       (next-buffer))))
 
+(defun buffer-mode (buffer-or-string)
+  "Returns the major mode associated with a buffer."
+  (with-current-buffer buffer-or-string
+     major-mode))
+
 (defun my-previous-user-buffer ()
   (interactive)
   (let (( bread-crumb (buffer-name) ))
@@ -79,6 +84,20 @@
 ;; packages used in init
 (use-package page-break-lines)
 (use-package dashboard)
+
+(use-package yasnippet
+  :commands (yas-minor-mode) ; autoload `yasnippet' when `yas-minor-mode' is called
+                                        ; using any means: via a hook or by user
+                                        ; Feel free to add more commands to this
+                                        ; list to suit your needs.
+  :init ; stuff to do before requiring the package
+  (progn
+    (add-hook 'python-mode-hook #'yas-minor-mode))
+  (progn
+    (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
+  :config ; stuff to do after requiring the package
+  (progn
+    (yas-reload-all)))
 
 (use-package dashboard
   :config
@@ -685,7 +704,7 @@
         org-export-backends '(html beamer ascii latex md)))
 
 
-(set-face-attribute 'default nil :font "liberation Mono-11" )
+(set-face-attribute 'default nil :font "Menlo-12" )
 ;(set-frame-font FONT nil t)
 
 
@@ -734,6 +753,7 @@
        ;"k" 'my-next-user-buffer
        ;"j" 'my-previous-user-buffer
        "ar" 'ranger
+       "y" 'yas-insert-snippet
        "gs" 'magit-status
        "gtt" 'git-timemachine-toggle
        "gtn" 'git-timemachine-show-next-revision
