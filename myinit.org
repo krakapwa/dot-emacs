@@ -498,8 +498,9 @@
                     "C-k" 'comint-previous-input
                     "C-j" 'comint-next-input)
 
-(setq python-shell-interpreter "ipython"
-    python-shell-interpreter-args "--simple-prompt -i")
+;(setq python-shell-interpreter "ipython"
+;    python-shell-interpreter-args "--simple-prompt -i")
+(setq python-shell-interpreter "python")
 (setq python-shell-completion-native-enable nil)
 #+end_src
 * Tex
