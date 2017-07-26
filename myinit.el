@@ -1,5 +1,3 @@
-* Use-package/sources
-#+begin_src emacs-lisp :tangle yes
 ;;; init --- Krakapwa's Emacs init file
 ;;; Commentary:
 ;; See readme.
@@ -34,10 +32,6 @@
          user-init-directory)
         (t "~/.emacs.d/")))
 
-
-#+end_src
-* Yasnippet
-#+begin_src emacs-lisp :tangle yes
 (use-package yasnippet
   :commands (yas-minor-mode) ; autoload `yasnippet' when `yas-minor-mode' is called
                                         ; using any means: via a hook or by user
@@ -51,10 +45,7 @@
   :config ; stuff to do after requiring the package
   (progn
     (yas-reload-all)))
-#+end_src
 
-* Evil
-#+begin_src emacs-lisp :tangle yes
 ;;; bindings
 ;; evil
 (use-package evil
@@ -188,10 +179,6 @@
         projectile-switch-project-action 'helm-projectile)
   (projectile-global-mode))
 
-#+end_src
-* Helm
-#+begin_src emacs-lisp :tangle yes
-
 (use-package helm-company
   :commands (helm-company)
   :config (company-mode))
@@ -213,11 +200,6 @@
 
 (use-package helm-gitignore)
 
-
-#+end_src
-
-* Appearance
-#+begin_src emacs-lisp :tangle yes
 (load-file "~/.emacs.d/themes/monokai-theme.el")
 
 (set-face-attribute 'default nil :font "Liberation Mono-12" )
@@ -296,11 +278,6 @@
   :config (setq ag-highlight-search t
                 ag-reuse-buffers t))
 
-
-
-#+end_src
-* Org
-#+begin_src emacs-lisp :tangle yes
 ;; org mode extensions
 
 (use-package org
@@ -356,11 +333,6 @@
 
 (menu-bar-mode -1)
 
-
-
-#+end_src
-* Python
-#+begin_src emacs-lisp :tangle yes
 ; Highlight the call to pdb
 (defun annotate-pdb ()
   (interactive)
@@ -508,9 +480,6 @@
        (get-buffer-process (current-buffer))
        nil "_"))))
 
-#+end_src
-* Tex
-#+begin_src emacs-lisp :tangle yes
 (use-package auctex
   :defer t
   :ensure t
@@ -549,9 +518,6 @@
     "k" 'iflipb-next-buffer
     "j" 'iflipb-previous-buffer))
 
-#+end_src
-* Define keys
-#+begin_src emacs-lisp :tangle yes
 ;Single escape to exit "everything"
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 
@@ -610,9 +576,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-#+end_src
-* Others
-#+begin_src emacs-lisp :tangle yes
 
 ;; anzu
 (use-package anzu
@@ -926,6 +889,3 @@
 ;; compilation
 (setq compilation-ask-about-save nil
       compilation-always-kill t)
-
-
-#+end_src
