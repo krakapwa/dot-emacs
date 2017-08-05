@@ -220,7 +220,16 @@
 #+begin_src emacs-lisp :tangle yes
 (load-file "~/.emacs.d/themes/monokai-theme.el")
 
-(set-face-attribute 'default nil :font "Liberation Mono-12" )
+(defvar my-default-font
+  "Source Code Pro"
+  "The font to use everywhere. Has to be both readable, and awesome.")
+
+(when (member my-default-font (font-family-list))
+  (let ((font (concat my-default-font "-13")))
+    ;; (add-to-list 'default-frame-alist '(font jcf-default-font))
+    (set-face-attribute 'default nil :font font)
+    (set-frame-font font nil t)))
+;;(set-face-attribute 'default nil :font "Liberation Mono-12" )
 
 (global-linum-mode t)
 (global-visual-line-mode 1)
@@ -497,7 +506,6 @@
 (setq python-shell-interpreter "ipython"
     python-shell-interpreter-args "--simple-prompt -i")
 
-
 (with-eval-after-load 'python
   (defun python-shell-completion-native-try ()
     "Return non-nil if can trigger native completion."
@@ -561,6 +569,7 @@
        "TAB" 'switch-to-previous-buffer
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
+       "tl" 'toggle-truncate-lines
        "wv" 'split-window-right
        "wd" 'delete-window
        "s" 'ace-window
@@ -568,7 +577,9 @@
        "bd" 'kill-this-buffer
        ;"k" 'my-next-user-buffer
        ;"j" 'my-previous-user-buffer
-       "ar" 'ranger
+       "r" 'ranger
+       "af" 'ag-dired
+       "as" 'ag-project
        "y" 'yas-insert-snippet
        "gs" 'magit-status
        "gtt" 'git-timemachine-toggle
