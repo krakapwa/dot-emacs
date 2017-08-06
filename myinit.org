@@ -39,18 +39,23 @@
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
 (use-package yasnippet
-  :commands (yas-minor-mode) ; autoload `yasnippet' when `yas-minor-mode' is called
-                                        ; using any means: via a hook or by user
-                                        ; Feel free to add more commands to this
-                                        ; list to suit your needs.
+; autoload `yasnippet' when `yas-minor-mode' is called
+; using any means: via a hook or by user
+; Feel free to add more commands to this
+; list to suit your needs.
+  :commands (yas-minor-mode yas-exapand yas-insert-snipet)
   :init ; stuff to do before requiring the package
   (progn
-    (add-hook 'python-mode-hook #'yas-minor-mode))
-  (progn
+    (add-hook 'python-mode-hook #'yas-minor-mode)
+    (add-hook 'org-mode-hook #'yas-minor-mode)
     (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
+  ;;(progn
+  ;;  )
   :config ; stuff to do after requiring the package
   (progn
-    (yas-reload-all)))
+    (yas-reload-all)
+    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
+    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")))
 #+end_src
 
 * Evil
@@ -220,6 +225,12 @@
 #+begin_src emacs-lisp :tangle yes
 (load-file "~/.emacs.d/themes/monokai-theme.el")
 
+;; Powerline
+(use-package spaceline-config
+  :ensure spaceline
+  :config
+(spaceline-spacemacs-theme))
+
 (defvar my-default-font
   "Source Code Pro"
   "The font to use everywhere. Has to be both readable, and awesome.")
@@ -299,11 +310,6 @@
 (use-package adaptive-wrap
   :config (adaptive-wrap-prefix-mode))
 
-;; ag - the silver searcher
-(use-package ag
-  :commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
-  :config (setq ag-highlight-search t
-                ag-reuse-buffers t))
 
 
 
@@ -358,9 +364,6 @@
 ;; git
 (use-package git-timemachine)
 
-;; yaml
-(use-package yaml-mode
-  :mode "\\.ya?ml\'")
 
 
 (menu-bar-mode -1)
@@ -568,7 +571,7 @@
  :prefix "SPC"
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
-       "tl" 'toggle-truncate-lines
+       "tw" 'whitespace-mode
        "wv" 'split-window-right
        "wf" 'split-window-fairly
        "wd" 'delete-window
@@ -635,6 +638,14 @@
  )
 #+end_src
 * Others
+** Yaml
+#+begin_src emacs-lisp :tangle yes
+;; yaml
+(use-package yaml-mode
+  :mode "\\.ya?ml\'")
+#+end_src
+** Anzu
+anzu.el provides a minor mode which displays current match and total matches information in the mode-line in various search modes.
 #+begin_src emacs-lisp :tangle yes
 
 ;; anzu
@@ -642,7 +653,10 @@
   :commands (isearch-foward isearch-backward)
   :config (global-anzu-mode))
 
-;; company "complete anything"
+#+end_src
+** Company
+Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
+#+begin_src emacs-lisp :tangle yes
 (use-package company
   :diminish company-mode
   :commands (company-complete company-mode)
@@ -659,10 +673,19 @@
   (define-key company-active-map (kbd "C-k") #'company-select-previous))
 
 
+#+end_src
+** Demangle
+demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
+Use M-x demangle-mode to toggle demangling on or off in any buffer. Turn on font-lock-mode as well: demangle-mode uses this to stay in sync as buffer contents change.
+#+begin_src emacs-lisp :tangle yes
 ;; automatic demangling
 (use-package demangle-mode
   :commands demangle-mode)
+#+end_src
 
+** Dtrt
+A minor mode that guesses the indentation offset originally used for creating source code files and transparently adjusts the corresponding settings in Emacs, making it more convenient to edit foreign files.
+#+begin_src emacs-lisp :tangle yes
 ;; dtrt
 (use-package dtrt-indent
   :load-path "site-lisp/dtrt-indent"
@@ -670,10 +693,11 @@
   (dtrt-indent-mode)
   (setq dtrt-indent-min-quality 60
         dtrt-indent-verbosity 3))
+#+end_src
 
-;; electric spacing
-(use-package electric-spacing
-  :commands electric-spacing-mode)
+** Flycheck/Flyspell
+On the fly syntax/spelling checking.
+#+begin_src emacs-lisp :tangle yes
 
 ;; flycheck
 (use-package flycheck
@@ -686,6 +710,11 @@
   :config (setq ispell-program-name (executable-find "aspell")
                 ispell-extra-args '("--sug-mode=ultra")))
 
+#+end_src
+
+** GGtags
+Emacs frontend to GNU Global source code tagging system
+#+begin_src emacs-lisp :tangle yes
 
 ;; ggtags
 (use-package ggtags
@@ -701,6 +730,11 @@
     :config (helm-gtags-mode)))
 
 
+#+end_src
+
+** Magit
+Magit is an interface to the version control system Git, implemented as an Emacs package.
+#+begin_src emacs-lisp :tangle yes
 ;; magit
 (use-package magit
   :commands (magit-status projectile-vc)
@@ -712,13 +746,14 @@
 
 (global-git-commit-mode)
 
+#+end_src
+
+** Popwin
+Popwin is a popup window manager for Emacs which makes you free from the hell of annoying buffers such like *Help*, *Completions*, *compilation*, and etc.
+#+begin_src emacs-lisp :tangle yes
 ;; popwin
 (use-package popwin
   :config (popwin-mode))
-
-;; regex tool
-(use-package regex-tool
-  :commands (regex-tool))
 
 ;; save kill ring
 (use-package savekill)
@@ -738,6 +773,16 @@
   :config (setq inferior-lisp-program (executable-find "sbcl")))
 
 
+#+end_src
+
+** Tramp
+Tramp stands for `Transparent Remote (file) Access, Multiple Protocol'.
+From find-file, enter
+#+begin_verse
+/ssh:username@domain:/home/username/myfile
+#+end_verse
+
+#+begin_src emacs-lisp :tangle yes
 ;; tramp
 (use-package tramp
   :config
@@ -748,9 +793,65 @@
                 "-o ControlMaster=auto "
                 "-o ControlPersist=no")))
 
-;; try
-(use-package try
-  :commands try)
+#+end_src
+** Uniquify
+The library uniquify overrides Emacs’ default mechanism for making buffer names unique (using suffixes like <2>, <3> etc.) with a more sensible behaviour which use parts of the file names to make the buffer names distinguishable.
+#+begin_src emacs-lisp :tangle yes
+(use-package uniquify
+  :ensure nil
+  :config (setq uniquify-buffer-name-style 'forward))
+#+end_src
+** Whitespace
+This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE).
+#+begin_src emacs-lisp :tangle yes
+;; whitespace
+(use-package whitespace
+  :commands (whitespace-mode)
+  :config
+  (setq whitespace-style '(face tabs spaces newline empty
+                                trailing tab-mark newline-mark)))
+
+(use-package whitespace-cleanup-mode
+  :diminish whitespace-cleanup-mode
+  :init (global-whitespace-cleanup-mode))
+
+#+end_src
+** Ranger
+#+begin_src emacs-lisp :tangle yes
+(use-package ranger
+  :ensure t
+  :defer t
+  :commands (ranger)
+  :config
+  (require 'cl-lib)
+  (setq ranger-cleanup-eagerly t)
+  (setq ranger-show-hidden nil)
+  )
+#+end_src
+** Markdown
+#+begin_src emacs-lisp :tangle yes
+(use-package markdown-mode
+  :mode ("\\.markdown\\'" "\\.mk?d\\'" "\\.text\\'")
+  :general
+  (:keymaps 'markdown-mode-map
+    :states '(normal visual emacs)
+    :major-mode 'markdown-mode
+    :prefix "SPC"
+    :which-key "Markdown"
+    "mj" 'markdown-jump
+    "mp" 'markdown-export-and-preview
+    "me" 'markdown-export
+    "mx" 'markdown-follow-link-at-point))
+#+end_src
+** Ag (silver-searcher)
+#+begin_src emacs-lisp :tangle yes
+(use-package ag
+  :commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
+  :config (setq ag-highlight-search t
+                ag-reuse-buffers t))
+#+end_src
+** Others
+#+begin_src emacs-lisp :tangle yes
 
 ;; undo-tree
 (use-package undo-tree
@@ -765,33 +866,10 @@
 (use-package unfill
   :commands (unfill-region unfill-paragraph toggle-fill-unfill))
 
-;; uniquify
-(use-package uniquify
-  :ensure nil
-  :config (setq uniquify-buffer-name-style 'forward))
-
 ;; which-key
 (use-package which-key
   :diminish which-key-mode
   :config (which-key-mode))
-
-;; whitespace
-(use-package whitespace
-  :commands (whitespace-mode)
-  :config
-  (setq whitespace-style '(face tabs spaces newline empty
-                                trailing tab-mark newline-mark)))
-
-(use-package whitespace-cleanup-mode
-  :diminish whitespace-cleanup-mode
-  :init (global-whitespace-cleanup-mode))
-
-;; yasnippet
-(use-package yasnippet
-  :commands (yas-expand yas-insert-snippet)
-  :config
-  (use-package java-snippets)
-  (yas-minor-mode))
 
 ;;; syntax support
 ;; mode mappings
@@ -799,10 +877,6 @@
 (add-to-list 'auto-mode-alist '("\\.vcsh\\'" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.zsh\\'" . sh-mode))
 (add-to-list 'magic-mode-alist '(";;; " . emacs-lisp-mode))
-
-;; bison
-(use-package bison-mode
-  :mode ("\\.y\\'" "\\.l\\'"))
 
 ;; CMake
 (use-package cmake-mode
@@ -830,10 +904,6 @@
 (use-package gitignore-mode
   :mode ("/\\.gitignore\\'" "/\\.git/info/exclude\\'" "/git/ignore\\'"))
 
-;; handlebars
-(use-package handlebars-mode
-  :mode ("\\.handlebars$" "\\.hbs$"))
-
 ;; json
 (use-package json-mode
   :mode "\\.json$"
@@ -853,13 +923,6 @@
 (use-package less-css-mode
   :mode "\\.less\\'")
 
-;; markdown
-(use-package markdown-mode
-  :mode ("\\.markdown\\'" "\\.mk?d\\'" "\\.text\\'")
-  :init
-  (evil-define-key 'normal markdown-mode-map
-    (kbd "g d") 'markdown-jump
-    (kbd "g x") 'markdown-follow-link-at-point))
 
 ;; matlab
 (use-package matlab-mode
@@ -870,23 +933,10 @@
   :mode ("nginx.conf$" "/etc/nginx/.*"))
 ;; packages used in init
 (use-package page-break-lines)
-(use-package dashboard)
+#+end_src
 
-;; Powerline
-(use-package spaceline-config
-  :ensure spaceline
-  :config
-(spaceline-spacemacs-theme))
+#+begin_src emacs-lisp :tangle yes
 
-(use-package ranger
-  :ensure t
-  :defer t
-  :commands (ranger)
-  :config
-  (require 'cl-lib)
-  (setq ranger-cleanup-eagerly t)
-  (setq ranger-show-hidden nil)
-  )
 (use-package dashboard
   :config
   (dashboard-setup-startup-hook))
