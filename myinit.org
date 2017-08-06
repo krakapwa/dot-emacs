@@ -566,13 +566,14 @@
 (general-define-key
  :states '(normal visual)
  :prefix "SPC"
-       "TAB" 'switch-to-previous-buffer
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
        "tl" 'toggle-truncate-lines
        "wv" 'split-window-right
+       "wf" 'split-window-fairly
        "wd" 'delete-window
-       "s" 'ace-window
+       "TAB" '(ace-window :which-key "next window")
+       "s" '(ace-swap-window :which-key "swap windows")
        "bb" 'helm-mini
        "bd" 'kill-this-buffer
        ;"k" 'my-next-user-buffer
@@ -581,12 +582,23 @@
        "af" 'ag-dired
        "as" 'ag-project
        "y" 'yas-insert-snippet
-       "gs" 'magit-status
+       "gs" '(magit-status :which-key "git status")
        "gtt" 'git-timemachine-toggle
        "gtn" 'git-timemachine-show-next-revision
        "gtp" 'git-timemachine-show-previous-revision
        "gtq" 'git-timemachine-quit
        "pr" 'profiler-report)
+
+(which-key-add-key-based-replacements
+    "SPC gt" "git timemachine"
+    "SPC g" "git"
+    "SPC f" "file"
+    "SPC a" "ag"
+    "SPC t" "toggle"
+    "SPC b" "buffer"
+    "SPC w" "window"
+    "SPC m" "major-mode"
+ )
 
 (require 'general)
 (general-evil-setup t)
