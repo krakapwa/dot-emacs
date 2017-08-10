@@ -34,6 +34,10 @@
          user-init-directory)
         (t "~/.emacs.d/")))
 
+;; which-key
+(use-package which-key
+  :diminish which-key-mode
+  :config (which-key-mode))
 
 #+end_src
 * Yasnippet
@@ -43,7 +47,7 @@
 ; using any means: via a hook or by user
 ; Feel free to add more commands to this
 ; list to suit your needs.
-  :commands (yas-minor-mode yas-exapand yas-insert-snipet)
+  :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
   (progn
     (add-hook 'python-mode-hook #'yas-minor-mode)
@@ -55,7 +59,8 @@
   (progn
     (yas-reload-all)
     (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
-    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")))
+    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
+    (yas-global-mode t))
 #+end_src
 
 * Evil
@@ -522,35 +527,63 @@
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
-(use-package auctex
-  :defer t
-  :ensure t
-  :mode ("\\.tex\\'" . latex-mode)
-  :commands (latex-mode LaTeX-mode plain-tex-mode)
-  :init
-  (progn
-    (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
-    (add-hook 'LaTeX-mode-hook #'flyspell-mode)
-    (add-hook 'LaTeX-mode-hook #'turn-on-reftex)
-    (setq TeX-auto-save t
-	  TeX-parse-self t
-	  TeX-save-query nil
-	  TeX-PDF-mode t)
-    (setq-default TeX-master nil))
-  :general
-  (:keymaps 'latex-mode-map
-   :states '(normal insert emacs)
-   :major-mode 'latex-mode
-   :prefix "SPC"
-   :which-key "Latex"
-      "mc" 'reftex-citation
-   )
+(use-package tex
+:ensure auctex
+:general
+(:keymaps 'LaTeX-mode-map
+  :states '(normal insert emacs)
+  :major-mode 'LaTeX-mode
+  :prefix "SPC"
+  :which-key "Latex"
+    "mc" 'reftex-citation
+    "mm" 'TeX-command-master
+    "mv" 'TeX-command-run-all
+    "mp" 'preview-at-point
   )
+:config
+(progn
+  (use-package auto-complete
+    :config
+    (progn
+      (ac-flyspell-workaround)
+      (setq ac-auto-show-menu 0.01
+            ac-auto-start 1
+            ac-delay 0.01)))
 
-;; So that RefTeX also recognizes \addbibresource.
-(setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
-(setq reftex-default-bibliography '("~/Documents/2017_miccai/laurent_lejeune/refs.bib"))
 
+
+  (use-package ispell
+    :ensure t
+    :config
+    (progn
+      (make-local-variable 'ispell-parser)
+      (setq ispell-parser 'tex)))
+
+  (use-package ac-ispell
+    :ensure t
+    :requires auto-complete ispell
+    )
+
+  (use-package writegood-mode
+    :ensure t
+    :config
+    (writegood-mode))
+
+  (use-package smartparens-latex
+    :disabled t ;; Does not seem to be available
+    :ensure t
+    :config
+    (smartparens-mode +1))
+
+  (use-package ac-math
+    :ensure t
+    :config
+    (LaTeX-math-mode))
+(setq Tex-auto-save t)
+(setq Tex-parse-self t)
+(setq TeX-save-query nil)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)))
 
 (use-package iflipb
   :general
@@ -852,7 +885,12 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 #+end_src
 ** Others
 #+begin_src emacs-lisp :tangle yes
-
+(use-package smooth-scroll
+  :if (display-graphic-p)
+  :diminish smooth-scroll-mode
+  :config
+  (setq smooth-scroll/vscroll-step-size 8)
+(smooth-scroll-mode))
 ;; undo-tree
 (use-package undo-tree
   :diminish undo-tree-mode
@@ -866,10 +904,6 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 (use-package unfill
   :commands (unfill-region unfill-paragraph toggle-fill-unfill))
 
-;; which-key
-(use-package which-key
-  :diminish which-key-mode
-  :config (which-key-mode))
 
 ;;; syntax support
 ;; mode mappings
