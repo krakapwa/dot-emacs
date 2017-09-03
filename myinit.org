@@ -39,6 +39,7 @@
   :diminish which-key-mode
   :config (which-key-mode))
 
+
 #+end_src
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
@@ -62,7 +63,6 @@
     (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
     (yas-global-mode t))
 #+end_src
-
 * Evil
 #+begin_src emacs-lisp :tangle yes
 ;;; bindings
@@ -103,7 +103,8 @@
       (setq linum-relative-format "%3s ")
       (linum-mode)
       (linum-relative-mode)
-      (setq highlight-indent-guides-method 'column)))
+      (setq highlight-indent-guides-method 'column))
+    :diminish highlight-indent-guides-mode)
   (use-package hlinum
     :ensure t
     :init
@@ -157,7 +158,9 @@
   :config (global-evil-matchit-mode))
 
 (use-package evil-snipe
-  :init (evil-snipe-mode))
+  :diminish evil-snipe-mode
+  :init (evil-snipe-mode)
+)
 
 (use-package evil-surround
   :config (global-evil-surround-mode))
@@ -234,7 +237,7 @@
 (use-package spaceline-config
   :ensure spaceline
   :config
-(spaceline-spacemacs-theme))
+(spaceline-emacs-theme))
 
 (defvar my-default-font
   "Source Code Pro"
@@ -249,6 +252,10 @@
 
 (global-linum-mode t)
 (global-visual-line-mode 1)
+(diminish 'visual-line-mode)
+(diminish 'hi-lock-mode)
+(diminish 'evil-snipe-local-mode)
+
 
 ;;Maximize on startup
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
@@ -313,7 +320,9 @@
 ;;; extensions
 ;; adaptive word wrapping
 (use-package adaptive-wrap
-  :config (adaptive-wrap-prefix-mode))
+  :config (adaptive-wrap-prefix-mode)
+  :diminish adaptive-wrap-prefix-mode
+)
 
 
 
@@ -452,7 +461,10 @@
         (elpy-shell-display-buffer)
         (when has-if-main
           (message (concat "Removed if __main__ == '__main__' construct, "
-                           "use a prefix argument to evaluate.")))))
+                           "use a prefix argument to evaluate."))))
+      :diminish elpy-mode
+
+)
 
   (defun ha/elpy-goto-definition ()
     (interactive)
@@ -482,7 +494,9 @@
   :config
   (add-to-list 'company-backends 'company-jedi))
 
-(use-package window-purpose)
+(use-package window-purpose
+:diminish purpose-mode)
+
 (purpose-mode)
 (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
 (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
@@ -531,7 +545,7 @@
 :ensure auctex
 :general
 (:keymaps 'LaTeX-mode-map
-  :states '(normal insert emacs)
+  :states '(normal emacs)
   :major-mode 'LaTeX-mode
   :prefix "SPC"
   :which-key "Latex"
@@ -684,7 +698,9 @@ anzu.el provides a minor mode which displays current match and total matches inf
 ;; anzu
 (use-package anzu
   :commands (isearch-foward isearch-backward)
-  :config (global-anzu-mode))
+  :config (global-anzu-mode)
+  :diminish anzu-mode
+)
 
 #+end_src
 ** Company
