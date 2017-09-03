@@ -236,7 +236,6 @@
 * Appearance
 #+begin_src emacs-lisp :tangle yes
   (load-file "~/.emacs.d/themes/monokai-theme.el")
-  (load-file (expand-file-name "init/advice.el" user-emacs-directory))
   (use-package powerline
   :if window-system
 :config (setq-default powerline-default-separator 'nil))
@@ -649,6 +648,7 @@
        "as" 'ag-project
        "y" 'yas-insert-snippet
        "gs" '(magit-status :which-key "git status")
+       "gf" '(with-editor-finish :which-key "git finish")
        "gtt" 'git-timemachine-toggle
        "gtn" 'git-timemachine-show-next-revision
        "gtp" 'git-timemachine-show-previous-revision
