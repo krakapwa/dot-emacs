@@ -15,7 +15,8 @@
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
+(package-initialize nil)
+(run-with-idle-timer 900 t 'package-refresh-contents)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
@@ -34,11 +35,14 @@
          user-init-directory)
         (t "~/.emacs.d/")))
 
+(setq-default package-user-dir (expand-file-name "etc/packages" user-emacs-directory))
+
 ;; which-key
 (use-package which-key
   :diminish which-key-mode
   :config (which-key-mode))
 
+(use-package restart-emacs :ensure t :bind ("s-q" . restart-emacs))
 
 #+end_src
 * Yasnippet
@@ -231,98 +235,109 @@
 
 * Appearance
 #+begin_src emacs-lisp :tangle yes
-(load-file "~/.emacs.d/themes/monokai-theme.el")
+  (load-file "~/.emacs.d/themes/monokai-theme.el")
+  (load-file (expand-file-name "init/advice.el" user-emacs-directory))
+  (use-package powerline
+  :if window-system
+:config (setq-default powerline-default-separator 'nil))
 
-;; Powerline
-(use-package spaceline-config
-  :ensure spaceline
+(use-package spaceline :ensure t
   :config
-(spaceline-emacs-theme))
+  (use-package spaceline-config
+    :config
+    (spaceline-toggle-minor-modes-off)
+    (spaceline-toggle-buffer-encoding-off)
+    (spaceline-toggle-buffer-encoding-abbrev-off)
+    (setq powerline-default-separator 'rounded)
+    (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state)
+    (spaceline-define-segment line-column
+      "The current line and column numbers."
+      "l:%l c:%2c")
+    (spaceline-emacs-theme)))
 
-(defvar my-default-font
-  "Source Code Pro"
-  "The font to use everywhere. Has to be both readable, and awesome.")
+  (defvar my-default-font
+    "Source Code Pro"
+    "The font to use everywhere. Has to be both readable, and awesome.")
 
-(when (member my-default-font (font-family-list))
-  (let ((font (concat my-default-font "-13")))
-    ;; (add-to-list 'default-frame-alist '(font jcf-default-font))
-    (set-face-attribute 'default nil :font font)
-    (set-frame-font font nil t)))
-;;(set-face-attribute 'default nil :font "Liberation Mono-12" )
+  (when (member my-default-font (font-family-list))
+    (let ((font (concat my-default-font "-13")))
+      ;; (add-to-list 'default-frame-alist '(font jcf-default-font))
+      (set-face-attribute 'default nil :font font)
+      (set-frame-font font nil t)))
+  ;;(set-face-attribute 'default nil :font "Liberation Mono-12" )
 
-(global-linum-mode t)
-(global-visual-line-mode 1)
-(diminish 'visual-line-mode)
-(diminish 'hi-lock-mode)
-(diminish 'evil-snipe-local-mode)
+  (global-linum-mode t)
+  (global-visual-line-mode 1)
+  (diminish 'visual-line-mode)
+  (diminish 'hi-lock-mode)
+  (diminish 'evil-snipe-local-mode)
 
+  ;;Maximize on startup
+  (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;;Maximize on startup
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (global-hl-line-mode +1)
+  (blink-cursor-mode 0)
+  (set-cursor-color "#f4d942")
 
-(global-hl-line-mode +1)
-(blink-cursor-mode 0)
-(set-cursor-color "#f4d942")
+  ;;; appearance
+  (if (display-graphic-p)
+      (progn
+        (tool-bar-mode 0)
+        (scroll-bar-mode 0)))
 
-;;; appearance
-(if (display-graphic-p)
-    (progn
-      (tool-bar-mode 0)
-      (scroll-bar-mode 0)))
+  ;; more context when scrolling
+  (setq next-screen-context-lines 4)
 
-;; more context when scrolling
-(setq next-screen-context-lines 4)
+  ;; y/n for yes/no
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
-;; y/n for yes/no
-(defalias 'yes-or-no-p 'y-or-n-p)
+  ;; start week on Monday
+  (setq calendar-week-start-day 1)
 
-;; start week on Monday
-(setq calendar-week-start-day 1)
+  ;; window undo/redo
+  (winner-mode)
 
-;; window undo/redo
-(winner-mode)
+  ;; tabs are truly evil
+  (setq-default indent-tabs-mode nil)
 
-;; tabs are truly evil
-(setq-default indent-tabs-mode nil)
+  ;; sentences end with one space
+  (setq sentence-end-double-space nil)
 
-;; sentences end with one space
-(setq sentence-end-double-space nil)
+  ;;; settings
+  ;; enable all commands
+  (setq disabled-command-function nil)
 
-;;; settings
-;; enable all commands
-(setq disabled-command-function nil)
+  ;; default truncate lines
+  (setq-default truncate-lines t)
 
-;; default truncate lines
-(setq-default truncate-lines t)
+  ;; disable bell
+  (setq ring-bell-function 'ignore
+        visible-bell t)
 
-;; disable bell
-(setq ring-bell-function 'ignore
-      visible-bell t)
+  ;; increase garbage collection threshold
+  (setq gc-cons-threshold (* 10 1024 1024))
 
-;; increase garbage collection threshold
-(setq gc-cons-threshold (* 10 1024 1024))
+  ;; inhibit startup message
+  (setq inhibit-startup-message t)
 
-;; inhibit startup message
-(setq inhibit-startup-message t)
+  ;; kill settings
+  (setq save-interprogram-paste-before-kill t
+        kill-do-not-save-duplicates t
+        kill-whole-line t)
 
-;; kill settings
-(setq save-interprogram-paste-before-kill t
-      kill-do-not-save-duplicates t
-      kill-whole-line t)
+  ;; repeat mark pop
+  (setq-default set-mark-command-repeat-pop t)
 
-;; repeat mark pop
-(setq-default set-mark-command-repeat-pop t)
+  ;; set terminfo
+  (setq system-uses-terminfo nil)
 
-;; set terminfo
-(setq system-uses-terminfo nil)
-
-;;; extensions
-;; adaptive word wrapping
-(use-package adaptive-wrap
-  :config (adaptive-wrap-prefix-mode)
-  :diminish adaptive-wrap-prefix-mode
-)
+  ;;; extensions
+  ;; adaptive word wrapping
+  (use-package adaptive-wrap
+    :config (adaptive-wrap-prefix-mode)
+    :diminish adaptive-wrap-prefix-mode
+  )
 
 
 
@@ -619,6 +634,7 @@
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
        "tw" 'whitespace-mode
+       "tr" 'restart-emacs
        "wv" 'split-window-right
        "wf" 'split-window-fairly
        "wd" 'delete-window
