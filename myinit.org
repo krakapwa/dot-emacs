@@ -16,10 +16,8 @@
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")))
 (package-initialize nil)
-(run-with-idle-timer 900 t 'package-refresh-contents)
 
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
 (setq use-package-verbose t
@@ -34,8 +32,6 @@
         ((boundp 'user-init-directory)
          user-init-directory)
         (t "~/.emacs.d/")))
-
-(setq-default package-user-dir (expand-file-name "etc/packages" user-emacs-directory))
 
 ;; which-key
 (use-package which-key
@@ -338,9 +334,6 @@
     :diminish adaptive-wrap-prefix-mode
   )
 
-
-
-
 #+end_src
 * Org
 #+begin_src emacs-lisp :tangle yes
@@ -419,15 +412,19 @@
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
 
-  ;(defun smart-open-line-above ()
-  ;"Insert an empty line above the current line.
-  ;  Position the cursor at it's beginning, according to the current mode."
-  ;  (interactive)
-  ;  (move-beginning-of-line nil)
-  ;  (newline-and-indent)
-  ;  (forward-line -1)
-  ;  (indent-according-to-mode))
+  (defun python-run-master-file ()
+    (interactive)
+    (python-switch-to-master-file)
+    (elpy-shell-send-region-or-buffer))
 
+  (defun python-set-master-file ()
+    (interactive)
+    (setq python-master-file (buffer-name))
+                (message "Set this buffer as python master file"))
+
+  (defun python-switch-to-master-file ()
+    (interactive)
+    (switch-to-buffer python-master-file))
 
   (defun python-add-breakpoint ()
     "Add a break point"
@@ -437,45 +434,6 @@
     (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-    (defun my-elpy-shell-send-region-or-buffer (&optional arg)
-      "Send the active region or the buffer to the Python shell.
-
-    If there is an active region, send that. Otherwise, send the
-    whole buffer.
-
-    In Emacs 24.3 and later, without prefix argument, this will
-    escape the Python idiom of if __name__ == '__main__' to be false
-    to avoid accidental execution of code. With prefix argument, this
-    code is executed."
-      (interactive "P")
-      ;; Ensure process exists
-      (elpy-shell-get-or-create-process)
-      (let ((if-main-regex "^if +__name__ +== +[\"']__main__[\"'] *:")
-            (has-if-main nil))
-        (if (use-region-p)
-            (let ((region (elpy-shell--region-without-indentation
-                           (region-beginning) (region-end))))
-              (setq has-if-main (string-match if-main-regex region))
-              (when (string-match "\t" region)
-                (message "Region contained tabs, this might cause weird errors")))
-              (python-shell-send-string region)
-              (elpy-shell-switch-to-shell)
-              (end-of-buffer)
-              (evil-escape)
-              (elpy-shell-switch-to-buffer))
-          (save-excursion
-            (goto-char (point-min))
-            (setq has-if-main (re-search-forward if-main-regex nil t)))
-          (python-shell-send-buffer arg)
-          (elpy-shell-switch-to-shell)
-          (end-of-buffer)
-          (evil-escape)
-          (elpy-shell-switch-to-buffer)
-          )
-        (elpy-shell-display-buffer)
-        (when has-if-main
-          (message (concat "Removed if __main__ == '__main__' construct, "
-                           "use a prefix argument to evaluate."))))
       :diminish elpy-mode
 
 )
@@ -526,7 +484,9 @@
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
-    ;"mb" 'elpy-shell-send-region-or-buffer
+    "ms" 'python-set-master-file
+    "mm" 'python-switch-to-master-file
+    "mr" 'python-run-master-file
     "md" 'python-add-breakpoint
     "mg" 'anaconda-mode-find-assignments
     "mf" 'elpy-yapf-fix-code
