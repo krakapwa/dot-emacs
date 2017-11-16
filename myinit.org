@@ -15,7 +15,7 @@
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
+(package-initialize nil)
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))

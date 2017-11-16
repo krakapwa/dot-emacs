@@ -2,6 +2,9 @@
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
 ;; You may delete these explanatory comments.
+
+(require 'package)
+
 (setq load-prefer-newer t
       package-enable-at-startup nil
       package-archives
@@ -9,12 +12,16 @@
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")))
-
-(require 'package)
 (package-initialize)
-(package-refresh-contents)
-(package-install 'use-package)
-(require 'use-package)
+
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+
+(setq use-package-verbose t
+      use-package-always-ensure t)
+
+(eval-when-compile
+  (require 'use-package))
 
 (setq use-package-verbose t
       use-package-always-ensure t)
