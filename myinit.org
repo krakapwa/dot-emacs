@@ -250,16 +250,7 @@
       "l:%l c:%2c")
     (spaceline-emacs-theme)))
 
-  (defvar my-default-font
-    "Source Code Pro"
-    "The font to use everywhere. Has to be both readable, and awesome.")
-
-  (when (member my-default-font (font-family-list))
-    (let ((font (concat my-default-font "-13")))
-      ;; (add-to-list 'default-frame-alist '(font jcf-default-font))
-      (set-face-attribute 'default nil :font font)
-      (set-frame-font font nil t)))
-  ;;(set-face-attribute 'default nil :font "Liberation Mono-12" )
+  (set-face-attribute 'default nil :font "Source Code Pro Medium-12")
 
   (global-linum-mode t)
   (global-visual-line-mode 1)
@@ -488,8 +479,9 @@
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
     "md" 'python-add-breakpoint
-    "mg" 'anaconda-mode-find-assignments
+    "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
+    "mh" 'elpy-doc
     "mi" 'run-python))
 
 (general-define-key :states '(normal insert emacs)
