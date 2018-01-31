@@ -39,7 +39,7 @@
   :config (which-key-mode))
 
 (use-package restart-emacs :ensure t :bind ("s-q" . restart-emacs))
-
+(use-package diminish :ensure t)
 #+end_src
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
@@ -231,28 +231,34 @@
 
 * Appearance
 #+begin_src emacs-lisp :tangle yes
-  (load-file "~/.emacs.d/themes/flatui-theme.el")
+  (load-file "~/.emacs.d/themes/zenburn-theme.el")
   (use-package powerline
   :if window-system
 :config (setq-default powerline-default-separator 'nil))
 
-(use-package spaceline :ensure t
+(use-package powerline)
+
+(use-package airline-themes
+  :init
+  (progn
+    (require 'airline-themes)
+    (load-theme 'airline-base16-gui-dark t))
   :config
-  (use-package spaceline-config
-    :config
-    (spaceline-toggle-minor-modes-off)
-    (spaceline-toggle-buffer-encoding-off)
-    (spaceline-toggle-buffer-encoding-abbrev-off)
-    (setq powerline-default-separator 'arrow)
-    (setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state)
-    (spaceline-define-segment line-column
-      "The current line and column numbers."
-      "l:%l c:%2c")
-    (spaceline-emacs-theme)
-))
+  (progn
+    (set-face-attribute 'mode-line          nil :font "Fira Mono for Powerline")
+    (set-face-attribute 'mode-line-inactive nil :font "Fira Mono for Powerline")
+    (setq powerline-utf-8-separator-left        #xe0b0
+          powerline-utf-8-separator-right       #xe0b2
+          airline-utf-glyph-separator-left      #xe0b0
+          airline-utf-glyph-separator-right     #xe0b2
+          airline-utf-glyph-subseparator-left   #xe0b1
+          airline-utf-glyph-subseparator-right  #xe0b3
+          airline-utf-glyph-branch              #xe0a0
+          airline-utf-glyph-readonly            #xe0a2
+airline-utf-glyph-linenumber #xe0a1)))
 
   ;;(set-face-attribute 'default nil :font "Source Code Pro Medium-12")
-  (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline")
+  (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-11")
 
   (global-linum-mode t)
   (global-visual-line-mode 1)
@@ -341,6 +347,21 @@
     :non-normal-prefix "M-SPC"
     :which-key "org"
     "me" 'org-export-dispatch))
+
+;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
+(add-hook 'org-mode-hook
+      '(lambda ()
+         (delete '("\\.pdf\\'" . default) org-file-apps)
+         (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+
+(use-package ox-reveal
+:ensure ox-reveal)
+
+(setq org-reveal-root "~/.dotfiles/reveal.js/")
+(setq org-reveal-mathjax t)
+
+(use-package htmlize
+:ensure t)
 
 (use-package org-plus-contrib
   :mode (("\\.org\\'" . org-mode) ("[0-9]\\{8\\}\\'" . org-mode))
@@ -593,10 +614,8 @@
        "wd" 'delete-window
        "TAB" '(ace-window :which-key "next window")
        "s" '(ace-swap-window :which-key "swap windows")
-       "bb" 'helm-mini
-       "bd" 'kill-this-buffer
-       ;"k" 'my-next-user-buffer
-       ;"j" 'my-previous-user-buffer
+       "b" 'helm-mini
+       "x" 'kill-this-buffer
        "r" 'ranger
        "af" 'ag-dired
        "as" 'ag-project
@@ -644,7 +663,7 @@
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 (custom-set-faces
@@ -902,10 +921,6 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 (use-package cmake-mode
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
 
-;; crontab
-(use-package crontab-mode
-  :mode "\\.cron\\(tab\\)?\\'")
-
 ;; C styles
 (c-add-style "work"
              '("bsd"
@@ -963,18 +978,6 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 
 (use-package dash)
 (use-package f)
-
-;;; system specific packages
-;; load Linux configuration
-(use-package linux
-  :ensure nil
-  :load-path "lisp/"
-  :if (eq system-type 'gnu/linux))
-
-;;; load local settings
-(use-package local
-  :ensure nil
-  :load-path "site-lisp/")
 
 (use-package auto-compile
   :defer t
