@@ -20,9 +20,6 @@ tangled, and the tangled file is compiled."
 
 (add-hook 'after-save-hook 'tangle-init)
 
-
-
-
 (require 'package)
 (setq load-prefer-newer t
       package-enable-at-startup nil
@@ -30,7 +27,15 @@ tangled, and the tangled file is compiled."
       '(("gnu" . "https://elpa.gnu.org/packages/")
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
-        ("melpa" . "https://melpa.org/packages/")))
+        ("melpa" . "https://melpa.org/packages/")
+        ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
+      package-archive-priorities
+            '(("gnu" . 10)
+              ("org"     . 5)
+              ("melpa"     . 5)
+              ("myelpa"     . 10)
+              ("org"     . 5)
+              ("elpy"        . 0)))
 (package-initialize nil)
 
 (require 'cl)
