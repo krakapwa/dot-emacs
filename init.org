@@ -1,3 +1,5 @@
+* Use-package/sources
+#+begin_src emacs-lisp :tangle yes
 ;;; init --- Krakapwa's Emacs init file
 ;;; Commentary:
 ;; See readme.
@@ -5,6 +7,22 @@
 ;;; Code:
 
 ;;; package setup
+
+(defun tangle-init ()
+  "If the current buffer is 'init.org' the code-blocks are
+tangled, and the tangled file is compiled."
+  (when (equal (buffer-file-name)
+               (expand-file-name (concat user-emacs-directory "init.org")))
+    ;; Avoid running hooks when tangling.
+    (let ((prog-mode-hook nil))
+      (org-babel-tangle)
+      (byte-compile-file (concat user-emacs-directory "init.el")))))
+
+(add-hook 'after-save-hook 'tangle-init)
+
+
+
+
 (require 'package)
 (setq load-prefer-newer t
       package-enable-at-startup nil
@@ -13,10 +31,14 @@
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
+(package-initialize nil)
+
+(require 'cl)
+
+(add-to-list 'load-path "~/.emacs.d/site-lisp/elpa-mirror")
+(require 'elpa-mirror)
 
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
 (setq use-package-verbose t
@@ -32,20 +54,39 @@
          user-init-directory)
         (t "~/.emacs.d/")))
 
+
+;; which-key
+(use-package which-key
+  :diminish which-key-mode
+  :config (which-key-mode))
+
+(use-package restart-emacs :ensure t :bind ("s-q" . restart-emacs))
+(use-package diminish :ensure t)
+#+end_src
+* Yasnippet
+#+begin_src emacs-lisp :tangle yes
 (use-package yasnippet
-  :commands (yas-minor-mode) ; autoload `yasnippet' when `yas-minor-mode' is called
-                                        ; using any means: via a hook or by user
-                                        ; Feel free to add more commands to this
-                                        ; list to suit your needs.
+; autoload `yasnippet' when `yas-minor-mode' is called
+; using any means: via a hook or by user
+; Feel free to add more commands to this
+; list to suit your needs.
+  :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
   (progn
-    (add-hook 'python-mode-hook #'yas-minor-mode))
-  (progn
+    (add-hook 'python-mode-hook #'yas-minor-mode)
+    (add-hook 'org-mode-hook #'yas-minor-mode)
     (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
+  ;;(progn
+  ;;  )
   :config ; stuff to do after requiring the package
   (progn
-    (yas-reload-all)))
-
+    (yas-reload-all)
+    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
+    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
+    (yas-global-mode t))
+#+end_src
+* Evil
+#+begin_src emacs-lisp :tangle yes
 ;;; bindings
 ;; evil
 (use-package evil
@@ -84,7 +125,8 @@
       (setq linum-relative-format "%3s ")
       (linum-mode)
       (linum-relative-mode)
-      (setq highlight-indent-guides-method 'column)))
+      (setq highlight-indent-guides-method 'column))
+    :diminish highlight-indent-guides-mode)
   (use-package hlinum
     :ensure t
     :init
@@ -138,7 +180,9 @@
   :config (global-evil-matchit-mode))
 
 (use-package evil-snipe
-  :init (evil-snipe-mode))
+  :diminish evil-snipe-mode
+  :init (evil-snipe-mode)
+)
 
 (use-package evil-surround
   :config (global-evil-surround-mode))
@@ -179,6 +223,10 @@
         projectile-switch-project-action 'helm-projectile)
   (projectile-global-mode))
 
+#+end_src
+* Helm
+#+begin_src emacs-lisp :tangle yes
+
 (use-package helm-company
   :commands (helm-company)
   :config (company-mode))
@@ -200,84 +248,116 @@
 
 (use-package helm-gitignore)
 
-(load-file "~/.emacs.d/themes/monokai-theme.el")
 
-(set-face-attribute 'default nil :font "Liberation Mono-12" )
+#+end_src
 
-(global-linum-mode t)
-(global-visual-line-mode 1)
+* Appearance
+#+begin_src emacs-lisp :tangle yes
+  (load-file "~/.emacs.d/themes/zenburn-theme.el")
+  (use-package powerline
+  :if window-system
+:config (setq-default powerline-default-separator 'nil))
 
-;;Maximize on startup
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+(use-package powerline)
 
-(global-hl-line-mode +1)
-(blink-cursor-mode 0)
-(set-cursor-color "#f4d942")
+(use-package airline-themes
+  :init
+  (progn
+    (require 'airline-themes)
+    (load-theme 'airline-base16-gui-dark t))
+  :config
+  (progn
+    (set-face-attribute 'mode-line          nil :font "Fira Mono for Powerline")
+    (set-face-attribute 'mode-line-inactive nil :font "Fira Mono for Powerline")
+    (setq powerline-utf-8-separator-left        #xe0b0
+          powerline-utf-8-separator-right       #xe0b2
+          airline-utf-glyph-separator-left      #xe0b0
+          airline-utf-glyph-separator-right     #xe0b2
+          airline-utf-glyph-subseparator-left   #xe0b1
+          airline-utf-glyph-subseparator-right  #xe0b3
+          airline-utf-glyph-branch              #xe0a0
+          airline-utf-glyph-readonly            #xe0a2
+airline-utf-glyph-linenumber #xe0a1)))
 
-;;; appearance
-(if (display-graphic-p)
-    (progn
-      (tool-bar-mode 0)
-      (scroll-bar-mode 0)))
+  ;;(set-face-attribute 'default nil :font "Source Code Pro Medium-12")
+  (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-11")
 
-;; more context when scrolling
-(setq next-screen-context-lines 4)
+  (global-linum-mode t)
+  (global-visual-line-mode 1)
+  (diminish 'visual-line-mode)
+  (diminish 'hi-lock-mode)
+  (diminish 'evil-snipe-local-mode)
 
-;; y/n for yes/no
-(defalias 'yes-or-no-p 'y-or-n-p)
+  ;;Maximize on startup
+  (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; start week on Monday
-(setq calendar-week-start-day 1)
+  (global-hl-line-mode +1)
+  (blink-cursor-mode 0)
+  (set-cursor-color "#f4d942")
 
-;; window undo/redo
-(winner-mode)
+  ;;; appearance
+  (if (display-graphic-p)
+      (progn
+        (tool-bar-mode 0)
+        (scroll-bar-mode 0)))
 
-;; tabs are truly evil
-(setq-default indent-tabs-mode nil)
+  ;; more context when scrolling
+  (setq next-screen-context-lines 4)
 
-;; sentences end with one space
-(setq sentence-end-double-space nil)
+  ;; y/n for yes/no
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
-;;; settings
-;; enable all commands
-(setq disabled-command-function nil)
+  ;; start week on Monday
+  (setq calendar-week-start-day 1)
 
-;; default truncate lines
-(setq-default truncate-lines t)
+  ;; window undo/redo
+  (winner-mode)
 
-;; disable bell
-(setq ring-bell-function 'ignore
-      visible-bell t)
+  ;; tabs are truly evil
+  (setq-default indent-tabs-mode nil)
 
-;; increase garbage collection threshold
-(setq gc-cons-threshold (* 10 1024 1024))
+  ;; sentences end with one space
+  (setq sentence-end-double-space nil)
 
-;; inhibit startup message
-(setq inhibit-startup-message t)
+  ;;; settings
+  ;; enable all commands
+  (setq disabled-command-function nil)
 
-;; kill settings
-(setq save-interprogram-paste-before-kill t
-      kill-do-not-save-duplicates t
-      kill-whole-line t)
+  ;; default truncate lines
+  (setq-default truncate-lines t)
 
-;; repeat mark pop
-(setq-default set-mark-command-repeat-pop t)
+  ;; disable bell
+  (setq ring-bell-function 'ignore
+        visible-bell t)
 
-;; set terminfo
-(setq system-uses-terminfo nil)
+  ;; increase garbage collection threshold
+  (setq gc-cons-threshold (* 10 1024 1024))
 
-;;; extensions
-;; adaptive word wrapping
-(use-package adaptive-wrap
-  :config (adaptive-wrap-prefix-mode))
+  ;; inhibit startup message
+  (setq inhibit-startup-message t)
 
-;; ag - the silver searcher
-(use-package ag
-  :commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
-  :config (setq ag-highlight-search t
-                ag-reuse-buffers t))
+  ;; kill settings
+  (setq save-interprogram-paste-before-kill t
+        kill-do-not-save-duplicates t
+        kill-whole-line t)
 
+  ;; repeat mark pop
+  (setq-default set-mark-command-repeat-pop t)
+
+  ;; set terminfo
+  (setq system-uses-terminfo nil)
+
+  ;;; extensions
+  ;; adaptive word wrapping
+  (use-package adaptive-wrap
+    :config (adaptive-wrap-prefix-mode)
+    :diminish adaptive-wrap-prefix-mode
+  )
+
+#+end_src
+* Org
+#+begin_src emacs-lisp :tangle yes
 ;; org mode extensions
 
 (use-package org
@@ -289,6 +369,21 @@
     :non-normal-prefix "M-SPC"
     :which-key "org"
     "me" 'org-export-dispatch))
+
+;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
+(add-hook 'org-mode-hook
+      '(lambda ()
+         (delete '("\\.pdf\\'" . default) org-file-apps)
+         (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+
+(use-package ox-reveal
+:ensure ox-reveal)
+
+(setq org-reveal-root "~/.dotfiles/reveal.js/")
+(setq org-reveal-mathjax t)
+
+(use-package htmlize
+:ensure t)
 
 (use-package org-plus-contrib
   :mode (("\\.org\\'" . org-mode) ("[0-9]\\{8\\}\\'" . org-mode))
@@ -326,13 +421,15 @@
 ;; git
 (use-package git-timemachine)
 
-;; yaml
-(use-package yaml-mode
-  :mode "\\.ya?ml\'")
 
 
 (menu-bar-mode -1)
 
+
+
+#+end_src
+* Python
+#+begin_src emacs-lisp :tangle yes
 ; Highlight the call to pdb
 (defun annotate-pdb ()
   (interactive)
@@ -351,15 +448,19 @@
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
 
-  ;(defun smart-open-line-above ()
-  ;"Insert an empty line above the current line.
-  ;  Position the cursor at it's beginning, according to the current mode."
-  ;  (interactive)
-  ;  (move-beginning-of-line nil)
-  ;  (newline-and-indent)
-  ;  (forward-line -1)
-  ;  (indent-according-to-mode))
+  (defun python-run-master-file ()
+    (interactive)
+    (python-switch-to-master-file)
+    (elpy-shell-send-region-or-buffer))
 
+  (defun python-set-master-file ()
+    (interactive)
+    (setq python-master-file (buffer-name))
+                (message "Set this buffer as python master file"))
+
+  (defun python-switch-to-master-file ()
+    (interactive)
+    (switch-to-buffer python-master-file))
 
   (defun python-add-breakpoint ()
     "Add a break point"
@@ -369,45 +470,9 @@
     (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-    (defun my-elpy-shell-send-region-or-buffer (&optional arg)
-      "Send the active region or the buffer to the Python shell.
+      :diminish elpy-mode
 
-    If there is an active region, send that. Otherwise, send the
-    whole buffer.
-
-    In Emacs 24.3 and later, without prefix argument, this will
-    escape the Python idiom of if __name__ == '__main__' to be false
-    to avoid accidental execution of code. With prefix argument, this
-    code is executed."
-      (interactive "P")
-      ;; Ensure process exists
-      (elpy-shell-get-or-create-process)
-      (let ((if-main-regex "^if +__name__ +== +[\"']__main__[\"'] *:")
-            (has-if-main nil))
-        (if (use-region-p)
-            (let ((region (elpy-shell--region-without-indentation
-                           (region-beginning) (region-end))))
-              (setq has-if-main (string-match if-main-regex region))
-              (when (string-match "\t" region)
-                (message "Region contained tabs, this might cause weird errors")))
-              (python-shell-send-string region)
-              (elpy-shell-switch-to-shell)
-              (end-of-buffer)
-              (evil-escape)
-              (elpy-shell-switch-to-buffer))
-          (save-excursion
-            (goto-char (point-min))
-            (setq has-if-main (re-search-forward if-main-regex nil t)))
-          (python-shell-send-buffer arg)
-          (elpy-shell-switch-to-shell)
-          (end-of-buffer)
-          (evil-escape)
-          (elpy-shell-switch-to-buffer)
-          )
-        (elpy-shell-display-buffer)
-        (when has-if-main
-          (message (concat "Removed if __main__ == '__main__' construct, "
-                           "use a prefix argument to evaluate.")))))
+)
 
   (defun ha/elpy-goto-definition ()
     (interactive)
@@ -437,7 +502,9 @@
   :config
   (add-to-list 'company-backends 'company-jedi))
 
-(use-package window-purpose)
+(use-package window-purpose
+:diminish purpose-mode)
+
 (purpose-mode)
 (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
 (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
@@ -453,10 +520,13 @@
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
-    ;"mb" 'elpy-shell-send-region-or-buffer
+    "ms" 'python-set-master-file
+    "mm" 'python-switch-to-master-file
+    "mr" 'python-run-master-file
     "md" 'python-add-breakpoint
-    "mg" 'anaconda-mode-find-assignments
+    "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
+    "mh" 'elpy-doc
     "mi" 'run-python))
 
 (general-define-key :states '(normal insert emacs)
@@ -469,7 +539,6 @@
 (setq python-shell-interpreter "ipython"
     python-shell-interpreter-args "--simple-prompt -i")
 
-
 (with-eval-after-load 'python
   (defun python-shell-completion-native-try ()
     "Return non-nil if can trigger native completion."
@@ -480,35 +549,66 @@
        (get-buffer-process (current-buffer))
        nil "_"))))
 
-(use-package auctex
-  :defer t
-  :ensure t
-  :mode ("\\.tex\\'" . latex-mode)
-  :commands (latex-mode LaTeX-mode plain-tex-mode)
-  :init
-  (progn
-    (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
-    (add-hook 'LaTeX-mode-hook #'flyspell-mode)
-    (add-hook 'LaTeX-mode-hook #'turn-on-reftex)
-    (setq TeX-auto-save t
-	  TeX-parse-self t
-	  TeX-save-query nil
-	  TeX-PDF-mode t)
-    (setq-default TeX-master nil))
-  :general
-  (:keymaps 'latex-mode-map
-   :states '(normal insert emacs)
-   :major-mode 'latex-mode
-   :prefix "SPC"
-   :which-key "Latex"
-      "mc" 'reftex-citation
-   )
+#+end_src
+* Tex
+#+begin_src emacs-lisp :tangle yes
+(use-package tex
+:ensure auctex
+:general
+(:keymaps 'LaTeX-mode-map
+  :states '(normal emacs)
+  :major-mode 'LaTeX-mode
+  :prefix "SPC"
+  :which-key "Latex"
+    "mc" 'reftex-citation
+    "mm" 'TeX-command-master
+    "mv" 'TeX-command-run-all
+    "mp" 'preview-at-point
   )
+:config
+(progn
+  (use-package auto-complete
+    :config
+    (progn
+      (ac-flyspell-workaround)
+      (setq ac-auto-show-menu 0.01
+            ac-auto-start 1
+            ac-delay 0.01)))
 
-;; So that RefTeX also recognizes \addbibresource.
-(setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
-(setq reftex-default-bibliography '("~/Documents/2017_miccai/laurent_lejeune/refs.bib"))
 
+
+  (use-package ispell
+    :ensure t
+    :config
+    (progn
+      (make-local-variable 'ispell-parser)
+      (setq ispell-parser 'tex)))
+
+  (use-package ac-ispell
+    :ensure t
+    :requires auto-complete ispell
+    )
+
+  (use-package writegood-mode
+    :ensure t
+    :config
+    (writegood-mode))
+
+  (use-package smartparens-latex
+    :disabled t ;; Does not seem to be available
+    :ensure t
+    :config
+    (smartparens-mode +1))
+
+  (use-package ac-math
+    :ensure t
+    :config
+    (LaTeX-math-mode))
+(setq Tex-auto-save t)
+(setq Tex-parse-self t)
+(setq TeX-save-query nil)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)))
 
 (use-package iflipb
   :general
@@ -518,30 +618,48 @@
     "k" 'iflipb-next-buffer
     "j" 'iflipb-previous-buffer))
 
+#+end_src
+* Define keys
+#+begin_src emacs-lisp :tangle yes
 ;Single escape to exit "everything"
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 
 (general-define-key
  :states '(normal visual)
  :prefix "SPC"
-       "TAB" 'switch-to-previous-buffer
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
+       "tw" 'whitespace-mode
+       "tr" 'restart-emacs
        "wv" 'split-window-right
+       "wf" 'split-window-fairly
        "wd" 'delete-window
-       "s" 'ace-window
-       "bb" 'helm-mini
-       "bd" 'kill-this-buffer
-       ;"k" 'my-next-user-buffer
-       ;"j" 'my-previous-user-buffer
-       "ar" 'ranger
+       "TAB" '(ace-window :which-key "next window")
+       "s" '(ace-swap-window :which-key "swap windows")
+       "b" 'helm-mini
+       "x" 'kill-this-buffer
+       "r" 'ranger
+       "af" 'ag-dired
+       "as" 'ag-project
        "y" 'yas-insert-snippet
-       "gs" 'magit-status
+       "gs" '(magit-status :which-key "git status")
+       "gf" '(with-editor-finish :which-key "git finish")
        "gtt" 'git-timemachine-toggle
        "gtn" 'git-timemachine-show-next-revision
        "gtp" 'git-timemachine-show-previous-revision
        "gtq" 'git-timemachine-quit
        "pr" 'profiler-report)
+
+(which-key-add-key-based-replacements
+    "SPC gt" "git timemachine"
+    "SPC g" "git"
+    "SPC f" "file"
+    "SPC a" "ag"
+    "SPC t" "toggle"
+    "SPC b" "buffer"
+    "SPC w" "window"
+    "SPC m" "major-mode"
+ )
 
 (require 'general)
 (general-evil-setup t)
@@ -563,11 +681,11 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("721bb3cb432bb6be7c58be27d583814e9c56806c06b4077797074b009f322509" "3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" "73a13a70fd111a6cd47f3d4be2260b1e4b717dbf635a9caee6442c949fad41cd" "003a9aa9e4acb50001a006cfde61a6c3012d373c4763b48ceb9d523ceba66829" "b59d7adea7873d58160d368d42828e7ac670340f11f36f67fa8071dbf957236a" default)))
+    (default)))
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine airline-themes ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode crontab-mode company-c-headers color-theme-solarized cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 (custom-set-faces
@@ -576,13 +694,29 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+#+end_src
+* Others
+** Yaml
+#+begin_src emacs-lisp :tangle yes
+;; yaml
+(use-package yaml-mode
+  :mode "\\.ya?ml\'")
+#+end_src
+** Anzu
+anzu.el provides a minor mode which displays current match and total matches information in the mode-line in various search modes.
+#+begin_src emacs-lisp :tangle yes
 
 ;; anzu
 (use-package anzu
   :commands (isearch-foward isearch-backward)
-  :config (global-anzu-mode))
+  :config (global-anzu-mode)
+  :diminish anzu-mode
+)
 
-;; company "complete anything"
+#+end_src
+** Company
+Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
+#+begin_src emacs-lisp :tangle yes
 (use-package company
   :diminish company-mode
   :commands (company-complete company-mode)
@@ -599,10 +733,19 @@
   (define-key company-active-map (kbd "C-k") #'company-select-previous))
 
 
+#+end_src
+** Demangle
+demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
+Use M-x demangle-mode to toggle demangling on or off in any buffer. Turn on font-lock-mode as well: demangle-mode uses this to stay in sync as buffer contents change.
+#+begin_src emacs-lisp :tangle yes
 ;; automatic demangling
 (use-package demangle-mode
   :commands demangle-mode)
+#+end_src
 
+** Dtrt
+A minor mode that guesses the indentation offset originally used for creating source code files and transparently adjusts the corresponding settings in Emacs, making it more convenient to edit foreign files.
+#+begin_src emacs-lisp :tangle yes
 ;; dtrt
 (use-package dtrt-indent
   :load-path "site-lisp/dtrt-indent"
@@ -610,10 +753,11 @@
   (dtrt-indent-mode)
   (setq dtrt-indent-min-quality 60
         dtrt-indent-verbosity 3))
+#+end_src
 
-;; electric spacing
-(use-package electric-spacing
-  :commands electric-spacing-mode)
+** Flycheck/Flyspell
+On the fly syntax/spelling checking.
+#+begin_src emacs-lisp :tangle yes
 
 ;; flycheck
 (use-package flycheck
@@ -626,6 +770,11 @@
   :config (setq ispell-program-name (executable-find "aspell")
                 ispell-extra-args '("--sug-mode=ultra")))
 
+#+end_src
+
+** GGtags
+Emacs frontend to GNU Global source code tagging system
+#+begin_src emacs-lisp :tangle yes
 
 ;; ggtags
 (use-package ggtags
@@ -641,6 +790,11 @@
     :config (helm-gtags-mode)))
 
 
+#+end_src
+
+** Magit
+Magit is an interface to the version control system Git, implemented as an Emacs package.
+#+begin_src emacs-lisp :tangle yes
 ;; magit
 (use-package magit
   :commands (magit-status projectile-vc)
@@ -652,13 +806,14 @@
 
 (global-git-commit-mode)
 
+#+end_src
+
+** Popwin
+Popwin is a popup window manager for Emacs which makes you free from the hell of annoying buffers such like *Help*, *Completions*, *compilation*, and etc.
+#+begin_src emacs-lisp :tangle yes
 ;; popwin
 (use-package popwin
   :config (popwin-mode))
-
-;; regex tool
-(use-package regex-tool
-  :commands (regex-tool))
 
 ;; save kill ring
 (use-package savekill)
@@ -678,6 +833,16 @@
   :config (setq inferior-lisp-program (executable-find "sbcl")))
 
 
+#+end_src
+
+** Tramp
+Tramp stands for `Transparent Remote (file) Access, Multiple Protocol'.
+From find-file, enter
+#+begin_verse
+/ssh:username@domain:/home/username/myfile
+#+end_verse
+
+#+begin_src emacs-lisp :tangle yes
 ;; tramp
 (use-package tramp
   :config
@@ -688,10 +853,71 @@
                 "-o ControlMaster=auto "
                 "-o ControlPersist=no")))
 
-;; try
-(use-package try
-  :commands try)
+#+end_src
+** Uniquify
+The library uniquify overrides Emacs’ default mechanism for making buffer names unique (using suffixes like <2>, <3> etc.) with a more sensible behaviour which use parts of the file names to make the buffer names distinguishable.
+#+begin_src emacs-lisp :tangle yes
+(use-package uniquify
+  :ensure nil
+  :config (setq uniquify-buffer-name-style 'forward))
+#+end_src
+** Whitespace
+This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE).
+#+begin_src emacs-lisp :tangle yes
+;; whitespace
+(use-package whitespace
+  :commands (whitespace-mode)
+  :config
+  (setq whitespace-style '(face tabs spaces newline empty
+                                trailing tab-mark newline-mark)))
 
+(use-package whitespace-cleanup-mode
+  :diminish whitespace-cleanup-mode
+  :init (global-whitespace-cleanup-mode))
+
+#+end_src
+** Ranger
+#+begin_src emacs-lisp :tangle yes
+(use-package ranger
+  :ensure t
+  :defer t
+  :commands (ranger)
+  :config
+  (require 'cl-lib)
+  (setq ranger-cleanup-eagerly t)
+  (setq ranger-show-hidden nil)
+  )
+#+end_src
+** Markdown
+#+begin_src emacs-lisp :tangle yes
+(use-package markdown-mode
+  :mode ("\\.markdown\\'" "\\.mk?d\\'" "\\.text\\'")
+  :general
+  (:keymaps 'markdown-mode-map
+    :states '(normal visual emacs)
+    :major-mode 'markdown-mode
+    :prefix "SPC"
+    :which-key "Markdown"
+    "mj" 'markdown-jump
+    "mp" 'markdown-export-and-preview
+    "me" 'markdown-export
+    "mx" 'markdown-follow-link-at-point))
+#+end_src
+** Ag (silver-searcher)
+#+begin_src emacs-lisp :tangle yes
+(use-package ag
+  :commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
+  :config (setq ag-highlight-search t
+                ag-reuse-buffers t))
+#+end_src
+** Others
+#+begin_src emacs-lisp :tangle yes
+(use-package smooth-scroll
+  :if (display-graphic-p)
+  :diminish smooth-scroll-mode
+  :config
+  (setq smooth-scroll/vscroll-step-size 8)
+(smooth-scroll-mode))
 ;; undo-tree
 (use-package undo-tree
   :diminish undo-tree-mode
@@ -705,33 +931,6 @@
 (use-package unfill
   :commands (unfill-region unfill-paragraph toggle-fill-unfill))
 
-;; uniquify
-(use-package uniquify
-  :ensure nil
-  :config (setq uniquify-buffer-name-style 'forward))
-
-;; which-key
-(use-package which-key
-  :diminish which-key-mode
-  :config (which-key-mode))
-
-;; whitespace
-(use-package whitespace
-  :commands (whitespace-mode)
-  :config
-  (setq whitespace-style '(face tabs spaces newline empty
-                                trailing tab-mark newline-mark)))
-
-(use-package whitespace-cleanup-mode
-  :diminish whitespace-cleanup-mode
-  :init (global-whitespace-cleanup-mode))
-
-;; yasnippet
-(use-package yasnippet
-  :commands (yas-expand yas-insert-snippet)
-  :config
-  (use-package java-snippets)
-  (yas-minor-mode))
 
 ;;; syntax support
 ;; mode mappings
@@ -740,17 +939,9 @@
 (add-to-list 'auto-mode-alist '("\\.zsh\\'" . sh-mode))
 (add-to-list 'magic-mode-alist '(";;; " . emacs-lisp-mode))
 
-;; bison
-(use-package bison-mode
-  :mode ("\\.y\\'" "\\.l\\'"))
-
 ;; CMake
 (use-package cmake-mode
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
-
-;; crontab
-(use-package crontab-mode
-  :mode "\\.cron\\(tab\\)?\\'")
 
 ;; C styles
 (c-add-style "work"
@@ -769,10 +960,6 @@
   :mode ("/\\.gitconfig\\'" "/\\.git/config\\'" "/git/config\\'" "/\\.gitmodules\\'"))
 (use-package gitignore-mode
   :mode ("/\\.gitignore\\'" "/\\.git/info/exclude\\'" "/git/ignore\\'"))
-
-;; handlebars
-(use-package handlebars-mode
-  :mode ("\\.handlebars$" "\\.hbs$"))
 
 ;; json
 (use-package json-mode
@@ -793,13 +980,6 @@
 (use-package less-css-mode
   :mode "\\.less\\'")
 
-;; markdown
-(use-package markdown-mode
-  :mode ("\\.markdown\\'" "\\.mk?d\\'" "\\.text\\'")
-  :init
-  (evil-define-key 'normal markdown-mode-map
-    (kbd "g d") 'markdown-jump
-    (kbd "g x") 'markdown-follow-link-at-point))
 
 ;; matlab
 (use-package matlab-mode
@@ -810,41 +990,16 @@
   :mode ("nginx.conf$" "/etc/nginx/.*"))
 ;; packages used in init
 (use-package page-break-lines)
-(use-package dashboard)
+#+end_src
 
-;; Powerline
-(use-package spaceline-config
-  :ensure spaceline
-  :config
-(spaceline-spacemacs-theme))
+#+begin_src emacs-lisp :tangle yes
 
-(use-package ranger
-  :ensure t
-  :defer t
-  :commands (ranger)
-  :config
-  (require 'cl-lib)
-  (setq ranger-cleanup-eagerly t)
-  (setq ranger-show-hidden nil)
-  )
 (use-package dashboard
   :config
   (dashboard-setup-startup-hook))
 
 (use-package dash)
 (use-package f)
-
-;;; system specific packages
-;; load Linux configuration
-(use-package linux
-  :ensure nil
-  :load-path "lisp/"
-  :if (eq system-type 'gnu/linux))
-
-;;; load local settings
-(use-package local
-  :ensure nil
-  :load-path "site-lisp/")
 
 (use-package auto-compile
   :defer t
@@ -889,3 +1044,6 @@
 ;; compilation
 (setq compilation-ask-about-save nil
       compilation-always-kill t)
+
+
+#+end_src
