@@ -257,11 +257,19 @@ tangled, and the tangled file is compiled."
 #+end_src
 
 * Appearance
+To get smooth fonts, set hinting full...
+cd /etc/fonts/conf.d
+sudo rm 10-hint*
+sudo ln -s ../10-hinting-full.conf
+
 #+begin_src emacs-lisp :tangle yes
+  ;;(set-face-attribute 'default nil :font "Source Code Pro Medium-12")
+
   (load-file "~/.emacs.d/themes/zenburn-theme.el")
   (use-package powerline
   :if window-system
 :config (setq-default powerline-default-separator 'nil))
+(set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-11")
 
 (use-package powerline)
 
@@ -284,8 +292,6 @@ tangled, and the tangled file is compiled."
           airline-utf-glyph-readonly            #xe0a2
 airline-utf-glyph-linenumber #xe0a1)))
 
-  ;;(set-face-attribute 'default nil :font "Source Code Pro Medium-12")
-  (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-11")
 
   (global-linum-mode t)
   (global-visual-line-mode 1)
@@ -429,8 +435,6 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 
 (menu-bar-mode -1)
-
-
 
 #+end_src
 * Python
