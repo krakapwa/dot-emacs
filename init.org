@@ -30,7 +30,7 @@ tangled, and the tangled file is compiled."
         ("melpa" . "https://melpa.org/packages/")
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
-            '(("gnu" . 10)
+            '(("gnu" . 0)
               ("org"     . 5)
               ("melpa"     . 5)
               ("myelpa"     . 10)
