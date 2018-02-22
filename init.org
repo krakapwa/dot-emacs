@@ -1,13 +1,76 @@
-* Use-package/sources
+* Emacs configuration file
+Author: Laurent Lejeune
+Largely inspired by: https://github.com/larstvei/dot-emacs/
+
+** Installation
+#+begin_src shell :tangle no
+cd ~
+git clone https://github.com/lejeunel/dot-emacs.git .emacs.d
+
+#+end_src
+
+This config relies on the elpa-mirror:
+https://raw.githubusercontent.com/lejeunel/myelpa/master/
+
+If it is not accessible, emacs will download packages from official mirrors.
+
+* Configuration
+
+** Meta
+All changes to the configuration should be done in =init.org=, not in =init.el=. Any changes in the init.el will be overwritten by saving =init.org=. The =init.el= in this repo should not be tracked by git, and is replaced the first time Emacs is started (assuming it has been renamed to =~/.emacs.d=).
+
+Emacs can’t load .org-files directly, but org-mode provides functions to extract the code blocks and write them to a file.
+
+When this configuration is loaded for the first time, the =init.el= is the file that is loaded. It looks like this:
+
+#+begin_src emacs-lisp :tangle no
+;; This file replaces itself with the actual configuration at first run.
+
+;; We can't tangle without org!
+(require 'org)
+;; Open the configuration
+(find-file (concat user-emacs-directory "init.org"))
+;; tangle it
+(org-babel-tangle)
+;; load it
+(load-file (concat user-emacs-directory "init.el"))
+;; finally byte-compile it
+(byte-compile-file (concat user-emacs-directory "init.el"))#+end_src
+#+end_src
+It tangles the org-file, so that this file is overwritten with the actual
+   configuration.
+
+   There is no reason to track the =init.el= that is generated; by running
+   the following command =git= will not bother tracking it:
+
+   #+BEGIN_SRC sh :tangle no
+   git update-index --assume-unchanged init.el
+   #+END_SRC
+
+   If one wishes to make changes to the repo-version of =init.el= start
+   tracking again with:
+
+   #+BEGIN_SRC sh :tangle no
+   git update-index --no-assume-unchanged init.el
+   #+END_SRC
+
+   I want lexical scoping for the init-file, which can be specified in the
+   header. The first line of the configuration is as follows:
+
+   #+BEGIN_SRC emacs-lisp
+   ;;; -*- lexical-binding: t -*-
+   #+END_SRC
+
+   The =init.el= should (after the first run) mirror the source blocks in
+   the =init.org=. We can use =C-c C-v t= to run =org-babel-tangle=, which
+   extracts the code blocks from the current file into a source-specific
+   file (in this case a =.el=-file).
+
+   To avoid doing this each time a change is made we can add a function to
+   the =after-save-hook= ensuring to always tangle and byte-compile the
+   =org=-document after changes.
+
 #+begin_src emacs-lisp :tangle yes
-;;; init --- Krakapwa's Emacs init file
-;;; Commentary:
-;; See readme.
-
-;;; Code:
-
-;;; package setup
-
 (defun tangle-init ()
   "If the current buffer is 'init.org' the code-blocks are
 tangled, and the tangled file is compiled."
@@ -19,6 +82,11 @@ tangled, and the tangled file is compiled."
       (byte-compile-file (concat user-emacs-directory "init.el")))))
 
 (add-hook 'after-save-hook 'tangle-init)
+
+#+end_src
+* Packages
+
+#+begin_src emacs-lisp :tangle yes
 
 (require 'package)
 (setq load-prefer-newer t
@@ -61,10 +129,6 @@ tangled, and the tangled file is compiled."
         (t "~/.emacs.d/")))
 
 
-;; which-key
-(use-package which-key
-  :diminish which-key-mode
-  :config (which-key-mode))
 
 (use-package restart-emacs :ensure t :bind ("s-q" . restart-emacs))
 (use-package diminish :ensure t)
@@ -227,7 +291,7 @@ tangled, and the tangled file is compiled."
   (setq projectile-enable-caching t
         projectile-completion-system 'helm
         projectile-switch-project-action 'helm-projectile)
-  (projectile-global-mode))
+  (projectile-mode))
 
 #+end_src
 * Helm
@@ -264,13 +328,23 @@ sudo rm 10-hint*
 sudo ln -s ../10-hinting-full.conf
 
 #+begin_src emacs-lisp :tangle yes
-  ;;(set-face-attribute 'default nil :font "Source Code Pro Medium-12")
 
-  (load-file "~/.emacs.d/themes/zenburn-theme.el")
+
   (use-package powerline
   :if window-system
 :config (setq-default powerline-default-separator 'nil))
-(set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-11")
+
+;; (set-face-attribute 'default nil :font "Source Code Pro Medium-12")
+;; (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-12")
+;; (set-face-attribute 'default nil :font "Inconsolata for Powerline-12")
+(set-face-attribute 'default nil :font "Hack-12")
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+(use-package apropospriate-theme
+  :ensure t
+  :config
+  (load-theme 'apropospriate-dark t))
 
 (use-package powerline)
 
@@ -367,6 +441,10 @@ airline-utf-glyph-linenumber #xe0a1)))
     :diminish adaptive-wrap-prefix-mode
   )
 
+    ;; which-key
+    (use-package which-key
+    :diminish which-key-mode
+    :config (which-key-mode))
 #+end_src
 * Org
 #+begin_src emacs-lisp :tangle yes
@@ -422,8 +500,7 @@ airline-utf-glyph-linenumber #xe0a1)))
                             ("reals" "\\mathbb{R}" t "&#8477;" "" "" "ℝ")
                             ("ints" "\\mathbb{Z}" t "&#8484;" "" "" "ℤ")
                             ("complex" "\\mathbb{C}" t "&#2102;" "" "" "ℂ")
-                            ("models" "\\models" nil "&#8872;" "" "" "⊧"))
-        org-export-backends '(html beamer ascii latex md)))
+                            ("models" "\\models" nil "&#8872;" "" "" "⊧"))))
 
 
 ;(set-frame-font FONT nil t)
@@ -570,12 +647,14 @@ airline-utf-glyph-linenumber #xe0a1)))
   :major-mode 'LaTeX-mode
   :prefix "SPC"
   :which-key "Latex"
-    "mc" 'reftex-citation
     "mm" 'TeX-command-master
     "mv" 'TeX-command-run-all
     "mp" 'preview-at-point
   )
+:init
+(progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
 :config
+(setq reftex-ref-macro-prompt nil)
 (progn
   (use-package auto-complete
     :config
@@ -584,8 +663,6 @@ airline-utf-glyph-linenumber #xe0a1)))
       (setq ac-auto-show-menu 0.01
             ac-auto-start 1
             ac-delay 0.01)))
-
-
 
   (use-package ispell
     :ensure t
@@ -611,23 +688,48 @@ airline-utf-glyph-linenumber #xe0a1)))
     (smartparens-mode +1))
 
   (use-package ac-math
-    :ensure t
-    :config
-    (LaTeX-math-mode))
+    :ensure t)
 (setq Tex-auto-save t)
 (setq Tex-parse-self t)
 (setq TeX-save-query nil)
-(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)))
 
-(use-package iflipb
-  :general
-  (
-    :states '(normal)
-    :prefix "SPC"
-    "k" 'iflipb-next-buffer
-    "j" 'iflipb-previous-buffer))
+(use-package company-auctex
+  :ensure t
+  :config
+  (company-auctex-init)
+)
 
+(use-package reftex
+  :diminish reftex-mode
+  :commands turn-on-reftex
+  :init
+  (progn
+  (setq reftex-plug-into-AUCTeX t))
+  :config
+  (general-define-key
+   :keymaps 'LaTeX-mode-map
+    :states '(normal emacs)
+    :major-mode 'LaTeX-mode
+    :prefix "SPC"
+    :which-key "Latex"
+   "mrc" 'helm-bibtex-with-local-bibliography
+   "mrg"    'reftex-grep-document
+   "mri"    'reftex-index-selection-or-word
+   "mrI"    'reftex-display-index
+   "mr TAB" 'reftex-index
+   "mrl"    'reftex-label
+   "mrp"    'reftex-index-phrase-selection-or-word
+   "mrP"    'reftex-index-visit-phrases-buffer
+   "mrr"    'reftex-reference
+   "mrt"    'reftex-toc
+   "mrT"    'reftex-toc-recenter
+   "mrv" 'reftex-view-crossref)
+  (reftex-mode))
+
+(which-key-add-key-based-replacements
+    "SPC mr" "reftex"
+ )
 #+end_src
 * Define keys
 #+begin_src emacs-lisp :tangle yes
@@ -650,7 +752,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "x" 'kill-this-buffer
        "r" 'ranger
        "af" 'ag-dired
-       "as" 'ag-project
+       "as" 'helm-ag-project-root
        "y" 'yas-insert-snippet
        "gs" '(magit-status :which-key "git status")
        "gf" '(with-editor-finish :which-key "git finish")
@@ -727,6 +829,7 @@ anzu.el provides a minor mode which displays current match and total matches inf
 ** Company
 Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
 #+begin_src emacs-lisp :tangle yes
+
 (use-package company
   :diminish company-mode
   :commands (company-complete company-mode)
@@ -760,7 +863,6 @@ A minor mode that guesses the indentation offset originally used for creating so
 (use-package dtrt-indent
   :load-path "site-lisp/dtrt-indent"
   :config
-  (dtrt-indent-mode)
   (setq dtrt-indent-min-quality 60
         dtrt-indent-verbosity 3))
 #+end_src
@@ -828,11 +930,6 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ;; save kill ring
 (use-package savekill)
 
-;; saveplace
-(use-package saveplace
-  :config
-  (setq-default save-place t
-                save-place-file (f-expand "saved-places" user-emacs-directory)))
 ;; scratch
 (use-package scratch
   :commands (scratch))
@@ -841,7 +938,6 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 (use-package sly
   :commands (sly)
   :config (setq inferior-lisp-program (executable-find "sbcl")))
-
 
 #+end_src
 
@@ -908,7 +1004,7 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
     :major-mode 'markdown-mode
     :prefix "SPC"
     :which-key "Markdown"
-    "mj" 'markdown-jump
+    "mj" 'markdown-do
     "mp" 'markdown-export-and-preview
     "me" 'markdown-export
     "mx" 'markdown-follow-link-at-point))
@@ -928,18 +1024,10 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
   :config
   (setq smooth-scroll/vscroll-step-size 8)
 (smooth-scroll-mode))
-;; undo-tree
-(use-package undo-tree
-  :diminish undo-tree-mode
-  :config
-  (global-undo-tree-mode)
-  (setq undo-tree-history-directory-alist
-        `(("." . ,(f-expand "undo-tree" user-emacs-directory)))
-        undo-tree-auto-save-history t))
 
 ;; unfill autofill
 (use-package unfill
-  :commands (unfill-region unfill-paragraph toggle-fill-unfill))
+  :commands (unfill-region unfill-paragraph unfill-toggle))
 
 
 ;;; syntax support
@@ -1055,5 +1143,12 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 (setq compilation-ask-about-save nil
       compilation-always-kill t)
 
+(use-package iflipb
+  :general
+  (
+    :states '(normal)
+    :prefix "SPC"
+    "k" 'iflipb-next-buffer
+    "j" 'iflipb-previous-buffer))
 
 #+end_src
