@@ -140,6 +140,7 @@ tangled, and the tangled file is compiled."
 ; using any means: via a hook or by user
 ; Feel free to add more commands to this
 ; list to suit your needs.
+    :diminish yas-minor-mode
   :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
   (progn
@@ -235,6 +236,10 @@ tangled, and the tangled file is compiled."
 (use-package evil-commentary
   :diminish evil-commentary-mode
   :config (evil-commentary-mode))
+
+(use-package undo-tree
+    :diminish undo-tree-mode
+    :init (global-undo-tree-mode))
 
 (use-package ediff
   :ensure nil
