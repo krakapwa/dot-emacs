@@ -148,6 +148,7 @@ tangled, and the tangled file is compiled."
     (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
   ;;(progn
   ;;  )
+  :diminish evil-commentary-mode
   :config ; stuff to do after requiring the package
   (progn
     (yas-reload-all)
