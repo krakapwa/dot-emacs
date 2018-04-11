@@ -140,6 +140,7 @@ tangled, and the tangled file is compiled."
 ; using any means: via a hook or by user
 ; Feel free to add more commands to this
 ; list to suit your needs.
+    :diminish yas-minor-mode
   :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
   (progn
@@ -237,6 +238,10 @@ tangled, and the tangled file is compiled."
   :diminish evil-commentary-mode
   :config (evil-commentary-mode))
 
+(use-package undo-tree
+    :diminish undo-tree-mode
+    :init (global-undo-tree-mode))
+
 (use-package ediff
   :ensure nil
   :defer t
@@ -270,9 +275,24 @@ tangled, and the tangled file is compiled."
    "M-y" 'helm-show-kill-ring
    "TAB" 'helm-company))
 
-;;; navigation
+;; projectile
+(use-package projectile
+  :ensure projectile
+  :diminish projectile-mode
+  :config
+  (setq projectile-enable-caching t
+        projectile-global-mode t
+        projectile-completion-system 'helm
+        projectile-switch-project-action 'helm-projectile)
+  (projectile-mode)
+  )
+
+#+end_src
+* Helm
+#+begin_src emacs-lisp :tangle yes
 ;; helm
 (use-package helm
+  :ensure helm
   :diminish helm-mode
   :config
   (require 'helm-config)
@@ -283,43 +303,30 @@ tangled, and the tangled file is compiled."
    "C-i" 'helm-execute-persistent-action
    "C-z" 'helm-select-action)
   (global-unset-key (kbd "C-x c"))
-  (helm-mode))
+  :init (progn
+               (require 'helm-config)
+               (helm-mode t)
+               (helm-adaptative-mode t)
 
-;; projectile
-(use-package projectile
-  :diminish projectile-mode
-  :config
-  (setq projectile-enable-caching t
-        projectile-completion-system 'helm
-        projectile-switch-project-action 'helm-projectile)
-  (projectile-mode))
+                (use-package helm-projectile
+                    :ensure (helm-projectile)
+                    :config (helm-projectile-on))
 
-#+end_src
-* Helm
-#+begin_src emacs-lisp :tangle yes
+                (use-package helm-company
+                :commands (helm-company)
+                :config (company-mode))
 
-(use-package helm-company
-  :commands (helm-company)
-  :config (company-mode))
+                (use-package helm-ag
+                :commands (helm-ag)
+                :config
+                ;; fix https://github.com/bbatsov/projectile/issues/837
+                (setq grep-find-ignored-files nil
+                        grep-find-ignored-directories nil))
 
-(use-package helm-ag
-  :commands (helm-ag)
-  :config
-  ;; fix https://github.com/bbatsov/projectile/issues/837
-  (setq grep-find-ignored-files nil
-        grep-find-ignored-directories nil))
+                (use-package helm-descbinds
+                :config (helm-descbinds-mode))
 
-(use-package helm-projectile
-  :commands (helm-projectile)
-  :config (helm-projectile-on))
-
-(use-package helm-descbinds
-  :config (helm-descbinds-mode))
-
-
-(use-package helm-gitignore)
-
-
+                (use-package helm-gitignore)))
 #+end_src
 
 * Appearance
@@ -761,7 +768,9 @@ airline-utf-glyph-linenumber #xe0a1)))
        "gtn" 'git-timemachine-show-next-revision
        "gtp" 'git-timemachine-show-previous-revision
        "gtq" 'git-timemachine-quit
-       "pr" 'profiler-report)
+        "pf" 'helm-projectile
+        "ps" 'helm-projectile-switch-project
+)
 
 (which-key-add-key-based-replacements
     "SPC gt" "git timemachine"
