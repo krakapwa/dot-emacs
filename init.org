@@ -314,14 +314,13 @@ tangled, and the tangled file is compiled."
                 (use-package helm-company
                 :commands (helm-company)
                 :config (company-mode))
-
+                (use-package helm-themes   :ensure t :defer 5)
                 (use-package helm-ag
                 :commands (helm-ag)
                 :config
                 ;; fix https://github.com/bbatsov/projectile/issues/837
                 (setq grep-find-ignored-files nil
                         grep-find-ignored-directories nil))
-
                 (use-package helm-descbinds
                 :config (helm-descbinds-mode))
 
@@ -818,6 +817,12 @@ airline-utf-glyph-linenumber #xe0a1)))
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+'(dired-directory ((t (:foreground "dodger blue"))))
+'(dired-symlink ((t (:foreground "cyan"))))
+'(helm-ff-file ((t (:foreground "white"))))
+'(helm-ff-symlink ((t (:foreground "cyan"))))
+'(helm-buffer-directory ((t (:foreground "dodger blue"))))
+'(helm-buffer-file ((t (:foreground "white"))))
  )
 #+end_src
 * Others
