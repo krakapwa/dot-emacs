@@ -353,6 +353,7 @@ sudo ln -s ../10-hinting-full.conf
   :config
   (load-theme 'apropospriate-dark t))
 
+
 (use-package powerline)
 
 (use-package airline-themes
@@ -749,7 +750,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "ff" 'helm-find-files ; save windows layout
        "fs" 'save-buffer
        "tw" 'whitespace-mode
-       "tr" 'restart-emacs
+       "qr" 'restart-emacs
        "wv" 'split-window-right
        "wf" 'split-window-fairly
        "wd" 'delete-window
@@ -768,6 +769,9 @@ airline-utf-glyph-linenumber #xe0a1)))
        "gtp" 'git-timemachine-show-previous-revision
        "gtq" 'git-timemachine-quit
         "pf" 'helm-projectile
+        "ps" 'helm-projectile-switch-project
+        "zi" 'text-scale-increase
+        "zd" 'text-scale-decrease
         "ps" 'helm-projectile-switch-project
 )
 
