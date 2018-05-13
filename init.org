@@ -149,15 +149,18 @@ tangled, and the tangled file is compiled."
 (use-package evil
   :defines evil-disable-insert-state-bindings
   :init
+(progn
     (evil-mode t)
-  (setq evil-want-fine-undo 'no
-        evil-want-C-u-scroll t
-        evil-want-C-d-scroll t
-        evil-symbol-word-search t
-        evil-cross-lines t
-        evil-disable-insert-state-bindings t)
-        (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-    (define-key Info-mode-map "g" nil)
+    (setq evil-want-fine-undo 'no
+            evil-want-C-u-scroll t
+            evil-want-C-d-scroll t
+            evil-symbol-word-search t
+            evil-cross-lines t
+            evil-disable-insert-state-bindings t)
+            (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+        (define-key Info-mode-map "g" nil)
+    (use-package evil-org
+    :init (add-hook 'org-mode-hook 'evil-org-mode)))
   :config
     (add-hook 'git-commit-mode-hook 'evil-insert-state)
     (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
@@ -319,6 +322,11 @@ To get smooth fonts, set hinting full...
 cd /etc/fonts/conf.d
 sudo rm 10-hint*
 sudo ln -s ../10-hinting-full.conf
+#+end_src
+
+This sets the window title to buffer name. Use =%f= for full path.
+#+begin_src emacs-lisp :tangle yes
+(setq-default frame-title-format '("%b"))
 #+end_src
 ** Colors for dired, helm, etc..
 Colors can be displayed with =M-x list-faces-display=
