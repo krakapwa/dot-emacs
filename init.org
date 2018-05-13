@@ -1,7 +1,6 @@
 #+TITLE:       Emacs configuration
 #+AUTHOR:      Laurent Lejeune
-* Configuration
-** Meta
+* Meta
 All changes to the configuration should be done in =init.org=, not in =init.el=. Any changes in the init.el will be overwritten by saving =init.org=. The =init.el= in this repo should not be tracked by git, and is replaced the first time Emacs is started (assuming it has been renamed to =~/.emacs.d=).
 
 Emacs can’t load .org-files directly, but org-mode provides functions to extract the code blocks and write them to a file.
@@ -160,7 +159,8 @@ tangled, and the tangled file is compiled."
             (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
         (define-key Info-mode-map "g" nil)
     (use-package evil-org
-    :init (add-hook 'org-mode-hook 'evil-org-mode)))
+    :init (add-hook 'org-mode-hook 'evil-org-mode)
+    :config  (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))))
   :config
     (add-hook 'git-commit-mode-hook 'evil-insert-state)
     (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
@@ -494,23 +494,6 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package htmlize
 :ensure t)
-
-;;(use-package org-plus-contrib
-;;  :mode (("\\.org\\'" . org-mode) ("[0-9]\\{8\\}\\'" . org-mode))
-;;  :init
-;;  (org-babel-do-load-languages
-;;   'org-babel-load-languages
-;;   '((emacs-lisp . t) (gnuplot . t) (C . t) (emacs-lisp . t) (haskell . t)
-;;     (latex . t) (ledger . t) (python . t) (ruby . t) (sh . t)))
-;;  (evil-define-key 'normal org-mode-map (kbd "g x") 'org-open-at-point)
-;;  :config
-;;  (use-package evil-org)
-;;  (use-package org-ref)
-;;  (use-package org-journal
-;;    :commands (org-journal-new-entry))
-;;  (use-package org-pomodoro
-;;    :commands (org-pomodoro))
-;;  (add-hook 'org-mode-hook 'turn-on-auto-fill))
 
 ;; git
 (use-package git-timemachine)
@@ -918,8 +901,7 @@ Magit is an interface to the version control system Git, implemented as an Emacs
 :config
 (use-package evil-magit)
 (add-to-list 'magit-log-arguments "--no-abbrev-commit")
-(setq magit-popup-use-prefix-argument 'default
-    magit-completing-read-function 'magit-ido-completing-read))
+(setq magit-popup-use-prefix-argument 'default))
 
 (global-git-commit-mode)
 
