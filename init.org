@@ -1,5 +1,6 @@
 * Emacs configuration file
 Author: Laurent Lejeune
+
 Largely inspired by: https://github.com/larstvei/dot-emacs/
 
 ** Installation
@@ -98,11 +99,10 @@ tangled, and the tangled file is compiled."
         ("melpa" . "https://melpa.org/packages/")
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
-            '(("gnu" . 0)
-              ("org"     . 5)
+            '(("gnu" . 10)
               ("melpa"     . 5)
-              ("myelpa"     . 10)
-              ("org"     . 5)
+              ("myelpa"     . 0)
+              ("org"     . 10)
               ("elpy"        . 0)))
 (package-initialize nil)
 
@@ -151,6 +151,7 @@ tangled, and the tangled file is compiled."
     (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
   ;;(progn
   ;;  )
+  :diminish evil-commentary-mode
   :config ; stuff to do after requiring the package
   (progn
     (yas-reload-all)
@@ -232,6 +233,9 @@ tangled, and the tangled file is compiled."
 (define-key evil-visual-state-map (kbd "<") 'evil-shift-left-visual)
 (define-key evil-visual-state-map [tab] 'evil-shift-right-visual)
 (define-key evil-visual-state-map [S-tab] 'evil-shift-left-visual)
+(define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
+(define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
+
 
 (use-package evil-anzu)
 
@@ -809,7 +813,7 @@ airline-utf-glyph-linenumber #xe0a1)))
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode org-plus-contrib nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 #+end_src
@@ -1024,6 +1028,47 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
   :commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
   :config (setq ag-highlight-search t
                 ag-reuse-buffers t))
+#+end_src
+** Fill column indicator
+#+begin_src emacs-lisp :tangle yes
+(use-package fill-column-indicator
+  :init
+  (turn-on-fci-mode)
+  (fci-mode t)
+
+  (setq-default fill-column 80)
+  (defun jcf-fci-enabled-p ()
+    (and (boundp 'fci-mode) fci-mode))
+
+  (defvar jcf-fci-mode-suppressed nil)
+
+  (defadvice popup-create (before suppress-fci-mode activate)
+    "Suspend fci-mode while popups are visible"
+    (let ((fci-enabled (jcf-fci-enabled-p)))
+      (when fci-enabled
+        (set (make-local-variable 'jcf-fci-mode-suppressed) fci-enabled)
+        (turn-off-fci-mode))))
+
+  (defadvice popup-delete (after restore-fci-mode activate)
+    "Restore fci-mode when all popups have closed"
+    (when (and jcf-fci-mode-suppressed
+               (null popup-instances))
+      (setq jcf-fci-mode-suppressed nil)
+      (turn-on-fci-mode))
+
+    (defadvice enable-theme (after recompute-fci-face activate)
+      "Regenerate fci-mode line images after switching themes"
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (turn-on-fci-mode))))))
+
+(add-hook 'python-mode-hook (lambda ()
+                              (fci-mode)
+                              (set-fill-column 80)))
+
+(add-hook 'org-mode-hook (lambda ()
+                              (fci-mode)
+                              (set-fill-column 80)))
 #+end_src
 ** Others
 #+begin_src emacs-lisp :tangle yes
