@@ -101,7 +101,7 @@ tangled, and the tangled file is compiled."
       package-archive-priorities
             '(("gnu" . 10)
               ("melpa"     . 5)
-              ("myelpa"     . 0)
+              ("myelpa"     . 15)
               ("org"     . 10)
               ("elpy"        . 0)))
 (package-initialize nil)
@@ -542,6 +542,11 @@ airline-utf-glyph-linenumber #xe0a1)))
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
 
+  (defun python-rerun-master-file ()
+    (interactive)
+    (python-switch-to-master-file)
+    (elpy-shell-send-region-or-buffer))
+
   (defun python-run-master-file ()
     (interactive)
     (python-switch-to-master-file)
@@ -550,7 +555,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (defun python-set-master-file ()
     (interactive)
     (setq python-master-file (buffer-name))
-                (message "Set this buffer as python master file"))
+    (message "Set this buffer as python master file"))
 
   (defun python-switch-to-master-file ()
     (interactive)
@@ -573,7 +578,6 @@ airline-utf-glyph-linenumber #xe0a1)))
     (condition-case err
         (elpy-goto-definition)
       ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
-
 
 (use-package pyenv-mode
   :defer t
