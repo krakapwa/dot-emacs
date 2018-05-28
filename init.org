@@ -75,20 +75,20 @@ tangled, and the tangled file is compiled."
 
 (require 'package)
 (setq load-prefer-newer t
-      package-enable-at-startup nil
+      package-enable-at-startup t
       package-archives
       '(("gnu" . "https://elpa.gnu.org/packages/")
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
-        ("melpa" . "https://melpa.org/packages/")
+        ("melpa-stable" . "https://stable.melpa.org/packages/")
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 10)
-              ("melpa"     . 5)
-              ("myelpa"     . 15)
+              ("melpa"     . 10)
+              ("myelpa"     . 10)
               ("org"     . 10)
               ("elpy"        . 0)))
-(package-initialize nil)
+(package-initialize t)
 
 (require 'cl)
 
@@ -336,12 +336,13 @@ Colors can be displayed with =M-x list-faces-display=
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-'(dired-directory ((t (:foreground "sky blue"))))
-'(dired-symlink ((t (:foreground "cyan"))))
-'(helm-ff-file ((t (:foreground "white"))))
-'(helm-ff-symlink ((t (:foreground "cyan"))))
-'(helm-buffer-directory ((t (:foreground "sky blue"))))
-'(helm-buffer-file ((t (:foreground "white"))))
+;;'(dired-directory ((t (:foreground "sky blue"))))
+;;'(dired-symlink ((t (:foreground "cyan"))))
+;;'(helm-ff-file ((t (:foreground "white"))))
+;;'(helm-ff-symlink ((t (:foreground "cyan"))))
+;;'(helm-buffer-directory ((t (:foreground "sky blue"))))
+;;'(helm-buffer-file ((t (:foreground "white"))))
+;;'(helm-selection ((t (:inherit bold :background "dark violet" :foreground "white" :weight bold))))
  )
 
 #+end_src
@@ -359,19 +360,16 @@ Colors can be displayed with =M-x list-faces-display=
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
-(use-package apropospriate-theme
-  :ensure t
-  :config
-  (load-theme 'apropospriate-dark t))
-
-
-(use-package powerline)
+;;(use-package apropospriate-theme
+;;  :ensure t
+;;  :config
+;;  (load-theme 'apropospriate-dark t))
 
 (use-package airline-themes
   :init
   (progn
     (require 'airline-themes)
-    (load-theme 'airline-base16-gui-dark t))
+    (load-theme 'airline-doom-one t))
   :config
   (progn
     (set-face-attribute 'mode-line          nil :font "Fira Mono for Powerline")
@@ -386,7 +384,20 @@ Colors can be displayed with =M-x list-faces-display=
           airline-utf-glyph-readonly            #xe0a2
 airline-utf-glyph-linenumber #xe0a1)))
 
+(let ((basedir "~/.emacs.d/themes/"))
+  (dolist (f (directory-files basedir))
+    (if (and (not (or (equal f ".") (equal f "..")))
+              (file-directory-p (concat basedir f)))
+        (add-to-list 'custom-theme-load-path (concat basedir f)))))
 
+(use-package doom-themes
+  :init
+  (load-theme 'doom-darcula t)
+  :config
+  (progn
+    (doom-themes-neotree-config)
+
+(doom-themes-org-config)))
   (global-linum-mode t)
   (global-visual-line-mode 1)
   (diminish 'visual-line-mode)
@@ -1185,7 +1196,5 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 "k" 'iflipb-next-buffer
 "j" 'iflipb-previous-buffer))
 
-
-(setq process-connection-type nil)
 
 #+end_src
