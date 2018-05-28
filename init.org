@@ -75,20 +75,20 @@ tangled, and the tangled file is compiled."
 
 (require 'package)
 (setq load-prefer-newer t
-      package-enable-at-startup t
+      package-enable-at-startup nil
       package-archives
       '(("gnu" . "https://elpa.gnu.org/packages/")
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
-        ("melpa-stable" . "https://stable.melpa.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 10)
               ("melpa"     . 10)
-              ("myelpa"     . 10)
+              ("myelpa"     . 15)
               ("org"     . 10)
               ("elpy"        . 0)))
-(package-initialize t)
+(package-initialize nil)
 
 (require 'cl)
 
@@ -296,9 +296,6 @@ tangled, and the tangled file is compiled."
   :init (progn
                (require 'helm-config)
                (helm-mode t)
-                (use-package helm-projectile
-                    :ensure (helm-projectile)
-                    :config (helm-projectile-on))
 
                 (use-package helm-company
                 :commands (helm-company)
@@ -343,6 +340,7 @@ Colors can be displayed with =M-x list-faces-display=
 ;;'(helm-buffer-directory ((t (:foreground "sky blue"))))
 ;;'(helm-buffer-file ((t (:foreground "white"))))
 ;;'(helm-selection ((t (:inherit bold :background "dark violet" :foreground "white" :weight bold))))
+'(minibuffer-prompt ((t (:background "#282a36" :foreground "sky blue" :box nil))))
  )
 
 #+end_src
@@ -357,8 +355,6 @@ Colors can be displayed with =M-x list-faces-display=
 ;; (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-12")
 ;; (set-face-attribute 'default nil :font "Inconsolata for Powerline-12")
 (set-face-attribute 'default nil :font "Hack-12")
-
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
 ;;(use-package apropospriate-theme
 ;;  :ensure t
@@ -384,15 +380,9 @@ Colors can be displayed with =M-x list-faces-display=
           airline-utf-glyph-readonly            #xe0a2
 airline-utf-glyph-linenumber #xe0a1)))
 
-(let ((basedir "~/.emacs.d/themes/"))
-  (dolist (f (directory-files basedir))
-    (if (and (not (or (equal f ".") (equal f "..")))
-              (file-directory-p (concat basedir f)))
-        (add-to-list 'custom-theme-load-path (concat basedir f)))))
-
 (use-package doom-themes
   :init
-  (load-theme 'doom-darcula t)
+  (load-theme 'doom-dracula t)
   :config
   (progn
     (doom-themes-neotree-config)
@@ -803,7 +793,7 @@ airline-utf-glyph-linenumber #xe0a1)))
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-projectile helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 #+end_src
