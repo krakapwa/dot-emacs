@@ -145,6 +145,7 @@ tangled, and the tangled file is compiled."
 #+end_src
 * Evil
 #+begin_src emacs-lisp :tangle yes
+(setq evil-want-C-i-jump nil)
 (use-package evil
   :defines evil-disable-insert-state-bindings
   :init
@@ -263,8 +264,7 @@ tangled, and the tangled file is compiled."
   ;; global keys
   (general-define-key
    :states '(insert)
-   "M-y" 'helm-show-kill-ring
-   "TAB" 'helm-company))
+   "M-y" 'helm-show-kill-ring))
 
 ;; projectile
 (use-package projectile
@@ -297,9 +297,6 @@ tangled, and the tangled file is compiled."
                (require 'helm-config)
                (helm-mode t)
 
-                (use-package helm-company
-                :commands (helm-company)
-                :config (company-mode))
                 (use-package helm-themes   :ensure t :defer 5)
                 (use-package helm-ag
                 :commands (helm-ag)
@@ -486,9 +483,6 @@ airline-utf-glyph-linenumber #xe0a1)))
          (delete '("\\.pdf\\'" . default) org-file-apps)
          (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
 
-(use-package ox-reveal
-:ensure ox-reveal)
-
 (setq org-reveal-root "~/.dotfiles/reveal.js/")
 (setq org-reveal-mathjax t)
 (setq org-src-fontify-natively t)
@@ -627,6 +621,48 @@ airline-utf-glyph-linenumber #xe0a1)))
        (get-buffer-process (current-buffer))
        nil "_"))))
 
+#+end_src
+* C++
+#+begin_src emacs-lisp :tangle yes
+(defun setup-flycheck-rtags ()
+  (interactive)
+  (flycheck-select-checker 'rtags)
+  ;; RTags creates more accurate overlays.
+  (setq-local flycheck-highlighting-mode nil)
+  (setq-local flycheck-check-syntax-automatically nil))
+
+(use-package rtags
+  :ensure t
+  :diminish rtags
+  :config
+  (progn
+    (add-hook 'c-mode-hook 'rtags-start-process-unless-running)
+    (add-hook 'c++-mode-hook 'rtags-start-process-unless-running)
+
+    (setq rtags-autostart-diagnostics t)
+    (rtags-diagnostics)
+    (setq rtags-completions-enabled t)
+    (setq rtags-use-helm t)
+
+    (use-package flycheck-rtags
+      :ensure t
+      :config
+      (progn
+	(defun my-flycheck-setup ()
+	  (flycheck-select-checker 'rtags))
+	(add-hook 'c-mode-hook #'my-flycheck-setup)
+	(add-hook 'c++-mode-hook #'my-flycheck-setup))
+      )
+    (use-package company-rtags
+      :ensure t
+      :config
+      (progn
+    	(require 'company)
+        (add-to-list 'company-backends 'company-rtags)
+    	))
+    )
+)
+(add-hook 'c-mode-common-hook #'setup-flycheck-rtags)
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
@@ -824,14 +860,13 @@ Company is a text completion framework for Emacs. The name stands for "complete 
 :diminish company-mode
 :commands (company-complete company-mode)
 :config
-(use-package company-c-headers)
-(push '(company-clang
-        :with company-semantic
-        :with company-yasnippet
-        :with company-c-headers)
-    company-backends))
+  (general-define-key
+   :states '(insert)
+   "TAB" 'company-complete-common-or-cycle)
+  (use-package company-c-headers))
 
 (with-eval-after-load 'company
+(global-company-mode)
 (define-key company-active-map (kbd "C-j") #'company-select-next)
 (define-key company-active-map (kbd "C-k") #'company-select-previous))
 
@@ -1076,16 +1111,6 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 ;; CMake
 (use-package cmake-mode
 :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
-
-;; C styles
-(c-add-style "work"
-            '("bsd"
-            (c-basic-offset . 4)
-            (c-offsets-alist . ((arglist-intro . +)))))
-
-(add-to-list 'c-default-style '(c-mode . "work"))
-(add-to-list 'c-default-style '(c++-mode . "work"))
-(add-to-list 'c-default-style '(csharp-mode . "c#"))
 
 ;; git modes
 (use-package gitattributes-mode
