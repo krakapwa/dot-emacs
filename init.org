@@ -91,10 +91,6 @@ tangled, and the tangled file is compiled."
 (package-initialize nil)
 
 (require 'cl)
-
-(add-to-list 'load-path "~/.emacs.d/site-lisp/elpa-mirror")
-(require 'elpa-mirror)
-
 (unless (package-installed-p 'use-package)
     (package-refresh-contents)
     (package-install 'use-package))
@@ -111,13 +107,17 @@ tangled, and the tangled file is compiled."
         ((boundp 'user-init-directory)
          user-init-directory)
         (t "~/.emacs.d/")))
+#+end_src
+** Elpa-mirror
+=M-x elpamr-create-mirror-for-installed= to create local repository.
+To change output directory,
+#+begin_src emacs-lisp :tangle yes
+(setq elpamr-default-output-directory "~/myelpa")
+#+end_src
 
-
-
-(use-package restart-emacs
-    :ensure t)
-(use-package diminish
-    :ensure t)
+#+begin_src emacs-lisp :tangle yes
+(add-to-list 'load-path "~/.emacs.d/site-lisp/elpa-mirror")
+(require 'elpa-mirror)
 #+end_src
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
@@ -622,7 +622,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        nil "_"))))
 
 #+end_src
-* C++
+* C/C++
 #+begin_src emacs-lisp :tangle yes
 (defun setup-flycheck-rtags ()
   (interactive)
@@ -633,6 +633,14 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package rtags
   :ensure t
+  :general
+  (:keymaps 'c-mode-map
+    :states '(normal visual emacs)
+    :major-mode 'c-mode
+    :prefix "SPC"
+    :which-key "C/C++"
+    "ms" 'rtags-find-symbol-at-point
+    "mr" 'rtags-find-references-at-point)
   :diminish rtags
   :config
   (progn
@@ -834,6 +842,13 @@ airline-utf-glyph-linenumber #xe0a1)))
  '(split-width-threshold 0))
 #+end_src
 * Others
+** Restart emacs
+#+begin_src emacs-lisp :tangle yes
+(use-package restart-emacs
+    :ensure t)
+(use-package diminish
+    :ensure t)
+#+end_src
 ** Yaml
 #+begin_src emacs-lisp :tangle yes
 ;; yaml
