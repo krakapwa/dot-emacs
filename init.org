@@ -860,9 +860,6 @@ Company is a text completion framework for Emacs. The name stands for "complete 
 :diminish company-mode
 :commands (company-complete company-mode)
 :config
-  (general-define-key
-   :states '(insert)
-   "TAB" 'company-complete-common-or-cycle)
   (use-package company-c-headers))
 
 (with-eval-after-load 'company
@@ -870,6 +867,12 @@ Company is a text completion framework for Emacs. The name stands for "complete 
 (define-key company-active-map (kbd "C-j") #'company-select-next)
 (define-key company-active-map (kbd "C-k") #'company-select-previous))
 
+(use-package helm-company
+  :ensure t
+  :config
+  (general-define-key
+   :states '(insert)
+   "TAB" 'helm-company))
 
 #+end_src
 ** Demangle
