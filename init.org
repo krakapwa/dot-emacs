@@ -81,12 +81,14 @@ tangled, and the tangled file is compiled."
         ("org" . "http://orgmode.org/elpa/")
         ("elpy" . "https://jorgenschaefer.github.io/packages/")
         ("melpa" . "https://melpa.org/packages/")
+        ("stable-melpa" . "https://stable.melpa.org/packages/")
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
-            '(("gnu" . 10)
+            '(("gnu" . 5)
               ("melpa"     . 10)
-              ("myelpa"     . 15)
-              ("org"     . 10)
+              ("myelpa"     . 0)
+              ("stable-melpa"     . 15)
+              ("org"     . 0)
               ("elpy"        . 0)))
 (package-initialize nil)
 
