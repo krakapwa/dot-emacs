@@ -85,9 +85,9 @@ tangled, and the tangled file is compiled."
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 5)
-              ("melpa"     . 10)
-              ("myelpa"     . 0)
-              ("stable-melpa"     . 15)
+              ("melpa"     . 0)
+              ("myelpa"     . 10)
+              ("stable-melpa"     . 0)
               ("org"     . 0)
               ("elpy"        . 0)))
 (package-initialize nil)
@@ -109,6 +109,9 @@ tangled, and the tangled file is compiled."
         ((boundp 'user-init-directory)
          user-init-directory)
         (t "~/.emacs.d/")))
+
+(use-package diminish
+    :ensure t)
 #+end_src
 ** Elpa-mirror
 =M-x elpamr-create-mirror-for-installed= to create local repository.
@@ -847,8 +850,6 @@ airline-utf-glyph-linenumber #xe0a1)))
 ** Restart emacs
 #+begin_src emacs-lisp :tangle yes
 (use-package restart-emacs
-    :ensure t)
-(use-package diminish
     :ensure t)
 #+end_src
 ** Yaml
