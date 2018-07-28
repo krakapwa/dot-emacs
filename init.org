@@ -802,9 +802,10 @@ airline-utf-glyph-linenumber #xe0a1)))
        "gtq" 'git-timemachine-quit
         "pf" 'helm-projectile
         "ps" 'helm-projectile-switch-project
-        "zi" 'text-scale-increase
-        "zd" 'text-scale-decrease
+        "zi" 'default-text-scale-increase
+        "zd" 'default-text-scale-decrease
         "ps" 'helm-projectile-switch-project
+        "e" '(my/switch-to-buffer/body :which-key "buffer")
 )
 
 (which-key-add-key-based-replacements
@@ -845,6 +846,58 @@ airline-utf-glyph-linenumber #xe0a1)))
     (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
+#+end_src
+* Hydras
+#+begin_src emacs-lisp :tangle yes
+(use-package hydra
+    :ensure
+    :config
+
+        (defun my/name-of-buffers (n)
+        "Return the names of the first N buffers from `buffer-list'."
+        (let ((bns
+                (delq nil
+                    (mapcar
+                        (lambda (b)
+                        (unless (string-match "^ " (setq b (buffer-name b)))
+                            b))
+                        (buffer-list)))))
+            (subseq bns 1 (min (1+ n) (length bns)))))
+
+        ;; Given ("a", "b", "c"), return "1. a, 2. b, 3. c".
+        (defun my/number-names (list)
+        "Enumerate and concatenate LIST."
+        (let ((i 0))
+            (mapconcat
+            (lambda (x)
+            (format "%d. %s" (cl-incf i) x))
+            list
+            ", ")))
+
+        (defvar my/last-buffers nil)
+
+        (defun my/switch-to-buffer (arg)
+        (interactive "p")
+        (switch-to-buffer
+        (nth (1- arg) my/last-buffers)))
+
+        (defun my/switch-to-buffer-other-window (arg)
+        (interactive "p")
+        (switch-to-buffer-other-window
+        (nth (1- arg) my/last-buffers)))
+
+        (defhydra my/switch-to-buffer (:exit t
+                                        :body-pre (setq my/last-buffers
+                                                        (my/name-of-buffers 4)))
+        "
+        _o_ther buffers: %s(my/number-names my/last-buffers)
+
+        "
+        ("o" my/switch-to-buffer "this window")
+        ("O" my/switch-to-buffer-other-window "other window")
+        ("<escape>" nil))
+
+)
 #+end_src
 * Others
 ** Restart emacs
@@ -1110,6 +1163,9 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 ;; xdg-open won't work without this
 (setq process-connection-type nil)
 
+  (use-package default-text-scale
+    :ensure t)
+
 (use-package smooth-scroll
 :if (display-graphic-p)
 :diminish smooth-scroll-mode
@@ -1224,13 +1280,28 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 (setq compilation-ask-about-save nil
     compilation-always-kill t)
 
+
 (use-package iflipb
 :general
 (
 :states '(normal)
+:config
+  (defun swap-buffer-window ()
+    "Put the buffer from the selected window in next window, and vice versa"
+    (interactive)
+    (let* ((this (selected-window))
+      (other (next-window))
+      (this-buffer (window-buffer this)))
+      (set-window-buffer other this-buffer)
+      (iflipb-next-buffer 1) ;;change current buffer
+      (other-window 1) ;;swap cursor to new buffer
+      )
+    )
+
 :prefix "SPC"
 "k" 'iflipb-next-buffer
-"j" 'iflipb-previous-buffer))
+"j" 'iflipb-previous-buffer
+"d" 'swap-buffer-window))
 
 
 #+end_src
