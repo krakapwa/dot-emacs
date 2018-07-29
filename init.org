@@ -284,6 +284,19 @@ To change output directory,
   (projectile-mode)
   )
 
+(use-package helm-projectile
+  :ensure t
+  :general
+    (:keymaps 'projectile-mode-map
+     :states '(normal visual emacs)
+     :prefix "SPC"
+     :which-key "projectile"
+     "pf" 'helm-projectile-find-file
+     "pa" 'helm-projectile-ag
+     "pg" 'helm-projectile-grep
+     "ps" 'helm-projectile-switch-project)
+  :init
+    (helm-projectile-on))
 #+end_src
 * Helm
 #+begin_src emacs-lisp :tangle yes
@@ -305,11 +318,11 @@ To change output directory,
 
                 (use-package helm-themes   :ensure t :defer 5)
                 (use-package helm-ag
-                :commands (helm-ag)
-                :config
-                ;; fix https://github.com/bbatsov/projectile/issues/837
-                (setq grep-find-ignored-files nil
-                        grep-find-ignored-directories nil))
+                    :commands (helm-ag)
+                    :config
+                    ;; fix https://github.com/bbatsov/projectile/issues/837
+                    (setq grep-find-ignored-files nil
+                            grep-find-ignored-directories nil))
                 (use-package helm-descbinds
                 :config (helm-descbinds-mode))
 
@@ -801,11 +814,8 @@ airline-utf-glyph-linenumber #xe0a1)))
        "gtn" 'git-timemachine-show-next-revision
        "gtp" 'git-timemachine-show-previous-revision
        "gtq" 'git-timemachine-quit
-        "pf" 'helm-projectile
-        "ps" 'helm-projectile-switch-project
         "zi" 'default-text-scale-increase
         "zd" 'default-text-scale-decrease
-        "ps" 'helm-projectile-switch-project
         "e" '(my/switch-to-buffer/body :which-key "buffer")
 )
 
@@ -844,7 +854,7 @@ airline-utf-glyph-linenumber #xe0a1)))
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 #+end_src
@@ -1122,7 +1132,7 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 ** Ag (silver-searcher)
 #+begin_src emacs-lisp :tangle yes
 (use-package ag
-:commands (ag ag-files ag-regexp ag-project ag-dired helm-ag)
+:commands (ag ag-files ag-regexp ag-project ag-dired helm-ag helm-projectile-ag)
 :config (setq ag-highlight-search t
             ag-reuse-buffers t))
 #+end_src
@@ -1311,6 +1321,4 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
 "k" 'iflipb-next-buffer
 "j" 'iflipb-previous-buffer
 "d" 'swap-buffer-window))
-
-
 #+end_src
