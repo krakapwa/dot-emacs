@@ -166,6 +166,7 @@ To change output directory,
         (define-key Info-mode-map "g" nil)
     (use-package evil-org
     :init (add-hook 'org-mode-hook 'evil-org-mode)
+    :diminish evil-org-mode
     :config  (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))))
   :config
     (add-hook 'git-commit-mode-hook 'evil-insert-state)
@@ -843,7 +844,7 @@ airline-utf-glyph-linenumber #xe0a1)))
  '(evil-symbol-word-search t)
  '(package-selected-packages
    (quote
-    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger ac-anaconda company-anaconda anaconda-mode elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
+    (iflipb iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window spaceline pyenv-mode)))
  '(split-height-threshold nil)
  '(split-width-threshold 0))
 #+end_src
@@ -945,6 +946,14 @@ Company is a text completion framework for Emacs. The name stands for "complete 
    :states '(insert)
    "TAB" 'helm-company))
 
+(setq company-backends
+      '((company-files          ; files & directory
+         company-keywords       ; keywords
+         company-capf
+         company-yasnippet
+         )
+        (company-abbrev company-dabbrev)
+        ))
 #+end_src
 ** Demangle
 demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
@@ -1166,12 +1175,12 @@ This package is a minor mode to visualize blanks (TAB, (HARD) SPACE and NEWLINE)
   (use-package default-text-scale
     :ensure t)
 
-(use-package smooth-scroll
-:if (display-graphic-p)
-:diminish smooth-scroll-mode
-:config
-(setq smooth-scroll/vscroll-step-size 8)
-(smooth-scroll-mode))
+;;(use-package smooth-scroll
+;;:if (display-graphic-p)
+;;:diminish smooth-scroll-mode
+;;:config
+;;(setq smooth-scroll/vscroll-step-size 8)
+;;(smooth-scroll-mode))
 
 ;; unfill autofill
 (use-package unfill
