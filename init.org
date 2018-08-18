@@ -502,7 +502,22 @@ airline-utf-glyph-linenumber #xe0a1)))
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
     :which-key "org"
-    "me" 'org-export-dispatch))
+    "me" 'org-export-dispatch)
+  :config
+  ;;where to save todo items
+  (setq org-agenda-files (quote ("/~/ownCloud/org")))
+  
+  ;;set priority range from A to C with default A
+  (setq org-highest-priority ?A)
+  (setq org-lowest-priority ?C)
+  (setq org-default-priority ?A)
+  
+  ;;open agenda in current window
+  (setq org-agenda-window-setup (quote current-window))
+  (setq org-capture-templates
+  '(("t" "todo" entry (file+headline "~/ownCloud/org/todo.org" "Tasks")
+         "* TODO [#A] %?")))
+)
 
 ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
 (add-hook 'org-mode-hook
@@ -815,6 +830,8 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
+        "oa" 'org-agenda
+        "oc" 'org-capture
   )
 
   (which-key-add-key-based-replacements
@@ -1023,6 +1040,19 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 
 #+end_src
 
+** Ranger
+#+begin_src emacs-lisp :tangle yes
+(use-package ranger
+:ensure t)
+
+#+end_src
+
+** Ace-window
+#+begin_src emacs-lisp :tangle yes
+(use-package ace-window
+:ensure t)
+
+#+end_src
 ** Dashboard
 #+begin_src emacs-lisp :tangle yes
 
