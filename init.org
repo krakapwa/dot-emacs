@@ -92,7 +92,7 @@ tangled, and the tangled file is compiled."
               ("elpy"        . 0)))
 (package-initialize nil)
 
-(require 'cl)
+;;(require 'cl)
 (unless (package-installed-p 'use-package)
     (package-refresh-contents)
     (package-install 'use-package))
@@ -504,9 +504,10 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "org"
     "me" 'org-export-dispatch)
   :config
-  ;;where to save todo items
-  (setq org-agenda-files (quote ("~/ownCloud/org/agenda")))
   
+ (setq org-agenda-files '("~/ownCloud/org/agenda")) 
+
+  ;;where to save todo items
   (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
   
   ;;skips highest priority for custom agenda view
@@ -520,12 +521,10 @@ airline-utf-glyph-linenumber #xe0a1)))
         subtree-end
       nil)))
       
-  (defun my-pop-to-org-agenda (&optional split)
+  (defun my-pop-to-org-agenda ()
     "Visit the org agenda, in the current window or a SPLIT."
-    (interactive "P")
-    (org-agenda nil "c")
-    (when (not split)
-      (delete-other-windows)))
+    (interactive)
+    (org-agenda nil "c"))      
       
   ;;set priority range from A to C with default A
   (setq org-highest-priority ?A)
@@ -535,8 +534,9 @@ airline-utf-glyph-linenumber #xe0a1)))
   ;;org custom agenda
   (setq org-agenda-custom-commands
       '(("c" "Simple agenda view"
-         ((tags "PRIORITY=\"A\""
-                ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+         ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
+                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org")) 
+                (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
                  (org-agenda-overriding-header "High-priority unfinished tasks:")))
           (agenda "")
           (alltodo ""
@@ -600,7 +600,9 @@ airline-utf-glyph-linenumber #xe0a1)))
   (electric-indent-local-mode -1)
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
-
+  
+  (eval-when-compile
+      (defvar python-master-file))
   (defun python-rerun-master-file ()
     (interactive)
     (python-switch-to-master-file)
