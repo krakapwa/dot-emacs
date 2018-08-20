@@ -92,7 +92,7 @@ tangled, and the tangled file is compiled."
               ("elpy"        . 0)))
 (package-initialize nil)
 
-(require 'cl)
+;;(require 'cl)
 (unless (package-installed-p 'use-package)
     (package-refresh-contents)
     (package-install 'use-package))
@@ -502,7 +502,65 @@ airline-utf-glyph-linenumber #xe0a1)))
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
     :which-key "org"
-    "me" 'org-export-dispatch))
+    "me" 'org-export-dispatch)
+  :config
+  
+ (setq org-agenda-files '("~/ownCloud/org/agenda")) 
+
+  ;;where to save todo items
+  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
+  
+  ;;skips highest priority for custom agenda view
+  (defun my-org-skip-subtree-if-priority (priority)
+  "Skip an agenda subtree if it has a priority of PRIORITY.
+    PRIORITY may be one of the characters ?A, ?B, or ?C."
+  (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+        (pri-value (* 1000 (- org-lowest-priority priority)))
+        (pri-current (org-get-priority (thing-at-point 'line t))))
+    (if (= pri-value pri-current)
+        subtree-end
+      nil)))
+      
+  (defun my-pop-to-org-agenda ()
+    "Visit the org agenda, in the current window or a SPLIT."
+    (interactive)
+    (org-agenda nil "c"))      
+      
+  ;;set priority range from A to C with default A
+  (setq org-highest-priority ?A)
+  (setq org-lowest-priority ?C)
+  (setq org-default-priority ?A)
+  
+  ;;org custom agenda
+  (setq org-agenda-custom-commands
+      '(("c" "Simple agenda view"
+         ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
+                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org")) 
+                (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                 (org-agenda-overriding-header "High-priority unfinished tasks:")))
+          (agenda "")
+          (alltodo ""
+                   ((org-agenda-skip-function
+                     '(or (my-org-skip-subtree-if-priority ?A)
+                          (org-agenda-skip-if nil '(scheduled deadline))))))))))
+ 
+
+
+  (setq-default org-display-custom-times t)
+  (setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
+  ;;open agenda in current window
+  (setq org-agenda-window-setup (quote current-window))
+  (setq org-capture-templates
+  '(("t" "todo" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Tasks")
+         "* TODO [#A] %? \n %T")
+    ("m" "meeting" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Meetings")
+    "* %? \n %T")
+    ("d" "deadline" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Deadlines")
+    "* TODO %? \n DEADLINE: %T")
+    ("n" "note" entry (file+headline "~/ownCloud/org/agenda/notes.org" "Notes")
+    "* %? \n %T")
+))
+)
 
 ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
 (add-hook 'org-mode-hook
@@ -510,12 +568,18 @@ airline-utf-glyph-linenumber #xe0a1)))
          (delete '("\\.pdf\\'" . default) org-file-apps)
          (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
 
+(general-define-key :states '(normal emacs)
+                    :major-mode 'org-agenda-mode
+                    :keymaps 'org-agenda-mode-map
+                    "k" 'org-agenda-previous-line
+                    "j" 'org-agenda-next-line
+                    "c" 'org-capture)
+                    
 (setq org-reveal-root "~/.dotfiles/reveal.js/")
 (setq org-reveal-mathjax t)
 (setq org-src-fontify-natively t)
 
 (menu-bar-mode -1)
-
 #+end_src
 * Python
 #+begin_src emacs-lisp :tangle yes
@@ -536,7 +600,9 @@ airline-utf-glyph-linenumber #xe0a1)))
   (electric-indent-local-mode -1)
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
-
+  
+  (eval-when-compile
+      (defvar python-master-file))
   (defun python-rerun-master-file ()
     (interactive)
     (python-switch-to-master-file)
@@ -815,6 +881,8 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
+        "oa" 'my-pop-to-org-agenda
+        "oc" 'org-capture
   )
 
   (which-key-add-key-based-replacements
@@ -911,7 +979,7 @@ Company is a text completion framework for Emacs. The name stands for "complete 
         company-yasnippet
         )
         (company-abbrev company-dabbrev)
-        ))
+))
 #+end_src
 ** Demangle
 demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
@@ -1023,6 +1091,19 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 
 #+end_src
 
+** Ranger
+#+begin_src emacs-lisp :tangle yes
+(use-package ranger
+:ensure t)
+
+#+end_src
+
+** Ace-window
+#+begin_src emacs-lisp :tangle yes
+(use-package ace-window
+:ensure t)
+
+#+end_src
 ** Dashboard
 #+begin_src emacs-lisp :tangle yes
 
@@ -1040,7 +1121,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   :config
   (setq dashboard-startup-banner 'logo)
   
-  (setq dashboard-items '((recents . 5) (bookmarks . 5) (projects . 5)))
+  (setq dashboard-items '((recents . 5) (bookmarks . 5) (projects . 5) (agenda . 5)))
   (dashboard-setup-startup-hook))
 #+end_src
 
