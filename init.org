@@ -283,28 +283,28 @@ To change output directory,
 (use-package projectile
   :ensure projectile
   :diminish projectile-mode
+  :init
+
+    (use-package helm-projectile
+    :ensure t
+    :general
+        (:keymaps 'projectile-mode-map
+        :states '(normal visual emacs)
+        :prefix "SPC"
+        :which-key "projectile"
+        "pf" 'helm-projectile-find-file
+        "pb" 'projectile-compile-project
+        "pa" 'helm-projectile-ag
+        "pg" 'helm-projectile-grep
+        "ps" 'helm-projectile-switch-project))
   :config
   (setq projectile-enable-caching t
         projectile-global-mode t
         projectile-completion-system 'helm
         projectile-switch-project-action 'helm-projectile)
-  (projectile-mode)
+  (projectile-global-mode)
   )
 
-(use-package helm-projectile
-  :ensure t
-  :general
-    (:keymaps 'projectile-mode-map
-     :states '(normal visual emacs)
-     :prefix "SPC"
-     :which-key "projectile"
-     "pf" 'helm-projectile-find-file
-     "pb" 'projectile-compile-project
-     "pa" 'helm-projectile-ag
-     "pg" 'helm-projectile-grep
-     "ps" 'helm-projectile-switch-project)
-  :init
-    (helm-projectile-on))
 #+end_src
 * Helm
 #+begin_src emacs-lisp :tangle yes
