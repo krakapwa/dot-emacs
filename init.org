@@ -406,7 +406,8 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package doom-themes
   :init
-  (load-theme 'doom-dracula t)
+  ;;(load-theme 'doom-dracula t)
+  (load-theme 'doom-one t)
   :config
   (progn
     (doom-themes-neotree-config)
@@ -1151,4 +1152,11 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 "d" 'swap-buffer-window))
 
 (setq iflipb-ignore-buffers '("magit" "^[*]"))
+#+end_src
+** CMake
+
+#+begin_src emacs-lisp :tangle yes
+(use-package cmake-mode
+  :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
+("\\.cmake\\'" . cmake-mode)))
 #+end_src
