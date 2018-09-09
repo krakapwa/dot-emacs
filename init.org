@@ -283,28 +283,28 @@ To change output directory,
 (use-package projectile
   :ensure projectile
   :diminish projectile-mode
+  :init
+
+    (use-package helm-projectile
+    :ensure t
+    :general
+        (:keymaps 'projectile-mode-map
+        :states '(normal visual emacs)
+        :prefix "SPC"
+        :which-key "projectile"
+        "pf" 'helm-projectile-find-file
+        "pb" 'projectile-compile-project
+        "pa" 'helm-projectile-ag
+        "pg" 'helm-projectile-grep
+        "ps" 'helm-projectile-switch-project))
   :config
   (setq projectile-enable-caching t
-        projectile-global-mode t
+        projectile-mode t
         projectile-completion-system 'helm
         projectile-switch-project-action 'helm-projectile)
   (projectile-mode)
   )
 
-(use-package helm-projectile
-  :ensure t
-  :general
-    (:keymaps 'projectile-mode-map
-     :states '(normal visual emacs)
-     :prefix "SPC"
-     :which-key "projectile"
-     "pf" 'helm-projectile-find-file
-     "pb" 'projectile-compile-project
-     "pa" 'helm-projectile-ag
-     "pg" 'helm-projectile-grep
-     "ps" 'helm-projectile-switch-project)
-  :init
-    (helm-projectile-on))
 #+end_src
 * Helm
 #+begin_src emacs-lisp :tangle yes
@@ -547,12 +547,12 @@ airline-utf-glyph-linenumber #xe0a1)))
  
 
 
-  (setq-default org-display-custom-times t)
-  (setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
+  ;;(setq-default org-display-custom-times t)
+  ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
   ;;open agenda in current window
   (setq org-agenda-window-setup (quote current-window))
   (setq org-capture-templates
-  '(("t" "todo" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Tasks")
+  '(("t" "todo" entry (file+headline "~/ownCloud/org/agenda/tasks.org" "Tasks")
          "* TODO [#A] %? \n %T")
     ("m" "meeting" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Meetings")
     "* %? \n %T")
@@ -573,6 +573,11 @@ airline-utf-glyph-linenumber #xe0a1)))
                     :major-mode 'org-agenda-mode
                     :keymaps 'org-agenda-mode-map
                     "k" 'org-agenda-previous-line
+                    "j" 'org-agenda-next-line
+                    "C-k" 'org-priority-down
+                    "C-j" 'org-priority-up
+                    "S-k" 'org-timestamp-down
+                    "S-j" 'org-timestamp-up
                     "j" 'org-agenda-next-line
                     "c" 'org-capture)
                     
