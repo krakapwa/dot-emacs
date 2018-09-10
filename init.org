@@ -714,7 +714,14 @@ airline-utf-glyph-linenumber #xe0a1)))
     "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
     "mh" 'elpy-doc
-    "mi" 'run-python))
+    "mi" 'run-python)
+    :config 
+        (add-hook 'python-mode-hook
+        (lambda ()
+            (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+            (setq flycheck-pylintrc "~/.pylintrc")))
+
+)
 
 (general-define-key :states '(normal insert emacs)
                     :major-mode 'inferior-python-mode
@@ -749,9 +756,9 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package rtags
   :ensure t
   :general
-  (:keymaps 'c-mode-map
+  (:keymaps '(c-mode-map c++-mode-map)
     :states '(normal visual emacs)
-    :major-mode 'c-mode
+    :major-mode '(c-mode c++-mode-map)
     :prefix "SPC"
     :which-key "C/C++"
     "ms" 'rtags-find-symbol-at-point
