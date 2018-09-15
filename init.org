@@ -689,13 +689,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   :config
   (add-to-list 'company-backends 'company-jedi))
 
-(use-package window-purpose
-:diminish purpose-mode)
 
-(purpose-mode)
-(add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-(add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-(purpose-compile-user-configuration)
 
 (use-package python
   :defer t
@@ -918,6 +912,9 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hp" 'describe-package
         "oa" 'my-pop-to-org-agenda
         "oc" 'org-capture
+        "us" 'purpose-save-window-layout
+        "ul" 'purpose-load-window-layout
+        "ur" 'purpose-reset-window-layout
   )
 
   (which-key-add-key-based-replacements
@@ -1178,14 +1175,15 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
       (iflipb-next-buffer 1) ;;change current buffer
       (other-window 1) ;;swap cursor to new buffer
       )
-    )
+   )
 
 :prefix "SPC"
 "k" 'iflipb-next-buffer
 "j" 'iflipb-previous-buffer
 "d" 'swap-buffer-window))
 
-(setq iflipb-ignore-buffers '("magit" "^[*]"))
+;;(setq iflipb-ignore-buffers '("magit" "^[*]"))
+(setq iflipb-ignore-buffers '("magit"))
 #+end_src
 ** CMake
 
@@ -1193,4 +1191,25 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 (use-package cmake-mode
   :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
 ("\\.cmake\\'" . cmake-mode)))
+#+end_src
+* i3
+#+begin_src emacs-lisp :tangle yes
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/i3"))
+(require 'i3)
+(require 'i3-integration)
+#+end_src
+
+* purpose
+
+#+begin_src emacs-lisp :tangle yes
+;;(use-package window-purpose
+;;    :ensure t
+;;    :diminish purpose-mode
+;;    :init
+;;        (purpose-mode)
+;;        (purpose-compile-user-configuration) ; activates your changes
+;;    :config
+;;        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
+;;        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
+;;        (purpose-compile-user-configuration))
 #+end_src
