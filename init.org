@@ -422,7 +422,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   ;;Maximize on startup
   (add-to-list 'initial-frame-alist '(fullscreen . maximized))
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
+  
   (global-hl-line-mode +1)
   (blink-cursor-mode 0)
   (set-cursor-color "#f4d942")
@@ -503,7 +503,9 @@ airline-utf-glyph-linenumber #xe0a1)))
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
     :which-key "org"
-    "me" 'org-export-dispatch)
+    "me" 'org-export-dispatch
+    "mo" 'org-open-at-point
+    "mc" 'helm-bibtex)
   :config
   
  (setq org-agenda-files '("~/ownCloud/org/agenda")) 
@@ -694,13 +696,14 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package python
   :defer t
   :general
-  (:keymaps 'python-mode-map
+  (:keymaps '(python-mode-map inferior-python-mode-map)
     :states '(normal visual emacs)
-    :major-mode 'python-mode
+    :major-mode '(python-mode inferior-python-mode)
     :prefix "SPC"
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
+    "mq" 'elpy-kill-all
     "ms" 'python-set-master-file
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
@@ -851,12 +854,27 @@ airline-utf-glyph-linenumber #xe0a1)))
   (company-auctex-init)
 )
 
+(use-package org-ref
+:init
+    (progn
+
+    (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+        org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
+        org-ref-pdf-directory "~/ownCloud/papers/")
+    (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
+        bibtex-completion-library-path "~/ownCloud/papers"
+        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")))
+    (setq bibtex-completion-notes-template-one-file
+      (format
+      "\n** ${author} (${year}): ${title} [cite:${=key=}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
+        
 (use-package reftex
   :diminish reftex-mode
   :commands turn-on-reftex
   :init
   (progn
   (setq reftex-plug-into-AUCTeX t))
+  (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
   :config
   (general-define-key
    :keymaps 'LaTeX-mode-map
@@ -894,6 +912,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "fs" 'save-buffer
        "tw" 'whitespace-mode
        "qr" 'restart-emacs
+       "wf" 'make-frame-command
        "wv" 'split-window-right
        "wf" 'split-window-fairly
        "wd" 'delete-window
@@ -1192,24 +1211,16 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
 ("\\.cmake\\'" . cmake-mode)))
 #+end_src
-* i3
+* window purpose
 #+begin_src emacs-lisp :tangle yes
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/i3"))
-(require 'i3)
-(require 'i3-integration)
-#+end_src
-
-* purpose
-
-#+begin_src emacs-lisp :tangle yes
-;;(use-package window-purpose
-;;    :ensure t
-;;    :diminish purpose-mode
-;;    :init
-;;        (purpose-mode)
-;;        (purpose-compile-user-configuration) ; activates your changes
-;;    :config
-;;        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-;;        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-;;        (purpose-compile-user-configuration))
+(use-package window-purpose
+    :ensure t
+    :diminish purpose-mode
+    :init
+        (purpose-mode)
+        (purpose-compile-user-configuration) ; activates your changes
+    :config
+        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
+        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
+        (purpose-compile-user-configuration))
 #+end_src
