@@ -380,120 +380,115 @@ Colors can be displayed with =M-x list-faces-display=
 
 ** Themes
 #+begin_src emacs-lisp :tangle yes
-  (use-package powerline
-  :if window-system
-:config (setq-default powerline-default-separator 'nil))
 
-;; (set-face-attribute 'default nil :font "Source Code Pro Medium-12")
-;; (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-12")
-;; (set-face-attribute 'default nil :font "Inconsolata for Powerline-12")
 (set-face-attribute 'default nil :font "Hack-12")
-
-;;(use-package apropospriate-theme
-;;  :ensure t
-;;  :config
-;;  (load-theme 'apropospriate-dark t))
+(setq myfont "Hack")
+(cond
+((string-equal system-name "multichouette")
+  (set-face-attribute 'default nil :font myfont :height 114))
+((string-equal system-name "tc")
+  (set-face-attribute 'default nil :font myfont :height 164)))
 
 (use-package airline-themes
-  :init
-  (progn
+:init
+(progn
     (require 'airline-themes)
     (load-theme 'airline-doom-one t))
-  :config
-  (progn
+:config
+(progn
     (set-face-attribute 'mode-line          nil :font "Fira Mono for Powerline")
     (set-face-attribute 'mode-line-inactive nil :font "Fira Mono for Powerline")
     (setq powerline-utf-8-separator-left        #xe0b0
-          powerline-utf-8-separator-right       #xe0b2
-          airline-utf-glyph-separator-left      #xe0b0
-          airline-utf-glyph-separator-right     #xe0b2
-          airline-utf-glyph-subseparator-left   #xe0b1
-          airline-utf-glyph-subseparator-right  #xe0b3
-          airline-utf-glyph-branch              #xe0a0
-          airline-utf-glyph-readonly            #xe0a2
+        powerline-utf-8-separator-right       #xe0b2
+        airline-utf-glyph-separator-left      #xe0b0
+        airline-utf-glyph-separator-right     #xe0b2
+        airline-utf-glyph-subseparator-left   #xe0b1
+        airline-utf-glyph-subseparator-right  #xe0b3
+        airline-utf-glyph-branch              #xe0a0
+        airline-utf-glyph-readonly            #xe0a2
 airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package doom-themes
-  :init
-  ;;(load-theme 'doom-dracula t)
-  (load-theme 'doom-one t)
-  :config
-  (progn
+:init
+;;(load-theme 'doom-dracula t)
+(load-theme 'doom-one t)
+:config
+(progn
     (doom-themes-neotree-config)
 
 (doom-themes-org-config)))
-  (global-linum-mode t)
-  (global-visual-line-mode 1)
-  (diminish 'visual-line-mode)
-  (diminish 'hi-lock-mode)
-  (diminish 'evil-snipe-local-mode)
+(global-linum-mode t)
+(global-visual-line-mode 1)
+(diminish 'visual-line-mode)
+(diminish 'hi-lock-mode)
+(diminish 'evil-snipe-local-mode)
 
-  ;;Maximize on startup
-  (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
-  
-  (global-hl-line-mode +1)
-  (blink-cursor-mode 0)
-  (set-cursor-color "#f4d942")
+;;Maximize on startup
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-  ;;; appearance
-  (if (display-graphic-p)
-      (progn
+(global-hl-line-mode +1)
+(blink-cursor-mode 0)
+(set-cursor-color "#f4d942")
+
+;;; appearance
+(if (display-graphic-p)
+    (progn
         (tool-bar-mode 0)
         (scroll-bar-mode 0)))
 
-  ;; more context when scrolling
-  (setq next-screen-context-lines 4)
+;; more context when scrolling
+(setq next-screen-context-lines 4)
 
-  ;; y/n for yes/no
-  (defalias 'yes-or-no-p 'y-or-n-p)
+;; y/n for yes/no
+(defalias 'yes-or-no-p 'y-or-n-p)
 
-  ;; start week on Monday
-  (setq calendar-week-start-day 1)
+;; start week on Monday
+(setq calendar-week-start-day 1)
 
-  ;; window undo/redo
-  (winner-mode)
+;; window undo/redo
+(winner-mode)
 
-  ;; tabs are truly evil
-  (setq-default indent-tabs-mode nil)
+;; tabs are truly evil
+(setq-default indent-tabs-mode nil)
 
-  ;; sentences end with one space
-  (setq sentence-end-double-space nil)
+;; sentences end with one space
+(setq sentence-end-double-space nil)
 
-  ;;; settings
-  ;; enable all commands
-  (setq disabled-command-function nil)
+;;; settings
+;; enable all commands
+(setq disabled-command-function nil)
 
-  ;; default truncate lines
-  (setq-default truncate-lines t)
+;; default truncate lines
+(setq-default truncate-lines t)
 
-  ;; disable bell
-  (setq ring-bell-function 'ignore
+;; disable bell
+(setq ring-bell-function 'ignore
         visible-bell t)
 
-  ;; increase garbage collection threshold
-  (setq gc-cons-threshold (* 10 1024 1024))
+;; increase garbage collection threshold
+(setq gc-cons-threshold (* 10 1024 1024))
 
-  ;; inhibit startup message
-  (setq inhibit-startup-message t)
+;; inhibit startup message
+(setq inhibit-startup-message t)
 
-  ;; kill settings
-  (setq save-interprogram-paste-before-kill t
+;; kill settings
+(setq save-interprogram-paste-before-kill t
         kill-do-not-save-duplicates t
         kill-whole-line t)
 
-  ;; repeat mark pop
-  (setq-default set-mark-command-repeat-pop t)
+;; repeat mark pop
+(setq-default set-mark-command-repeat-pop t)
 
-  ;; set terminfo
-  (setq system-uses-terminfo nil)
+;; set terminfo
+(setq system-uses-terminfo nil)
 
-  ;;; extensions
-  ;; adaptive word wrapping
-  (use-package adaptive-wrap
+;;; extensions
+;; adaptive word wrapping
+(use-package adaptive-wrap
     :config (adaptive-wrap-prefix-mode)
     :diminish adaptive-wrap-prefix-mode
-  )
+)
 
     ;; which-key
     (use-package which-key
@@ -1092,6 +1087,7 @@ A minor mode that guesses the indentation offset originally used for creating so
 (use-package dtrt-indent
 :ensure t
 :commands dtrt-indent-mode
+:diminish dtrt-indent-mode
 :defer 3
 :config
 (progn
@@ -1124,7 +1120,7 @@ Emacs frontend to GNU Global source code tagging system
 ;; ggtags
 (use-package ggtags
 :commands ggtags-mode
-:diminish ggtags-mode
+:diminish '(ggtags-mode helm-gtags-mode)
 :config
 (general-define-key
 :keymaps 'ggtags-mode-map
