@@ -163,6 +163,7 @@ To change output directory,
 * Evil
 #+begin_src emacs-lisp :tangle yes
 (setq evil-want-C-i-jump nil)
+
 (use-package evil
   :defines evil-disable-insert-state-bindings
   :init
@@ -218,6 +219,13 @@ To change output directory,
       (setq show-paren-style 'parenthesis)
       (show-paren-mode +1)
       )))
+      
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
 
 (with-eval-after-load 'comint
     (define-key comint-mode-map "\C-d" nil))
