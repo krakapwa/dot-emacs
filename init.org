@@ -431,7 +431,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   ;;Maximize on startup
   (add-to-list 'initial-frame-alist '(fullscreen . maximized))
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
+  
   (global-hl-line-mode +1)
   (blink-cursor-mode 0)
   (set-cursor-color "#f4d942")
@@ -541,7 +541,9 @@ airline-utf-glyph-linenumber #xe0a1)))
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
     :which-key "org"
-    "me" 'org-export-dispatch)
+    "me" 'org-export-dispatch
+    "mo" 'org-open-at-point
+    "mc" 'helm-bibtex)
   :config
   
  (setq org-agenda-files '("~/ownCloud/org/agenda")) 
@@ -627,6 +629,24 @@ airline-utf-glyph-linenumber #xe0a1)))
 #+end_src
 * Python
 #+begin_src emacs-lisp :tangle yes
+
+(use-package exec-path-from-shell
+  :disabled (not (equal system-type 'darwin))
+  :config
+  (progn
+    ;; For debugging
+    (when nil
+      (message "path: %s, setup: %s" (getenv "PATH")
+               (getenv "ENVIRONMENT_SETUP_DONE"))
+      (setq exec-path-from-shell-debug t))
+    (setq exec-path-from-shell-arguments (list "-l"))
+    (setq exec-path-from-shell-check-startup-files nil)
+    (add-to-list 'exec-path-from-shell-variables "SHELL")
+    (add-to-list 'exec-path-from-shell-variables "GOPATH")
+    (add-to-list 'exec-path-from-shell-variables "ENVIRONMENT_SETUP_DONE")
+    (add-to-list 'exec-path-from-shell-variables "PYTHONPATH")
+    (exec-path-from-shell-initialize)))
+
 ; Highlight the call to pdb
 (defun annotate-pdb ()
   (interactive)
@@ -688,7 +708,11 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package pyenv-mode
   :defer t
   :ensure t
+  :init 
+    (add-to-list 'exec-path "~/.pyenv/shims")
+    (setenv "WORKON_HOME" "~/.pyenv/versions/")
   :config
+    (pyenv-mode)
     (defun projectile-pyenv-mode-set ()
       "Set pyenv version matching project name."
       (let ((project (projectile-project-name)))
@@ -702,7 +726,7 @@ airline-utf-glyph-linenumber #xe0a1)))
  (use-package jedi
   :ensure t
   :init
-  (add-to-list 'company-backends 'company-jedi)
+  (setq company-jedi-python-bin "~/.pyenv/shims/python")
   :config
   (use-package company-jedi
     :ensure t
@@ -710,24 +734,19 @@ airline-utf-glyph-linenumber #xe0a1)))
     (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
     (setq company-jedi-python-bin "python")))   
 
-(use-package window-purpose
-:diminish purpose-mode)
 
-(purpose-mode)
-(add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-(add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-(purpose-compile-user-configuration)
 
 (use-package python
   :defer t
   :general
-  (:keymaps 'python-mode-map
+  (:keymaps '(python-mode-map inferior-python-mode-map)
     :states '(normal visual emacs)
-    :major-mode 'python-mode
+    :major-mode '(python-mode inferior-python-mode)
     :prefix "SPC"
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
+    "mq" 'elpy-kill-all
     "ms" 'python-set-master-file
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
@@ -739,6 +758,11 @@ airline-utf-glyph-linenumber #xe0a1)))
     :config
       (setq python-indent-offset 4)
       (elpy-enable)
+        (add-hook 'python-mode-hook
+        (lambda ()
+            (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+            (setq flycheck-pylintrc "~/.pylintrc")))
+
 )
 
 (general-define-key :states '(normal insert emacs)
@@ -776,7 +800,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   :general
   (:keymaps '(c-mode-map c++-mode-map)
     :states '(normal visual emacs)
-    :major-mode 'c-mode
+    :major-mode '(c-mode c++-mode-map)
     :prefix "SPC"
     :which-key "C/C++"
     "ms" 'rtags-find-symbol-at-point
@@ -875,12 +899,27 @@ airline-utf-glyph-linenumber #xe0a1)))
   (company-auctex-init)
 )
 
+(use-package org-ref
+:init
+    (progn
+
+    (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+        org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
+        org-ref-pdf-directory "~/ownCloud/papers/")
+    (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
+        bibtex-completion-library-path "~/ownCloud/papers"
+        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")))
+    (setq bibtex-completion-notes-template-one-file
+      (format
+      "\n** ${author} (${year}): ${title} [cite:${=key=}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
+        
 (use-package reftex
   :diminish reftex-mode
   :commands turn-on-reftex
   :init
   (progn
   (setq reftex-plug-into-AUCTeX t))
+  (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
   :config
   (general-define-key
    :keymaps 'LaTeX-mode-map
@@ -918,6 +957,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "fs" 'save-buffer
        "tw" 'whitespace-mode
        "qr" 'restart-emacs
+       "wf" 'make-frame-command
        "wv" 'split-window-right
        "wf" 'split-window-fairly
        "wd" 'delete-window
@@ -935,6 +975,9 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hp" 'describe-package
         "oa" 'my-pop-to-org-agenda
         "oc" 'org-capture
+        "us" 'purpose-save-window-layout
+        "ul" 'purpose-load-window-layout
+        "ur" 'purpose-reset-window-layout
   )
 
   (which-key-add-key-based-replacements
@@ -1196,14 +1239,15 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
       (iflipb-next-buffer 1) ;;change current buffer
       (other-window 1) ;;swap cursor to new buffer
       )
-    )
+   )
 
 :prefix "SPC"
 "k" 'iflipb-next-buffer
 "j" 'iflipb-previous-buffer
 "d" 'swap-buffer-window))
 
-(setq iflipb-ignore-buffers '("magit" "^[*]"))
+;;(setq iflipb-ignore-buffers '("magit" "^[*]"))
+(setq iflipb-ignore-buffers '("magit"))
 #+end_src
 ** CMake
 
@@ -1211,4 +1255,17 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 (use-package cmake-mode
   :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
 ("\\.cmake\\'" . cmake-mode)))
+#+end_src
+* window purpose
+#+begin_src emacs-lisp :tangle yes
+(use-package window-purpose
+    :ensure t
+    :diminish purpose-mode
+    :init
+        (purpose-mode)
+        (purpose-compile-user-configuration) ; activates your changes
+    :config
+        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
+        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
+        (purpose-compile-user-configuration))
 #+end_src
