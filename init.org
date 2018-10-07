@@ -92,6 +92,13 @@ tangled, and the tangled file is compiled."
               ("elpy"        . 0)))
 (package-initialize nil)
 
+(use-package exec-path-from-shell
+  :custom
+  (exec-path-from-shell-check-startup-files nil)
+  :config
+  (push "HISTFILE" exec-path-from-shell-variables)
+(exec-path-from-shell-initialize))
+
 ;;(require 'cl)
 (unless (package-installed-p 'use-package)
     (package-refresh-contents)
@@ -263,6 +270,8 @@ To change output directory,
 (use-package evil-snipe
   :diminish evil-snipe-mode
   :init (evil-snipe-mode)
+  :config
+  (setq evil-snipe-smart-case t)
 )
 
 (use-package evil-surround
@@ -491,6 +500,35 @@ airline-utf-glyph-linenumber #xe0a1)))
     :diminish which-key-mode
     :config (which-key-mode))
 #+end_src
+
+** Text zoom
+#+begin_src emacs-lisp :tangle yes
+(defun my/zoom-in ()
+"Increase font size by 10 points"
+(interactive)
+(set-face-attribute 'default nil
+                    :height
+                    (+ (face-attribute 'default :height)
+                        10)))
+
+(defun my/zoom-out ()
+  "Decrease font size by 10 points"
+  (interactive)
+  (set-face-attribute 'default nil
+                      :height
+                      (- (face-attribute 'default :height)
+                         10)))
+                         
+(require 'hydra) ;; this fixes a bug...
+(use-package hydra
+  :ensure t
+  :defer t)
+      
+(defhydra hydra-zoom()
+"zoom"
+  ("g" my/zoom-in)
+  ("l" my/zoom-out))
+#+end_src
 * Org
 #+begin_src emacs-lisp :tangle yes
 ;; org mode extensions
@@ -606,6 +644,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (electric-indent-local-mode -1)
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
+  (setq elpy-rpc-backend "jedi")
   
   (eval-when-compile
       (defvar python-master-file))
@@ -660,12 +699,16 @@ airline-utf-glyph-linenumber #xe0a1)))
     (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
     (add-hook 'python-mode-hook 'pyenv-mode))
 
-(use-package company-jedi
+ (use-package jedi
   :ensure t
   :init
-  ;(setq company-jedi-python-bin "python2")
+  (add-to-list 'company-backends 'company-jedi)
   :config
-  (add-to-list 'company-backends 'company-jedi))
+  (use-package company-jedi
+    :ensure t
+    :init
+    (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
+    (setq company-jedi-python-bin "python")))   
 
 (use-package window-purpose
 :diminish purpose-mode)
@@ -692,7 +735,11 @@ airline-utf-glyph-linenumber #xe0a1)))
     "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
     "mh" 'elpy-doc
-    "mi" 'run-python))
+    "mi" 'run-python)
+    :config
+      (setq python-indent-offset 4)
+      (elpy-enable)
+)
 
 (general-define-key :states '(normal insert emacs)
                     :major-mode 'inferior-python-mode
@@ -727,7 +774,7 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package rtags
   :ensure t
   :general
-  (:keymaps 'c-mode-map
+  (:keymaps '(c-mode-map c++-mode-map)
     :states '(normal visual emacs)
     :major-mode 'c-mode
     :prefix "SPC"
@@ -879,10 +926,9 @@ airline-utf-glyph-linenumber #xe0a1)))
        "b" 'helm-mini
        "x" 'kill-this-buffer
        "r" 'ranger
+       "z" 'hydra-zoom/body
        "af" 'ag-dired
        "as" 'helm-ag-project-root
-        "zi" 'default-text-scale-increase
-        "zd" 'default-text-scale-decrease
         "hb" 'describe-bindings
         "hv" 'describe-variable
         "hf" 'describe-function
@@ -982,6 +1028,7 @@ Company is a text completion framework for Emacs. The name stands for "complete 
       '((company-files          ; files & directory
         company-keywords       ; keywords
         company-capf
+        company-jedi
         company-yasnippet
         )
         (company-abbrev company-dabbrev)
