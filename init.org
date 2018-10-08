@@ -392,7 +392,7 @@ Colors can be displayed with =M-x list-faces-display=
 (setq myfont "Hack")
 (cond
 ((string-equal system-name "multichouette")
-  (set-face-attribute 'default nil :font myfont :height 114))
+  (set-face-attribute 'default nil :font myfont :height 130))
 ((string-equal system-name "tc")
   (set-face-attribute 'default nil :font myfont :height 164)))
 
@@ -984,6 +984,8 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hp" 'describe-package
         "oa" 'my-pop-to-org-agenda
         "oc" 'org-capture
+        "os" 'org-store-link
+        "ol" 'org-insert-link
         "or" 'org-refile
         "us" 'purpose-save-window-layout
         "ul" 'purpose-load-window-layout
