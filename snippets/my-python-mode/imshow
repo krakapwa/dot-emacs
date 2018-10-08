@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: imshow
-# key: i
+# key: imshow
 # --
 plt.imshow(${1:arr});plt.show()
