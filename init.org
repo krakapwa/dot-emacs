@@ -136,7 +136,6 @@ To change output directory,
   (:keymaps 'yas-minor-mode-map
   :states '(normal visual emacs)
   :prefix "SPC"
-  :which-key "projectile"
   "y" 'yas-insert-snippet)
   :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
@@ -294,6 +293,7 @@ To change output directory,
         :which-key "projectile"
         "pf" 'helm-projectile-find-file
         "pb" 'projectile-compile-project
+        "pi" 'projectile-invalidate-cache
         "pa" 'helm-projectile-ag
         "pg" 'helm-projectile-grep
         "ps" 'helm-projectile-switch-project))
@@ -379,7 +379,11 @@ Colors can be displayed with =M-x list-faces-display=
 ;; (set-face-attribute 'default nil :font "DejaVu Sans Mono for Powerline-12")
 ;; (set-face-attribute 'default nil :font "Inconsolata for Powerline-12")
 (set-face-attribute 'default nil :font "Hack-12")
-
+(cond
+((string-equal system-name "multichouette")
+ (set-face-attribute 'default nil :font "Hack-13"))
+((string-equal system-name "other")
+ (set-face-attribute 'default nil :font "Hack-12")))
 ;;(use-package apropospriate-theme
 ;;  :ensure t
 ;;  :config
@@ -508,10 +512,10 @@ airline-utf-glyph-linenumber #xe0a1)))
     "mc" 'helm-bibtex)
   :config
   
- (setq org-agenda-files '("~/ownCloud/org/agenda")) 
+ (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
 
   ;;where to save todo items
-  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
+  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
   
   ;;skips highest priority for custom agenda view
   (defun my-org-skip-subtree-if-priority (priority)
@@ -716,6 +720,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         (add-hook 'python-mode-hook
         (lambda ()
             (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+            (setq tab-width 4)
             (setq flycheck-pylintrc "~/.pylintrc")))
 
 )
@@ -790,6 +795,12 @@ airline-utf-glyph-linenumber #xe0a1)))
     )
 )
 (add-hook 'c-mode-common-hook #'setup-flycheck-rtags)
+#+end_src
+* Lua
+#+begin_src emacs-lisp :tangle yes
+(use-package lua-mode
+  :ensure t
+  :mode (("\\.lua\\'" . lua-mode)))
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
@@ -931,6 +942,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hp" 'describe-package
         "oa" 'my-pop-to-org-agenda
         "oc" 'org-capture
+        "or" 'org-refile
         "us" 'purpose-save-window-layout
         "ul" 'purpose-load-window-layout
         "ur" 'purpose-reset-window-layout
@@ -1201,8 +1213,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 "j" 'iflipb-previous-buffer
 "d" 'swap-buffer-window))
 
-;;(setq iflipb-ignore-buffers '("magit" "^[*]"))
-(setq iflipb-ignore-buffers '("magit"))
+(setq iflipb-ignore-buffers '("magit" "^[*]"))
 #+end_src
 ** CMake
 
