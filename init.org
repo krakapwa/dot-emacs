@@ -143,7 +143,6 @@ To change output directory,
   (:keymaps 'yas-minor-mode-map
   :states '(normal visual emacs)
   :prefix "SPC"
-  :which-key "projectile"
   "y" 'yas-insert-snippet)
   :commands (yas-minor-mode yas-exapand yas-insert-snippet)
   :init ; stuff to do before requiring the package
@@ -312,6 +311,7 @@ To change output directory,
         :which-key "projectile"
         "pf" 'helm-projectile-find-file
         "pb" 'projectile-compile-project
+        "pi" 'projectile-invalidate-cache
         "pa" 'helm-projectile-ag
         "pg" 'helm-projectile-grep
         "ps" 'helm-projectile-switch-project))
@@ -390,11 +390,10 @@ Colors can be displayed with =M-x list-faces-display=
 ** Themes
 #+begin_src emacs-lisp :tangle yes
 
-(set-face-attribute 'default nil :font "Hack-12")
 (setq myfont "Hack")
 (cond
 ((string-equal system-name "multichouette")
-  (set-face-attribute 'default nil :font myfont :height 114))
+  (set-face-attribute 'default nil :font myfont :height 130))
 ((string-equal system-name "tc")
   (set-face-attribute 'default nil :font myfont :height 164)))
 
@@ -547,13 +546,13 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "org"
     "me" 'org-export-dispatch
     "mo" 'org-open-at-point
-    "mc" 'helm-bibtex)
+    "mc" 'org-ref-helm-insert-cite-link)
   :config
   
- (setq org-agenda-files '("~/ownCloud/org/agenda")) 
+ (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
 
   ;;where to save todo items
-  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
+  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
   
   ;;skips highest priority for custom agenda view
   (defun my-org-skip-subtree-if-priority (priority)
@@ -765,6 +764,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         (add-hook 'python-mode-hook
         (lambda ()
             (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+            (setq tab-width 4)
             (setq flycheck-pylintrc "~/.pylintrc")))
 
 )
@@ -840,6 +840,12 @@ airline-utf-glyph-linenumber #xe0a1)))
 )
 (add-hook 'c-mode-common-hook #'setup-flycheck-rtags)
 #+end_src
+* Lua
+#+begin_src emacs-lisp :tangle yes
+(use-package lua-mode
+  :ensure t
+  :mode (("\\.lua\\'" . lua-mode)))
+#+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
 (use-package tex
@@ -905,17 +911,46 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package org-ref
 :init
-    (progn
 
+    (setq org-ref-bibtex-completion-actions
+    (quote
+        (("Edit notes" . helm-bibtex-edit-notes)
+        ("Open PDF, URL or DOI" . helm-bibtex-open-any)
+        ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
+        ("Show entry" . helm-bibtex-show-entry)
+        ("Insert citation" . helm-bibtex-insert-citation)
+        ("Insert reference" . helm-bibtex-insert-reference)
+        ("Insert BibTeX key" . helm-bibtex-insert-key)
+        ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
+        ("Insert formatted citation(s)" lambda
+        (_)
+        (insert
+        (mapconcat
+            (quote identity)
+            (cl-loop for key in
+                    (helm-marked-candidates)
+                    collect
+                    (org-ref-format-entry key))
+            "
+
+    ")))
+        ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
+        ("Add keywords to entries" . org-ref-helm-tag-entries)
+        ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
+        ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
+    :config
     (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
         org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
         org-ref-pdf-directory "~/ownCloud/papers/")
     (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
         bibtex-completion-library-path "~/ownCloud/papers"
-        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")))
+        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
     (setq bibtex-completion-notes-template-one-file
       (format
-      "\n** ${author} (${year}): ${title} [cite:${=key=}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
+      "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
+    (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
+    (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
+)
         
 (use-package reftex
   :diminish reftex-mode
@@ -979,6 +1014,9 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hp" 'describe-package
         "oa" 'my-pop-to-org-agenda
         "oc" 'org-capture
+        "os" 'org-store-link
+        "ol" 'org-insert-link
+        "or" 'org-refile
         "us" 'purpose-save-window-layout
         "ul" 'purpose-load-window-layout
         "ur" 'purpose-reset-window-layout
@@ -1251,8 +1289,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 "j" 'iflipb-previous-buffer
 "d" 'swap-buffer-window))
 
-;;(setq iflipb-ignore-buffers '("magit" "^[*]"))
-(setq iflipb-ignore-buffers '("magit"))
+(setq iflipb-ignore-buffers '("magit" "^[*]"))
 #+end_src
 ** CMake
 
