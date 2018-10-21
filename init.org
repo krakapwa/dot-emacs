@@ -195,6 +195,7 @@ To change output directory,
     :ensure t
     :init
     (progn
+
       (setq linum-relative-format "%3s ")
       (setq linum-relative-current-symbol "")))
   ;; Highlight indent
@@ -1273,3 +1274,4 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
         (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
         (purpose-compile-user-configuration))
 #+end_src
+
