@@ -85,8 +85,8 @@ tangled, and the tangled file is compiled."
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 5)
-              ("melpa"     . 0)
-              ("myelpa"     . 10)
+              ("melpa"     . 10)
+              ("myelpa"     . 5)
               ("stable-melpa"     . 0)
               ("org"     . 0)
               ("elpy"        . 0)))
@@ -355,6 +355,11 @@ To change output directory,
 #+end_src
 
 * Appearance
+New/Unknown buffers (like config files) will open in this mode
+#+begin_src bash :tangle no
+  (setq-default major-mode 'conf-mode)
+#+end_src
+
 To get smooth fonts, set hinting full...
 #+begin_src bash :tangle no
 cd /etc/fonts/conf.d
@@ -578,7 +583,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (setq org-agenda-custom-commands
       '(("c" "Simple agenda view"
          ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
-                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org")) 
+                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org")) 
                 (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
                  (org-agenda-overriding-header "High-priority unfinished tasks:")))
           (agenda "")
@@ -673,6 +678,8 @@ airline-utf-glyph-linenumber #xe0a1)))
   (defun python-rerun-master-file ()
     (interactive)
     (python-switch-to-master-file)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*")
     (elpy-shell-send-region-or-buffer))
 
   (defun python-run-master-file ()
@@ -683,7 +690,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (defun python-set-master-file ()
     (interactive)
     (setq python-master-file (buffer-name))
-    (message "Set this buffer as python master file"))
+    (message "Set %s as python master file" (buffer-file-name)))
 
   (defun python-switch-to-master-file ()
     (interactive)
@@ -752,6 +759,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     "ms" 'python-set-master-file
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
+    "me" 'python-rerun-master-file
     "md" 'python-add-breakpoint
     "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
@@ -946,7 +954,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
     (setq bibtex-completion-notes-template-one-file
       (format
-      "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
+      "\n** ${author} (${year}): ${title} [cite:${=key=}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
     (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
     (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
 )
@@ -1016,6 +1024,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "os" 'org-store-link
         "ol" 'org-insert-link
         "or" 'org-refile
+        "of" 'bibtex-completion-exit-notes-buffer
         "us" 'purpose-save-window-layout
         "ul" 'purpose-load-window-layout
         "ur" 'purpose-reset-window-layout
@@ -1296,6 +1305,11 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 (use-package cmake-mode
   :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
 ("\\.cmake\\'" . cmake-mode)))
+#+end_src
+** Docker
+
+#+begin_src emacs-lisp :tangle yes
+(use-package dockerfile-mode)
 #+end_src
 * window purpose
 #+begin_src emacs-lisp :tangle yes
