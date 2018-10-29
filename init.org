@@ -704,9 +704,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-      :diminish elpy-mode
-
-)
+      :diminish elpy-mode)
 
   (defun ha/elpy-goto-definition ()
     (interactive)
@@ -742,8 +740,6 @@ airline-utf-glyph-linenumber #xe0a1)))
     :init
     (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
     (setq company-jedi-python-bin "python")))   
-
-
 
 (use-package python
   :defer t
@@ -1005,6 +1001,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "qr" 'restart-emacs
        "wf" 'make-frame-command
        "wv" 'split-window-right
+       "wh" 'split-window-below
        "wf" 'split-window-fairly
        "wd" 'delete-window
        "TAB" 'ace-window
@@ -1012,6 +1009,7 @@ airline-utf-glyph-linenumber #xe0a1)))
        "b" 'helm-mini
        "x" 'kill-this-buffer
        "r" 'ranger
+       "e" 'er/expand-region
        "z" 'hydra-zoom/body
        "af" 'ag-dired
        "as" 'helm-ag-project-root
@@ -1311,16 +1309,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 #+begin_src emacs-lisp :tangle yes
 (use-package dockerfile-mode)
 #+end_src
-* window purpose
+** Expand-region
 #+begin_src emacs-lisp :tangle yes
-(use-package window-purpose
-    :ensure t
-    :diminish purpose-mode
-    :init
-        (purpose-mode)
-        (purpose-compile-user-configuration) ; activates your changes
-    :config
-        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-        (purpose-compile-user-configuration))
+(use-package expand-region)
 #+end_src
