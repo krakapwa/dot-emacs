@@ -675,6 +675,12 @@ airline-utf-glyph-linenumber #xe0a1)))
   
   (eval-when-compile
       (defvar python-master-file))
+      
+  (defun python-kill ()
+    (interactive)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*"))
+      
   (defun python-rerun-master-file ()
     (interactive)
     (python-switch-to-master-file)
@@ -751,7 +757,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
-    "mq" 'elpy-kill-all
+    "mq" 'python-kill
     "ms" 'python-set-master-file
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
@@ -914,7 +920,7 @@ airline-utf-glyph-linenumber #xe0a1)))
 
 (use-package org-ref
 :init
-
+    (use-package helm-bibtex)
     (setq org-ref-bibtex-completion-actions
     (quote
         (("Edit notes" . helm-bibtex-edit-notes)
@@ -925,18 +931,6 @@ airline-utf-glyph-linenumber #xe0a1)))
         ("Insert reference" . helm-bibtex-insert-reference)
         ("Insert BibTeX key" . helm-bibtex-insert-key)
         ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-        ("Insert formatted citation(s)" lambda
-        (_)
-        (insert
-        (mapconcat
-            (quote identity)
-            (cl-loop for key in
-                    (helm-marked-candidates)
-                    collect
-                    (org-ref-format-entry key))
-            "
-
-    ")))
         ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
         ("Add keywords to entries" . org-ref-helm-tag-entries)
         ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
@@ -1163,26 +1157,6 @@ On the fly syntax/spelling checking.
 :commands (flyspell-mode flyspell-prog-mode)
 :config (setq ispell-program-name (executable-find "aspell")
             ispell-extra-args '("--sug-mode=ultra")))
-
-#+end_src
-
-** GGtags
-Emacs frontend to GNU Global source code tagging system
-#+begin_src emacs-lisp :tangle yes
-
-;; ggtags
-(use-package ggtags
-:commands ggtags-mode
-:diminish '(ggtags-mode helm-gtags-mode)
-:config
-(general-define-key
-:keymaps 'ggtags-mode-map
-:states '(normal)
-"g d" 'helm-gtags-dwim)
-(use-package helm-gtags
-:commands (helm-gtags-dwim)
-:config (helm-gtags-mode)))
-
 
 #+end_src
 
