@@ -349,7 +349,12 @@ To change output directory,
   (which-key-add-key-based-replacements
       "SPC f" "file")
   (require 'helm-config)
-  
+  (general-define-key
+   :keymaps 'helm-map
+   "C-c !" 'helm-toggle-suspend-update
+   "<tab>" 'helm-execute-persistent-action
+   "C-i" 'helm-execute-persistent-action
+   "C-z" 'helm-select-action)
   (global-unset-key (kbd "C-x c"))
   :init (progn
      (require 'helm-config)
@@ -1160,6 +1165,8 @@ On the fly syntax/spelling checking.
       :states '(normal visual emacs)
       :prefix "SPC"
           "gs" '(magit-status :which-key "status")
+          "gi" '(magit-init :which-key "init")
+          "gr" '(magit-remote-popup :which-key "remote")
           "gf" '(with-editor-finish :which-key "finish"))
       :config
       (which-key-add-key-based-replacements
@@ -1256,7 +1263,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 #+begin_src emacs-lisp :tangle yes
 (use-package avy
   :bind (("M-c" . avy-goto-char-2)
-      ("M-w" . avy-goto-word))
+      ("M-w" . avy-goto-word-1))
   :config
   (avy-setup-default))
 #+end_src
