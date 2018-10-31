@@ -1032,7 +1032,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "wd" 'delete-window
         "TAB" 'ace-window
         "x" 'kill-this-buffer
-        "z" 'hydra-zoom/body
+        "z" '(hydra-zoom/body :which-key "zoom")
         "af" 'ag-dired
         "hb" 'describe-bindings
         "hv" 'describe-variable
@@ -1251,4 +1251,12 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
     :states '(normal visual emacs)
     :prefix "SPC"
         "e" '(er/expand-region :which-key "expand")))
+#+end_src
+** Avy
+#+begin_src emacs-lisp :tangle yes
+(use-package avy
+  :bind (("M-c" . avy-goto-char-2)
+      ("M-w" . avy-goto-word))
+  :config
+  (avy-setup-default))
 #+end_src
