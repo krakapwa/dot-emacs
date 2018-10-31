@@ -153,26 +153,33 @@ To change output directory,
 #+end_src
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
-(use-package yasnippet
-; autoload `yasnippet' when `yas-minor-mode' is called
-; using any means: via a hook or by user
-; Feel free to add more commands to this
-; list to suit your needs.
-    :diminish yas-minor-mode
-  :commands (yas-minor-mode yas-exapand yas-insert-snippet)
-  :init ; stuff to do before requiring the package
-  (progn
-    (add-hook 'python-mode-hook #'yas-minor-mode)
-    (add-hook 'org-mode-hook #'yas-minor-mode)
-    (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
-  ;;(progn
-  ;;  )
-  :config ; stuff to do after requiring the package
-  (progn
-    (yas-reload-all)
-    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
-    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
-    (yas-global-mode t))
+  (use-package yasnippet
+  ; autoload `yasnippet' when `yas-minor-mode' is called
+  ; using any means: via a hook or by user
+  ; Feel free to add more commands to this
+  ; list to suit your needs.
+      :diminish yas-minor-mode
+    :commands (yas-minor-mode yas-exapand yas-insert-snippet)
+      :general
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+          "y" 'yas-insert-snippet)
+    :init ; stuff to do before requiring the package
+    (progn
+      (add-hook 'python-mode-hook #'yas-minor-mode)
+      (add-hook 'org-mode-hook #'yas-minor-mode)
+      (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
+    ;;(progn
+    ;;  )
+    :config ; stuff to do after requiring the package
+    (which-key-add-key-based-replacements
+        "SPC y" "insert-snippet")
+    (progn
+      (yas-reload-all)
+      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
+      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
+      (yas-global-mode t))
 #+end_src
 * Evil
 #+begin_src emacs-lisp :tangle yes
@@ -308,8 +315,22 @@ To change output directory,
   :diminish projectile-mode
   :init
     (use-package helm-projectile
-    :ensure t)
+    :ensure t
+    :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+    :which-key "projectile"
+        "pf" 'helm-projectile-find-file
+        "pb" 'projectile-compile-project
+        "pi" 'projectile-invalidate-cache
+        "pa" 'helm-projectile-ag
+        "pg" 'helm-projectile-grep
+        "ps" 'helm-projectile-switch-project))
   :config
+  (which-key-add-key-based-replacements
+      "SPC p" "projectile"
+)
   (setq projectile-enable-caching t
         projectile-mode t
         projectile-completion-system 'helm
@@ -323,30 +344,35 @@ To change output directory,
 (use-package helm
   :ensure helm
   :diminish helm-mode
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "b" 'helm-mini
+        "as" 'helm-ag-project-root
+        "ff" 'helm-find-files)
   :config
+  (which-key-add-key-based-replacements
+      "SPC f" "file"
+      "SPC b" "buffer")
   (require 'helm-config)
-  (general-define-key
-   :keymaps 'helm-map
-   "C-c !" 'helm-toggle-suspend-update
-   "<tab>" 'helm-execute-persistent-action
-   "C-i" 'helm-execute-persistent-action
-   "C-z" 'helm-select-action)
+  
   (global-unset-key (kbd "C-x c"))
   :init (progn
-               (require 'helm-config)
-               (helm-mode t)
+     (require 'helm-config)
+     (helm-mode t)
 
-                (use-package helm-themes   :ensure t :defer 5)
-                (use-package helm-ag
-                    :commands (helm-ag)
-                    :config
-                    ;; fix https://github.com/bbatsov/projectile/issues/837
-                    (setq grep-find-ignored-files nil
-                            grep-find-ignored-directories nil))
-                (use-package helm-descbinds
-                :config (helm-descbinds-mode))
+     (use-package helm-themes   :ensure t :defer 5)
+     (use-package helm-ag
+         :commands (helm-ag)
+         :config
+         ;; fix https://github.com/bbatsov/projectile/issues/837
+         (setq grep-find-ignored-files nil
+                 grep-find-ignored-directories nil))
+     (use-package helm-descbinds
+     :config (helm-descbinds-mode))
 
-                (use-package helm-gitignore)))
+     (use-package helm-gitignore)))
 #+end_src
 
 * Appearance
@@ -537,7 +563,7 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package org
   :general
   (:keymaps 'org-mode-map
-    :states '(normal insert emacs)
+    :states '(normal visual emacs)
     :major-mode 'org-mode
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
@@ -545,9 +571,20 @@ airline-utf-glyph-linenumber #xe0a1)))
     "me" 'org-export-dispatch
     "mo" 'org-open-at-point
     "mc" 'org-ref-helm-insert-cite-link)
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+    :which-key "org"
+        "oa" 'my-pop-to-org-agenda
+        "oc" 'org-capture
+        "os" 'org-store-link
+        "ol" 'org-insert-link
+        "or" 'org-refile
+        "of" 'bibtex-completion-exit-notes-buffer)
   :config
-  
- (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
+    (which-key-add-key-based-replacements
+        "SPC o" "org")
+    (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
 
   ;;where to save todo items
   (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
@@ -988,7 +1025,6 @@ airline-utf-glyph-linenumber #xe0a1)))
   :states '(normal visual)
   :keymaps 'override
   :prefix "SPC"
-        "ff" 'helm-find-files ; save windows layout
         "fs" 'save-buffer
         "tw" 'whitespace-mode
         "qr" 'restart-emacs
@@ -998,32 +1034,14 @@ airline-utf-glyph-linenumber #xe0a1)))
         "wf" 'split-window-fairly
         "wd" 'delete-window
         "TAB" 'ace-window
-        "s" 'ace-swap-window
-        "b" 'helm-mini
         "x" 'kill-this-buffer
-        "r" 'ranger
-        "y" 'yas-insert-snippet
-        "e" 'er/expand-region
         "z" 'hydra-zoom/body
         "af" 'ag-dired
-        "as" 'helm-ag-project-root
         "hb" 'describe-bindings
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
-        "oa" 'my-pop-to-org-agenda
-        "oc" 'org-capture
-        "os" 'org-store-link
-        "ol" 'org-insert-link
-        "or" 'org-refile
-        "of" 'bibtex-completion-exit-notes-buffer
-        "pf" 'helm-projectile-find-file
-        "pb" 'projectile-compile-project
-        "pi" 'projectile-invalidate-cache
-        "gs" 'magit-status
-        "pa" 'helm-projectile-ag
-        "pg" 'helm-projectile-grep
-        "ps" 'helm-projectile-switch-project))
+        ))
 
   (which-key-add-key-based-replacements
       "SPC gt" "git timemachine"
@@ -1144,7 +1162,19 @@ On the fly syntax/spelling checking.
   ;; magit
   (use-package magit
   :commands (magit-status projectile-vc)
+  
+  :general
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+          "gs" 'magit-status
+          "gf" 'with-editor-finish)
   :config
+  
+  (which-key-add-key-based-replacements
+      "SPC g" "git"
+      "SPC gf" "finish"
+      "SPC gs" "status")
   (use-package evil-magit)
   (add-to-list 'magit-log-arguments "--no-abbrev-commit")
   (setq magit-popup-use-prefix-argument 'default))
@@ -1180,13 +1210,28 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ** Ranger
 #+begin_src emacs-lisp :tangle yes
 (use-package ranger
-:ensure t)
+:ensure t
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "r" 'ranger)
+  :config
+    (which-key-add-key-based-replacements
+        "SPC r" "ranger"))
 #+end_src
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
 (use-package ace-window
-:ensure t)
-
+:ensure t
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "s" 'ace-swap-window)
+  :config
+    (which-key-add-key-based-replacements
+        "SPC s" "swap-windows"))
 #+end_src
 ** Iflipb
 
@@ -1229,5 +1274,13 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 #+end_src
 ** Expand-region
 #+begin_src emacs-lisp :tangle yes
-(use-package expand-region)
+(use-package expand-region
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "e" 'er/expand-region)
+:config
+  (which-key-add-key-based-replacements
+      "SPC e" "expand"))
 #+end_src
