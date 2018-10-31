@@ -147,7 +147,6 @@ To change output directory,
   (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
   :config
   (setq dashboard-startup-banner 'logo)
-  
   (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5)))
   (dashboard-setup-startup-hook))
 #+end_src
@@ -158,27 +157,23 @@ To change output directory,
   ; using any means: via a hook or by user
   ; Feel free to add more commands to this
   ; list to suit your needs.
-      :diminish yas-minor-mode
+    :ensure t
+    :diminish yas-minor-mode
     :commands (yas-minor-mode yas-exapand yas-insert-snippet)
       :general
     (:keymaps 'override
       :states '(normal visual emacs)
       :prefix "SPC"
-          "y" 'yas-insert-snippet)
-    :init ; stuff to do before requiring the package
-    (progn
+          "y" '(yas-insert-snippet :which-key "insert-snippet"))
+    :config 
+        (setq
+            yas-verbosity 1)
       (add-hook 'python-mode-hook #'yas-minor-mode)
       (add-hook 'org-mode-hook #'yas-minor-mode)
-      (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
-    ;;(progn
-    ;;  )
-    :config ; stuff to do after requiring the package
-    (which-key-add-key-based-replacements
-        "SPC y" "insert-snippet")
-    (progn
-      (yas-reload-all)
+      (add-hook 'inferior-python-mode-hook #'yas-minor-mode)
+      ;; (yas-reload-all)
       (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
-      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
+      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")
       (yas-global-mode t))
 #+end_src
 * Evil
@@ -321,16 +316,15 @@ To change output directory,
     :states '(normal visual emacs)
     :prefix "SPC"
     :which-key "projectile"
-        "pf" 'helm-projectile-find-file
-        "pb" 'projectile-compile-project
-        "pi" 'projectile-invalidate-cache
-        "pa" 'helm-projectile-ag
-        "pg" 'helm-projectile-grep
-        "ps" 'helm-projectile-switch-project))
+        "pf" '(helm-projectile-find-file :which-key "find-file")
+        "pb" '(projectile-compile-project :which-key "build")
+        "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
+        "pa" '(helm-projectile-ag :which-key "ag")
+        "pg" '(helm-projectile-grep :which-key "grep")
+        "ps" '(helm-projectile-switch-project :which-key "switch-project")))
   :config
   (which-key-add-key-based-replacements
-      "SPC p" "projectile"
-)
+      "SPC p" "projectile")
   (setq projectile-enable-caching t
         projectile-mode t
         projectile-completion-system 'helm
@@ -348,13 +342,12 @@ To change output directory,
   (:keymaps 'override
     :states '(normal visual emacs)
     :prefix "SPC"
-        "b" 'helm-mini
+        "b" '(helm-mini :which-key "buffer")
         "as" 'helm-ag-project-root
-        "ff" 'helm-find-files)
+        "ff" '(helm-find-files :which-key "find-files"))
   :config
   (which-key-add-key-based-replacements
-      "SPC f" "file"
-      "SPC b" "buffer")
+      "SPC f" "file")
   (require 'helm-config)
   
   (global-unset-key (kbd "C-x c"))
@@ -561,6 +554,7 @@ airline-utf-glyph-linenumber #xe0a1)))
 ;; org mode extensions
 
 (use-package org
+  :ensure t
   :general
   (:keymaps 'org-mode-map
     :states '(normal visual emacs)
@@ -575,7 +569,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     :states '(normal visual emacs)
     :prefix "SPC"
     :which-key "org"
-        "oa" 'my-pop-to-org-agenda
+        "oa" '(my-pop-to-org-agenda :which-key "agenda")
         "oc" 'org-capture
         "os" 'org-store-link
         "ol" 'org-insert-link
@@ -888,129 +882,132 @@ airline-utf-glyph-linenumber #xe0a1)))
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
-  (use-package tex
-  :ensure auctex
-  :general
-  (:keymaps 'LaTeX-mode-map
-    :states '(normal emacs)
-    :major-mode 'LaTeX-mode
-    :prefix "SPC"
-    :which-key "Latex"
-      "mm" 'TeX-command-master
-      "mv" 'TeX-command-run-all
-      "mp" 'preview-at-point
-    )
-  :init
-  (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
-  :config
-  (setq reftex-ref-macro-prompt nil)
-  (progn
-    (use-package auto-complete
-      :config
-      (progn
-        (ac-flyspell-workaround)
-        (setq ac-auto-show-menu 0.01
-              ac-auto-start 1
-              ac-delay 0.01)))
-
-    (use-package ispell
-      :ensure t
-      :config
-      (progn
-        (make-local-variable 'ispell-parser)
-        (setq ispell-parser 'tex)))
-
-    (use-package ac-ispell
-      :ensure t
-      :requires auto-complete ispell
-      )
-
-    (use-package writegood-mode
-      :ensure t
-      :config
-      (writegood-mode))
-
-    (use-package smartparens-latex
-      :disabled t ;; Does not seem to be available
-      :ensure t
-      :config
-      (smartparens-mode +1))
-
-    (use-package ac-math
-      :ensure t)
-  (setq Tex-auto-save t)
-  (setq Tex-parse-self t)
-  (setq TeX-save-query nil)
-  (setq reftex-plug-into-AUCTeX t)))
-
-  (use-package company-auctex
-    :ensure t
-    :config
-    (company-auctex-init)
-  )
-
-  (use-package org-ref
-  :init
-      (use-package helm-bibtex)
-      (setq org-ref-bibtex-completion-actions
-      (quote
-          (("Edit notes" . helm-bibtex-edit-notes)
-          ("Open PDF, URL or DOI" . helm-bibtex-open-any)
-          ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
-          ("Show entry" . helm-bibtex-show-entry)
-          ("Insert citation" . helm-bibtex-insert-citation)
-          ("Insert reference" . helm-bibtex-insert-reference)
-          ("Insert BibTeX key" . helm-bibtex-insert-key)
-          ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-          ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
-          ("Add keywords to entries" . org-ref-helm-tag-entries)
-          ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
-          ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
-      :config
-      (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
-          org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
-          org-ref-pdf-directory "~/ownCloud/papers/")
-      (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
-          bibtex-completion-library-path "~/ownCloud/papers"
-          bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
-      (setq bibtex-completion-notes-template-one-file
-        (format
-        "\n** ${author} (${year}): ${title} [cite:${=key=}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
-      (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
-      (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
-  )
-        
-  (use-package reftex
-    :diminish reftex-mode
-    :commands turn-on-reftex
-    :init
-    (progn
-    (setq reftex-plug-into-AUCTeX t))
-    (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
-    :config
-    (general-define-key
-     :keymaps 'LaTeX-mode-map
+    (use-package tex
+    :ensure auctex
+    :general
+    (:keymaps 'LaTeX-mode-map
       :states '(normal emacs)
       :major-mode 'LaTeX-mode
       :prefix "SPC"
       :which-key "Latex"
-     "mrc" 'helm-bibtex-with-local-bibliography
-     "mrg"    'reftex-grep-document
-     "mri"    'reftex-index-selection-or-word
-     "mrI"    'reftex-display-index
-     "mr TAB" 'reftex-index
-     "mrl"    'reftex-label
-     "mrp"    'reftex-index-phrase-selection-or-word
-     "mrP"    'reftex-index-visit-phrases-buffer
-     "mrr"    'reftex-reference
-     "mrt"    'reftex-toc
-     "mrT"    'reftex-toc-recenter
-     "mrv" 'reftex-view-crossref)
-    (reftex-mode))
+        "mm" 'TeX-command-master
+        "mv" 'TeX-command-run-all
+        "mp" 'preview-at-point
+      )
+    :init
+    (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
+    :config
+    (setq reftex-ref-macro-prompt nil)
+    (progn
+      (use-package auto-complete
+        :config
+        (progn
+          (ac-flyspell-workaround)
+          (setq ac-auto-show-menu 0.01
+                ac-auto-start 1
+                ac-delay 0.01)))
 
-(which-key-add-key-based-replacements
-    "SPC mr" "reftex"
-)
+      (use-package ispell
+        :ensure t
+        :config
+        (progn
+          (make-local-variable 'ispell-parser)
+          (setq ispell-parser 'tex)))
+
+      (use-package ac-ispell
+        :ensure t
+        :requires auto-complete ispell
+        )
+
+      (use-package writegood-mode
+        :ensure t
+        :config
+        (writegood-mode))
+
+      (use-package smartparens-latex
+        :disabled t ;; Does not seem to be available
+        :ensure t
+        :config
+        (smartparens-mode +1))
+
+      (use-package ac-math
+        :ensure t)
+    (setq Tex-auto-save t)
+    (setq Tex-parse-self t)
+    (setq TeX-save-query nil)
+    (setq reftex-plug-into-AUCTeX t)))
+
+    (use-package company-auctex
+      :ensure t
+      :config
+      (company-auctex-init)
+    )
+
+  
+  (use-package helm-bibtex
+    :ensure t
+    :after org-ref
+    :config
+      ;; (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
+      ;; (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
+    (setq org-ref-bibtex-completion-actions
+    (quote
+        (("Edit notes" . helm-bibtex-edit-notes)
+        ("Open PDF, URL or DOI" . helm-bibtex-open-any)
+        ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
+        ("Show entry" . helm-bibtex-show-entry)
+        ("Insert citation" . helm-bibtex-insert-citation)
+        ("Insert reference" . helm-bibtex-insert-reference)
+        ("Insert BibTeX key" . helm-bibtex-insert-key)
+        ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
+        ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
+        ("Add keywords to entries" . org-ref-helm-tag-entries)
+        ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
+        ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
+
+    (use-package org-ref
+        :config
+        (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+            org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
+            org-ref-pdf-directory "~/ownCloud/papers/")
+        (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
+            bibtex-completion-library-path "~/ownCloud/papers"
+            bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
+        (setq bibtex-completion-notes-template-one-file
+          (format
+          "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
+        
+    (use-package reftex
+      :diminish reftex-mode
+      :commands turn-on-reftex
+      :init
+      (progn
+      (setq reftex-plug-into-AUCTeX t))
+      (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
+      :config
+      (general-define-key
+       :keymaps 'LaTeX-mode-map
+        :states '(normal emacs)
+        :major-mode 'LaTeX-mode
+        :prefix "SPC"
+        :which-key "Latex"
+       "mrc" 'helm-bibtex-with-local-bibliography
+       "mrg"    'reftex-grep-document
+       "mri"    'reftex-index-selection-or-word
+       "mrI"    'reftex-display-index
+       "mr TAB" 'reftex-index
+       "mrl"    'reftex-label
+       "mrp"    'reftex-index-phrase-selection-or-word
+       "mrP"    'reftex-index-visit-phrases-buffer
+       "mrr"    'reftex-reference
+       "mrt"    'reftex-toc
+       "mrT"    'reftex-toc-recenter
+       "mrv" 'reftex-view-crossref)
+      (reftex-mode))
+
+  (which-key-add-key-based-replacements
+      "SPC mr" "reftex"
+  )
 #+end_src
 * Define keys
 #+begin_src emacs-lisp :tangle yes
@@ -1044,16 +1041,11 @@ airline-utf-glyph-linenumber #xe0a1)))
         ))
 
   (which-key-add-key-based-replacements
-      "SPC gt" "git timemachine"
-      "SPC g" "git"
-      "SPC f" "file"
       "SPC a" "ag"
       "SPC h" "help"
       "SPC t" "toggle"
-      "SPC b" "buffer"
       "SPC w" "window"
-      "SPC m" "major-mode"
-  )
+      "SPC m" "major-mode")
 
   (define-key helm-map (kbd "C-j") 'helm-next-line)
   (define-key helm-map (kbd "C-k") 'helm-previous-line)
@@ -1167,14 +1159,11 @@ On the fly syntax/spelling checking.
     (:keymaps 'override
       :states '(normal visual emacs)
       :prefix "SPC"
-          "gs" 'magit-status
-          "gf" 'with-editor-finish)
-  :config
-  
-  (which-key-add-key-based-replacements
-      "SPC g" "git"
-      "SPC gf" "finish"
-      "SPC gs" "status")
+          "gs" '(magit-status :which-key "status")
+          "gf" '(with-editor-finish :which-key "finish"))
+      :config
+      (which-key-add-key-based-replacements
+          "SPC g" "git")
   (use-package evil-magit)
   (add-to-list 'magit-log-arguments "--no-abbrev-commit")
   (setq magit-popup-use-prefix-argument 'default))
@@ -1215,10 +1204,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   (:keymaps 'override
     :states '(normal visual emacs)
     :prefix "SPC"
-        "r" 'ranger)
-  :config
-    (which-key-add-key-based-replacements
-        "SPC r" "ranger"))
+        "r" '(ranger :which-key "ranger")))
 #+end_src
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
@@ -1228,10 +1214,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   (:keymaps 'override
     :states '(normal visual emacs)
     :prefix "SPC"
-        "s" 'ace-swap-window)
-  :config
-    (which-key-add-key-based-replacements
-        "SPC s" "swap-windows"))
+        "s" '(ace-swap-window :which-key "swap-windows")))
 #+end_src
 ** Iflipb
 
@@ -1279,8 +1262,5 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   (:keymaps 'override
     :states '(normal visual emacs)
     :prefix "SPC"
-        "e" 'er/expand-region)
-:config
-  (which-key-add-key-based-replacements
-      "SPC e" "expand"))
+        "e" '(er/expand-region :which-key "expand")))
 #+end_src
