@@ -926,6 +926,7 @@ airline-utf-glyph-linenumber #xe0a1)))
 
       (use-package writegood-mode
         :ensure t
+        :diminish writegood-mode
         :config
         (writegood-mode))
 
@@ -978,6 +979,8 @@ airline-utf-glyph-linenumber #xe0a1)))
         (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
             bibtex-completion-library-path "~/ownCloud/papers"
             bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
+        (setq org-latex-pdf-process
+    '("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
         (setq bibtex-completion-notes-template-one-file
           (format
           "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
@@ -1038,7 +1041,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "TAB" 'ace-window
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
-        "af" 'ag-dired
+        "af" 'helm-ag-this-file
         "hb" 'describe-bindings
         "hv" 'describe-variable
         "hf" 'describe-function
@@ -1262,7 +1265,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ** Avy
 #+begin_src emacs-lisp :tangle yes
 (use-package avy
-  :bind (("M-c" . avy-goto-char-2)
+  :bind (("M-c" . avy-goto-char-timer)
       ("M-w" . avy-goto-word-1))
   :config
   (avy-setup-default))
