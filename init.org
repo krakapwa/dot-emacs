@@ -637,8 +637,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     "* TODO %? \n DEADLINE: %T")
     ("n" "note" entry (file+headline "~/ownCloud/org/agenda/notes.org" "Notes")
     "* %? \n %T")
-))
-)
+)))
 
 ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
 (add-hook 'org-mode-hook
@@ -887,135 +886,125 @@ airline-utf-glyph-linenumber #xe0a1)))
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
-    (use-package tex
-    :ensure auctex
-    :general
-    (:keymaps 'LaTeX-mode-map
-      :states '(normal emacs)
-      :major-mode 'LaTeX-mode
-      :prefix "SPC"
-      :which-key "Latex"
-        "mm" 'TeX-command-master
-        "mv" 'TeX-command-run-all
-        "mp" 'preview-at-point
-      )
-    :init
-    (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
+(use-package tex
+:ensure auctex
+:general
+(:keymaps 'LaTeX-mode-map
+    :states '(normal emacs)
+    :major-mode 'LaTeX-mode
+    :prefix "SPC"
+    :which-key "Latex"
+    "mm" 'TeX-command-master
+    "mv" 'TeX-command-run-all
+    "mp" 'preview-at-point
+    "mc" 'helm-bibtex-with-local-bibliography
+    "mt" 'reftex-toc
+    "mr" 'reftex-reference
+    "ml" 'reftex-label
+    )
+:init
+(progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
+:config
+(setq reftex-ref-macro-prompt nil)
+(progn
+    (use-package auto-complete
     :config
-    (setq reftex-ref-macro-prompt nil)
     (progn
-      (use-package auto-complete
-        :config
-        (progn
-          (ac-flyspell-workaround)
-          (setq ac-auto-show-menu 0.01
-                ac-auto-start 1
-                ac-delay 0.01)))
+        (ac-flyspell-workaround)
+        (setq ac-auto-show-menu 0.01
+            ac-auto-start 1
+            ac-delay 0.01)))
 
-      (use-package ispell
-        :ensure t
-        :config
-        (progn
-          (make-local-variable 'ispell-parser)
-          (setq ispell-parser 'tex)))
+    (use-package ispell
+    :ensure t
+    :config
+    (progn
+        (make-local-variable 'ispell-parser)
+        (setq ispell-parser 'tex)))
 
-      (use-package ac-ispell
-        :ensure t
-        :requires auto-complete ispell
-        )
-
-      (use-package writegood-mode
-        :ensure t
-        :diminish writegood-mode
-        :config
-        (writegood-mode))
-
-      (use-package smartparens-latex
-        :disabled t ;; Does not seem to be available
-        :ensure t
-        :config
-        (smartparens-mode +1))
-
-      (use-package ac-math
-        :ensure t)
-    (setq Tex-auto-save t)
-    (setq Tex-parse-self t)
-    (setq TeX-save-query nil)
-    (setq reftex-plug-into-AUCTeX t)))
-
-    (use-package company-auctex
-      :ensure t
-      :config
-      (company-auctex-init)
+    (use-package ac-ispell
+    :ensure t
+    :requires auto-complete ispell
     )
 
-  
-  (use-package helm-bibtex
+    (use-package writegood-mode
     :ensure t
-    :after org-ref
+    :diminish writegood-mode
     :config
-      ;; (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
-      ;; (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
-    (setq org-ref-bibtex-completion-actions
-    (quote
-        (("Edit notes" . helm-bibtex-edit-notes)
-        ("Open PDF, URL or DOI" . helm-bibtex-open-any)
-        ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
-        ("Show entry" . helm-bibtex-show-entry)
-        ("Insert citation" . helm-bibtex-insert-citation)
-        ("Insert reference" . helm-bibtex-insert-reference)
-        ("Insert BibTeX key" . helm-bibtex-insert-key)
-        ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-        ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
-        ("Add keywords to entries" . org-ref-helm-tag-entries)
-        ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
-        ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
+    (writegood-mode))
 
-    (use-package org-ref
-        :config
-        (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
-            org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
-            org-ref-pdf-directory "~/ownCloud/papers/")
-        (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
-            bibtex-completion-library-path "~/ownCloud/papers"
-            bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
-        (setq org-latex-pdf-process
-    '("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
-        (setq bibtex-completion-notes-template-one-file
-          (format
-          "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
-        
-    (use-package reftex
-      :diminish reftex-mode
-      :commands turn-on-reftex
-      :init
-      (progn
-      (setq reftex-plug-into-AUCTeX t))
-      (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
-      :config
-      (general-define-key
-       :keymaps 'LaTeX-mode-map
-        :states '(normal emacs)
-        :major-mode 'LaTeX-mode
-        :prefix "SPC"
-        :which-key "Latex"
-       "mrc" 'helm-bibtex-with-local-bibliography
-       "mrg"    'reftex-grep-document
-       "mri"    'reftex-index-selection-or-word
-       "mrI"    'reftex-display-index
-       "mr TAB" 'reftex-index
-       "mrl"    'reftex-label
-       "mrp"    'reftex-index-phrase-selection-or-word
-       "mrP"    'reftex-index-visit-phrases-buffer
-       "mrr"    'reftex-reference
-       "mrt"    'reftex-toc
-       "mrT"    'reftex-toc-recenter
-       "mrv" 'reftex-view-crossref)
-      (reftex-mode))
+    (use-package smartparens-latex
+    :disabled t ;; Does not seem to be available
+    :ensure t
+    :config
+    (smartparens-mode +1))
 
-  (which-key-add-key-based-replacements
-      "SPC mr" "reftex"
-  )
+    (use-package ac-math
+    :ensure t)
+(setq Tex-auto-save t)
+(setq Tex-parse-self t)
+(setq TeX-save-query nil)
+(setq reftex-plug-into-AUCTeX t)))
+
+(use-package company-auctex
+    :ensure t
+    :config
+    (company-auctex-init)
+)
+
+
+(use-package helm-bibtex
+:ensure t
+:after org-ref
+:config
+    ;; (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
+    ;; (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
+    (setq bibtex-completion-pdf-open-function
+    (lambda (fpath)
+    (call-process "evince" nil 0 nil fpath)))
+(setq org-ref-bibtex-completion-actions
+(quote
+    (("Edit notes" . helm-bibtex-edit-notes)
+    ("Open PDF, URL or DOI" . helm-bibtex-open-any)
+    ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
+    ("Show entry" . helm-bibtex-show-entry)
+    ("Insert citation" . helm-bibtex-insert-citation)
+    ("Insert reference" . helm-bibtex-insert-reference)
+    ("Insert BibTeX key" . helm-bibtex-insert-key)
+    ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
+    ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
+    ("Add keywords to entries" . org-ref-helm-tag-entries)
+    ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
+    ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
+
+(use-package org-ref
+;; :general
+;;     (:keymaps 'bibtex-mode-map
+;;         :states '(normal visual emacs)
+;;         :prefix "SPC"
+;;             "mo" '(org-ref-open-bibtex-pdf :which-key "open-pdf"))
+    :config
+    (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+        org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
+        org-ref-pdf-directory "~/ownCloud/papers/")
+    (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
+        bibtex-completion-library-path "~/ownCloud/papers"
+        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
+    (setq org-latex-pdf-process
+'("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
+    (setq bibtex-completion-notes-template-one-file
+        (format
+        "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
+
+(use-package reftex
+    :diminish reftex-mode
+    :commands turn-on-reftex
+    :init
+    (progn
+    (setq reftex-plug-into-AUCTeX t))
+    :config
+    (reftex-mode))
+
 #+end_src
 * Define keys
 #+begin_src emacs-lisp :tangle yes
