@@ -896,7 +896,6 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "Latex"
     "mm" 'TeX-command-master
     "mv" 'TeX-command-run-all
-    "mp" 'preview-at-point
     "mc" 'helm-bibtex-with-local-bibliography
     "mt" 'reftex-toc
     "mr" 'reftex-reference
@@ -1011,6 +1010,10 @@ airline-utf-glyph-linenumber #xe0a1)))
 ;Single escape to exit "everything"
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 
+(defun my/reload-init-file ()
+  (interactive)
+  (load-file user-init-file))
+
 (use-package general
 :ensure t
 :config
@@ -1035,6 +1038,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
+        "c"  'my/reload-init-file
         ))
 
   (which-key-add-key-based-replacements
