@@ -569,6 +569,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "org"
     "me" 'org-export-dispatch
     "mo" 'org-open-at-point
+    "mr" 'org-refile
     "mc" 'org-ref-helm-insert-cite-link)
   (:keymaps 'override
     :states '(normal visual emacs)
@@ -977,11 +978,13 @@ airline-utf-glyph-linenumber #xe0a1)))
     ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
 
 (use-package org-ref
-;; :general
-;;     (:keymaps 'bibtex-mode-map
-;;         :states '(normal visual emacs)
-;;         :prefix "SPC"
-;;             "mo" '(org-ref-open-bibtex-pdf :which-key "open-pdf"))
+    :general
+    (:keymaps 'bibtex-mode-map
+        :states '(normal visual emacs)
+        :major-mode 'bibtex-mode
+        :prefix "SPC"
+        :which-key "bibtex"
+        "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
     :config
     (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
         org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
@@ -1025,6 +1028,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "fs" 'save-buffer
         "tw" 'whitespace-mode
         "qr" 'restart-emacs
+        "qq" 'save-buffers-kill-emacs
         "wf" 'make-frame-command
         "wv" 'split-window-right
         "wh" 'split-window-below
