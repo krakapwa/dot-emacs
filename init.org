@@ -72,7 +72,6 @@ tangled, and the tangled file is compiled."
   This is where the mirrors and their priorities are set up.
 
 #+begin_src emacs-lisp :tangle yes
-
 (require 'package)
 (setq load-prefer-newer t
       package-enable-at-startup nil
@@ -86,11 +85,17 @@ tangled, and the tangled file is compiled."
       package-archive-priorities
             '(("gnu" . 5)
               ("melpa"     . 0)
-              ("myelpa"     . 10)
+              ("myelpa"     . 5)
               ("stable-melpa"     . 0)
               ("org"     . 0)
               ("elpy"        . 0)))
 (package-initialize nil)
+
+
+;;(require 'cl)
+(unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
 
 (use-package exec-path-from-shell
   :custom
@@ -98,11 +103,6 @@ tangled, and the tangled file is compiled."
   :config
   (push "HISTFILE" exec-path-from-shell-variables)
 (exec-path-from-shell-initialize))
-
-;;(require 'cl)
-(unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
 
 (setq use-package-verbose t
       use-package-always-ensure t)
@@ -130,34 +130,51 @@ To change output directory,
 #+begin_src emacs-lisp :tangle yes
 (add-to-list 'load-path "~/.emacs.d/site-lisp/elpa-mirror")
 (require 'elpa-mirror)
+
+#+end_src
+* Dashboard
+#+begin_src emacs-lisp :tangle yes
+(use-package dashboard
+  :preface
+    (defun my/dashboard-banner ()
+    """Set a dashboard banner including information on package initialization
+    time and garbage collections."""
+    (setq dashboard-banner-logo-title
+            (format "Emacs ready in %.2f seconds with %d garbage collections."
+                    (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
+  :init
+  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+  (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
+  :config
+  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5)))
+  (dashboard-setup-startup-hook))
 #+end_src
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
-(use-package yasnippet
-; autoload `yasnippet' when `yas-minor-mode' is called
-; using any means: via a hook or by user
-; Feel free to add more commands to this
-; list to suit your needs.
+  (use-package yasnippet
+  ; autoload `yasnippet' when `yas-minor-mode' is called
+  ; using any means: via a hook or by user
+  ; Feel free to add more commands to this
+  ; list to suit your needs.
+    :ensure t
     :diminish yas-minor-mode
-    :general
-  (:keymaps 'yas-minor-mode-map
-  :states '(normal visual emacs)
-  :prefix "SPC"
-  "y" 'yas-insert-snippet)
-  :commands (yas-minor-mode yas-exapand yas-insert-snippet)
-  :init ; stuff to do before requiring the package
-  (progn
-    (add-hook 'python-mode-hook #'yas-minor-mode)
-    (add-hook 'org-mode-hook #'yas-minor-mode)
-    (add-hook 'inferior-python-mode-hook #'yas-minor-mode))
-  ;;(progn
-  ;;  )
-  :config ; stuff to do after requiring the package
-  (progn
-    (yas-reload-all)
-    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
-    (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets"))
-    (yas-global-mode t))
+    :commands (yas-minor-mode yas-exapand yas-insert-snippet)
+      :general
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+          "y" '(yas-insert-snippet :which-key "insert-snippet"))
+    :config 
+        (setq
+            yas-verbosity 1)
+      (add-hook 'python-mode-hook #'yas-minor-mode)
+      (add-hook 'org-mode-hook #'yas-minor-mode)
+      (add-hook 'inferior-python-mode-hook #'yas-minor-mode)
+      ;; (yas-reload-all)
+      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
+      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")
+      (yas-global-mode t))
 #+end_src
 * Evil
 #+begin_src emacs-lisp :tangle yes
@@ -288,34 +305,27 @@ To change output directory,
 (use-package evil-visualstar
   :init (global-evil-visualstar-mode))
 
-;; key bindings
-(use-package general
-  :config
-  ;; global keys
-  (general-define-key
-   :states '(insert)
-   "M-y" 'helm-show-kill-ring))
-
 ;; projectile
 (use-package projectile
   :ensure projectile
   :diminish projectile-mode
   :init
-
     (use-package helm-projectile
     :ensure t
     :general
-        (:keymaps 'projectile-mode-map
-        :states '(normal visual emacs)
-        :prefix "SPC"
-        :which-key "projectile"
-        "pf" 'helm-projectile-find-file
-        "pb" 'projectile-compile-project
-        "pi" 'projectile-invalidate-cache
-        "pa" 'helm-projectile-ag
-        "pg" 'helm-projectile-grep
-        "ps" 'helm-projectile-switch-project))
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+    :which-key "projectile"
+        "pf" '(helm-projectile-find-file :which-key "find-file")
+        "pb" '(projectile-compile-project :which-key "build")
+        "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
+        "pa" '(helm-projectile-ag :which-key "ag")
+        "pg" '(helm-projectile-grep :which-key "grep")
+        "ps" '(helm-projectile-switch-project :which-key "switch-project")))
   :config
+  (which-key-add-key-based-replacements
+      "SPC p" "projectile")
   (setq projectile-enable-caching t
         projectile-mode t
         projectile-completion-system 'helm
@@ -329,7 +339,16 @@ To change output directory,
 (use-package helm
   :ensure helm
   :diminish helm-mode
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "b" '(helm-mini :which-key "buffer")
+        "as" 'helm-ag-project-root
+        "ff" '(helm-find-files :which-key "find-files"))
   :config
+  (which-key-add-key-based-replacements
+      "SPC f" "file")
   (require 'helm-config)
   (general-define-key
    :keymaps 'helm-map
@@ -339,23 +358,28 @@ To change output directory,
    "C-z" 'helm-select-action)
   (global-unset-key (kbd "C-x c"))
   :init (progn
-               (require 'helm-config)
-               (helm-mode t)
+     (require 'helm-config)
+     (helm-mode t)
 
-                (use-package helm-themes   :ensure t :defer 5)
-                (use-package helm-ag
-                    :commands (helm-ag)
-                    :config
-                    ;; fix https://github.com/bbatsov/projectile/issues/837
-                    (setq grep-find-ignored-files nil
-                            grep-find-ignored-directories nil))
-                (use-package helm-descbinds
-                :config (helm-descbinds-mode))
+     (use-package helm-themes   :ensure t :defer 5)
+     (use-package helm-ag
+         :commands (helm-ag)
+         :config
+         ;; fix https://github.com/bbatsov/projectile/issues/837
+         (setq grep-find-ignored-files nil
+                 grep-find-ignored-directories nil))
+     (use-package helm-descbinds
+     :config (helm-descbinds-mode))
 
-                (use-package helm-gitignore)))
+     (use-package helm-gitignore)))
 #+end_src
 
 * Appearance
+New/Unknown buffers (like config files) will open in this mode
+#+begin_src bash :tangle no
+  (setq-default major-mode 'conf-mode)
+#+end_src
+
 To get smooth fonts, set hinting full...
 #+begin_src bash :tangle no
 cd /etc/fonts/conf.d
@@ -498,10 +522,10 @@ airline-utf-glyph-linenumber #xe0a1)))
     :diminish adaptive-wrap-prefix-mode
 )
 
-    ;; which-key
-    (use-package which-key
-    :diminish which-key-mode
-    :config (which-key-mode))
+;; which-key
+(use-package which-key
+:diminish which-key-mode
+:config (which-key-mode))
 #+end_src
 
 ** Text zoom
@@ -522,7 +546,6 @@ airline-utf-glyph-linenumber #xe0a1)))
                       (- (face-attribute 'default :height)
                          10)))
                          
-(require 'hydra) ;; this fixes a bug...
 (use-package hydra
   :ensure t
   :defer t)
@@ -537,19 +560,32 @@ airline-utf-glyph-linenumber #xe0a1)))
 ;; org mode extensions
 
 (use-package org
+  :ensure t
   :general
   (:keymaps 'org-mode-map
-    :states '(normal insert emacs)
+    :states '(normal visual emacs)
     :major-mode 'org-mode
     :prefix "SPC"
     :non-normal-prefix "M-SPC"
     :which-key "org"
     "me" 'org-export-dispatch
     "mo" 'org-open-at-point
+    "mr" 'org-refile
     "mc" 'org-ref-helm-insert-cite-link)
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+    :which-key "org"
+        "oa" '(my-pop-to-org-agenda :which-key "agenda")
+        "oc" 'org-capture
+        "os" 'org-store-link
+        "ol" 'org-insert-link
+        "or" 'org-refile
+        "of" 'bibtex-completion-exit-notes-buffer)
   :config
-  
- (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
+    (which-key-add-key-based-replacements
+        "SPC o" "org")
+    (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
 
   ;;where to save todo items
   (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
@@ -579,7 +615,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (setq org-agenda-custom-commands
       '(("c" "Simple agenda view"
          ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
-                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org")) 
+                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org")) 
                 (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
                  (org-agenda-overriding-header "High-priority unfinished tasks:")))
           (agenda "")
@@ -603,8 +639,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     "* TODO %? \n DEADLINE: %T")
     ("n" "note" entry (file+headline "~/ownCloud/org/agenda/notes.org" "Notes")
     "* %? \n %T")
-))
-)
+)))
 
 ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
 (add-hook 'org-mode-hook
@@ -671,9 +706,17 @@ airline-utf-glyph-linenumber #xe0a1)))
   
   (eval-when-compile
       (defvar python-master-file))
+      
+  (defun python-kill ()
+    (interactive)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*"))
+      
   (defun python-rerun-master-file ()
     (interactive)
     (python-switch-to-master-file)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*")
     (elpy-shell-send-region-or-buffer))
 
   (defun python-run-master-file ()
@@ -684,7 +727,7 @@ airline-utf-glyph-linenumber #xe0a1)))
   (defun python-set-master-file ()
     (interactive)
     (setq python-master-file (buffer-name))
-    (message "Set this buffer as python master file"))
+    (message "Set %s as python master file" (buffer-file-name)))
 
   (defun python-switch-to-master-file ()
     (interactive)
@@ -698,9 +741,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     (evil-escape)
     (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-      :diminish elpy-mode
-
-)
+      :diminish elpy-mode)
 
   (defun ha/elpy-goto-definition ()
     (interactive)
@@ -737,8 +778,6 @@ airline-utf-glyph-linenumber #xe0a1)))
     (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
     (setq company-jedi-python-bin "python")))   
 
-
-
 (use-package python
   :defer t
   :general
@@ -749,10 +788,11 @@ airline-utf-glyph-linenumber #xe0a1)))
     :which-key "Python"
     "mv" 'pyenv-mode-set
     "mb" 'elpy-shell-send-region-or-buffer
-    "mq" 'elpy-kill-all
+    "mq" 'python-kill
     "ms" 'python-set-master-file
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
+    "me" 'python-rerun-master-file
     "md" 'python-add-breakpoint
     "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
@@ -852,51 +892,55 @@ airline-utf-glyph-linenumber #xe0a1)))
 :ensure auctex
 :general
 (:keymaps 'LaTeX-mode-map
-  :states '(normal emacs)
-  :major-mode 'LaTeX-mode
-  :prefix "SPC"
-  :which-key "Latex"
+    :states '(normal emacs)
+    :major-mode 'LaTeX-mode
+    :prefix "SPC"
+    :which-key "Latex"
     "mm" 'TeX-command-master
     "mv" 'TeX-command-run-all
-    "mp" 'preview-at-point
-  )
+    "mc" 'helm-bibtex-with-local-bibliography
+    "mt" 'reftex-toc
+    "mr" 'reftex-reference
+    "ml" 'reftex-label
+    )
 :init
 (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
 :config
 (setq reftex-ref-macro-prompt nil)
 (progn
-  (use-package auto-complete
+    (use-package auto-complete
     :config
     (progn
-      (ac-flyspell-workaround)
-      (setq ac-auto-show-menu 0.01
+        (ac-flyspell-workaround)
+        (setq ac-auto-show-menu 0.01
             ac-auto-start 1
             ac-delay 0.01)))
 
-  (use-package ispell
+    (use-package ispell
     :ensure t
     :config
     (progn
-      (make-local-variable 'ispell-parser)
-      (setq ispell-parser 'tex)))
+        (make-local-variable 'ispell-parser)
+        (setq ispell-parser 'tex)))
 
-  (use-package ac-ispell
+    (use-package ac-ispell
     :ensure t
     :requires auto-complete ispell
     )
 
-  (use-package writegood-mode
+    (use-package writegood-mode
     :ensure t
+    :diminish writegood-mode
     :config
     (writegood-mode))
 
-  (use-package smartparens-latex
+    (use-package smartparens-latex
     :disabled t ;; Does not seem to be available
     :ensure t
     :config
     (smartparens-mode +1))
 
-  (use-package ac-math
+    (use-package ac-math
     :ensure t)
 (setq Tex-auto-save t)
 (setq Tex-parse-self t)
@@ -904,40 +948,44 @@ airline-utf-glyph-linenumber #xe0a1)))
 (setq reftex-plug-into-AUCTeX t)))
 
 (use-package company-auctex
-  :ensure t
-  :config
-  (company-auctex-init)
+    :ensure t
+    :config
+    (company-auctex-init)
 )
 
+
+(use-package helm-bibtex
+:ensure t
+:after org-ref
+:config
+    ;; (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
+    ;; (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
+    (setq bibtex-completion-pdf-open-function
+    (lambda (fpath)
+    (call-process "evince" nil 0 nil fpath)))
+(setq org-ref-bibtex-completion-actions
+(quote
+    (("Edit notes" . helm-bibtex-edit-notes)
+    ("Open PDF, URL or DOI" . helm-bibtex-open-any)
+    ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
+    ("Show entry" . helm-bibtex-show-entry)
+    ("Insert citation" . helm-bibtex-insert-citation)
+    ("Insert reference" . helm-bibtex-insert-reference)
+    ("Insert BibTeX key" . helm-bibtex-insert-key)
+    ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
+    ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
+    ("Add keywords to entries" . org-ref-helm-tag-entries)
+    ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
+    ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
+
 (use-package org-ref
-:init
-
-    (setq org-ref-bibtex-completion-actions
-    (quote
-        (("Edit notes" . helm-bibtex-edit-notes)
-        ("Open PDF, URL or DOI" . helm-bibtex-open-any)
-        ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
-        ("Show entry" . helm-bibtex-show-entry)
-        ("Insert citation" . helm-bibtex-insert-citation)
-        ("Insert reference" . helm-bibtex-insert-reference)
-        ("Insert BibTeX key" . helm-bibtex-insert-key)
-        ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-        ("Insert formatted citation(s)" lambda
-        (_)
-        (insert
-        (mapconcat
-            (quote identity)
-            (cl-loop for key in
-                    (helm-marked-candidates)
-                    collect
-                    (org-ref-format-entry key))
-            "
-
-    ")))
-        ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
-        ("Add keywords to entries" . org-ref-helm-tag-entries)
-        ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
-        ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
+    :general
+    (:keymaps 'bibtex-mode-map
+        :states '(normal visual emacs)
+        :major-mode 'bibtex-mode
+        :prefix "SPC"
+        :which-key "bibtex"
+        "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
     :config
     (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
         org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
@@ -945,122 +993,68 @@ airline-utf-glyph-linenumber #xe0a1)))
     (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
         bibtex-completion-library-path "~/ownCloud/papers"
         bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
+    (setq org-latex-pdf-process
+'("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
     (setq bibtex-completion-notes-template-one-file
-      (format
-      "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n"))
-    (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
-    (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
-)
-        
-(use-package reftex
-  :diminish reftex-mode
-  :commands turn-on-reftex
-  :init
-  (progn
-  (setq reftex-plug-into-AUCTeX t))
-  (setq reftex-default-bibliography '("~/Documents/litteratureReview/refs.bib"))
-  :config
-  (general-define-key
-   :keymaps 'LaTeX-mode-map
-    :states '(normal emacs)
-    :major-mode 'LaTeX-mode
-    :prefix "SPC"
-    :which-key "Latex"
-   "mrc" 'helm-bibtex-with-local-bibliography
-   "mrg"    'reftex-grep-document
-   "mri"    'reftex-index-selection-or-word
-   "mrI"    'reftex-display-index
-   "mr TAB" 'reftex-index
-   "mrl"    'reftex-label
-   "mrp"    'reftex-index-phrase-selection-or-word
-   "mrP"    'reftex-index-visit-phrases-buffer
-   "mrr"    'reftex-reference
-   "mrt"    'reftex-toc
-   "mrT"    'reftex-toc-recenter
-   "mrv" 'reftex-view-crossref)
-  (reftex-mode))
+        (format
+        "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
 
-(which-key-add-key-based-replacements
-    "SPC mr" "reftex"
- )
+(use-package reftex
+    :diminish reftex-mode
+    :commands turn-on-reftex
+    :init
+    (progn
+    (setq reftex-plug-into-AUCTeX t))
+    :config
+    (reftex-mode))
+
 #+end_src
 * Define keys
 #+begin_src emacs-lisp :tangle yes
 ;Single escape to exit "everything"
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 
+(defun my/reload-init-file ()
+  (interactive)
+  (load-file user-init-file))
+
+(use-package general
+:ensure t
+:config
+(general-evil-setup t)
 (general-define-key
- :states '(normal visual)
- :prefix "SPC"
-       "ff" 'helm-find-files ; save windows layout
-       "fs" 'save-buffer
-       "tw" 'whitespace-mode
-       "qr" 'restart-emacs
-       "wf" 'make-frame-command
-       "wv" 'split-window-right
-       "wf" 'split-window-fairly
-       "wd" 'delete-window
-       "TAB" 'ace-window
-       "s" 'ace-swap-window
-       "b" 'helm-mini
-       "x" 'kill-this-buffer
-       "r" 'ranger
-       "z" 'hydra-zoom/body
-       "af" 'ag-dired
-       "as" 'helm-ag-project-root
+  :states '(normal visual)
+  :keymaps 'override
+  :prefix "SPC"
+        "fs" 'save-buffer
+        "tw" 'whitespace-mode
+        "qr" 'restart-emacs
+        "qq" 'save-buffers-kill-emacs
+        "wf" 'make-frame-command
+        "wv" 'split-window-right
+        "wh" 'split-window-below
+        "wf" 'split-window-fairly
+        "wd" 'delete-window
+        "TAB" 'ace-window
+        "x" 'kill-this-buffer
+        "z" '(hydra-zoom/body :which-key "zoom")
+        "af" 'helm-ag-this-file
         "hb" 'describe-bindings
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
-        "oa" 'my-pop-to-org-agenda
-        "oc" 'org-capture
-        "os" 'org-store-link
-        "ol" 'org-insert-link
-        "or" 'org-refile
-        "us" 'purpose-save-window-layout
-        "ul" 'purpose-load-window-layout
-        "ur" 'purpose-reset-window-layout
-  )
+        "c"  'my/reload-init-file
+        ))
 
   (which-key-add-key-based-replacements
-      "SPC gt" "git timemachine"
-      "SPC g" "git"
-      "SPC f" "file"
       "SPC a" "ag"
       "SPC h" "help"
       "SPC t" "toggle"
-      "SPC b" "buffer"
       "SPC w" "window"
-      "SPC m" "major-mode"
-  )
-
-  (require 'general)
-  (general-evil-setup t)
-
+      "SPC m" "major-mode")
 
   (define-key helm-map (kbd "C-j") 'helm-next-line)
   (define-key helm-map (kbd "C-k") 'helm-previous-line)
-
-
-
-  ;;; provide init package
-  (provide 'init)
-
-  ;;; init.el ends here
-  (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
-  '(custom-safe-themes
-    (quote
-      (default)))
-  '(evil-symbol-word-search t)
-  '(package-selected-packages
-    (quote
-      (iflibp buffer-stack hlinum rainbow-delimiters rainbow-delimiters-mode dashboard page-break-lines window-purpose dedicated latex-mode latex tex git-timemachine ranger elpy evil-magit znc yaml-mode whitespace-cleanup-mode which-key virtualenvwrapper use-package unfill try toml-mode ssh-config-mode smooth-scroll sly scratch savekill rust-mode regex-tool puppet-mode processing-mode powershell powerline popwin pkgbuild-mode nginx-mode matlab-mode markdown-mode magit less-css-mode ledger-mode org-plus-contrib java-snippets helm-gitignore helm-descbinds helm-company helm-ag haskell-mode handlebars-mode gnuplot gitconfig-mode ggtags general fortune-cookie flycheck f evil-visualstar evil-surround evil-snipe evil-smartparens evil-matchit evil-escape evil-easymotion evil-commentary evil-anzu electric-spacing dtrt-indent dockerfile-mode docker demangle-mode csharp-mode company-c-headers cmake-mode bison-mode auto-compile ag adaptive-wrap ace-window pyenv-mode)))
-  '(split-height-threshold nil)
-  '(split-width-threshold 0))
   #+end_src
 * Others
 ** Restart emacs
@@ -1160,44 +1154,24 @@ On the fly syntax/spelling checking.
 
 #+end_src
 
-** GGtags
-Emacs frontend to GNU Global source code tagging system
-#+begin_src emacs-lisp :tangle yes
-
-;; ggtags
-(use-package ggtags
-:commands ggtags-mode
-:diminish '(ggtags-mode helm-gtags-mode)
-:config
-(general-define-key
-:keymaps 'ggtags-mode-map
-:states '(normal)
-"g d" 'helm-gtags-dwim)
-(use-package helm-gtags
-:commands (helm-gtags-dwim)
-:config (helm-gtags-mode)))
-
-
-#+end_src
-
 ** Magit
   Magit is an interface to the version control system Git, implemented as an Emacs package.
   #+begin_src emacs-lisp :tangle yes
   ;; magit
   (use-package magit
   :commands (magit-status projectile-vc)
+  
   :general
-  (:states '(normal visual emacs)
-  :prefix "SPC"
-  :which-key "Magit"
-  "gs" 'magit-status
-  "gf" 'with-editor-finish
-  "gtt" 'git-timemachine-toggle
-  "gtn" 'git-timemachine-show-next-revision
-  "gtp" 'git-timemachine-show-previous-revision
-  "gtq" 'git-timemachine-quit
-)
-  :config
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+          "gs" '(magit-status :which-key "status")
+          "gi" '(magit-init :which-key "init")
+          "gr" '(magit-remote-popup :which-key "remote")
+          "gf" '(with-editor-finish :which-key "finish"))
+      :config
+      (which-key-add-key-based-replacements
+          "SPC g" "git")
   (use-package evil-magit)
   (add-to-list 'magit-log-arguments "--no-abbrev-commit")
   (setq magit-popup-use-prefix-argument 'default))
@@ -1233,63 +1207,37 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ** Ranger
 #+begin_src emacs-lisp :tangle yes
 (use-package ranger
-:ensure t)
-
+:ensure t
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "r" '(ranger :which-key "ranger")))
 #+end_src
-
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
 (use-package ace-window
-:ensure t)
-
+:ensure t
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "s" '(ace-swap-window :which-key "swap-windows")))
 #+end_src
-** Dashboard
-#+begin_src emacs-lisp :tangle yes
-
-(use-package dashboard
-  :preface
-    (defun my/dashboard-banner ()
-    """Set a dashboard banner including information on package initialization
-    time and garbage collections."""
-    (setq dashboard-banner-logo-title
-            (format "Emacs ready in %.2f seconds with %d garbage collections."
-                    (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
-  :init
-  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-  (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
-  :config
-  (setq dashboard-startup-banner 'logo)
-  
-  (setq dashboard-items '((recents . 5) (bookmarks . 5) (projects . 5) (agenda . 5)))
-  (dashboard-setup-startup-hook))
-#+end_src
-
 ** Iflipb
 
 #+begin_src emacs-lisp :tangle yes
 (use-package iflipb
-:general
-(
-:states '(normal)
-:config
-  (defun swap-buffer-window ()
-    "Put the buffer from the selected window in next window, and vice versa"
-    (interactive)
-    (let* ((this (selected-window))
-      (other (next-window))
-      (this-buffer (window-buffer this)))
-      (set-window-buffer other this-buffer)
-      (iflipb-next-buffer 1) ;;change current buffer
-      (other-window 1) ;;swap cursor to new buffer
-      )
-   )
-
-:prefix "SPC"
-"k" 'iflipb-next-buffer
-"j" 'iflipb-previous-buffer
-"d" 'swap-buffer-window))
-
-(setq iflipb-ignore-buffers '("magit" "^[*]"))
+:ensure t
+  :general
+  (
+    :keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+      "k" '(iflipb-next-buffer :which-key "next-buffer")
+      "j" '(iflipb-previous-buffer :which-key "previous-buffer"))
+  :config
+  (setq iflipb-ignore-buffers '("^[*]")))
 #+end_src
 ** CMake
 
@@ -1298,17 +1246,26 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
   :mode (("/CMakeLists\\.txt\\'" . cmake-mode)
 ("\\.cmake\\'" . cmake-mode)))
 #+end_src
-* window purpose
+** Docker
+
 #+begin_src emacs-lisp :tangle yes
-(use-package window-purpose
-    :ensure t
-    :diminish purpose-mode
-    :init
-        (purpose-mode)
-        (purpose-compile-user-configuration) ; activates your changes
-    :config
-        (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-        (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-        (purpose-compile-user-configuration))
+(use-package dockerfile-mode)
+#+end_src
+** Expand-region
+#+begin_src emacs-lisp :tangle yes
+(use-package expand-region
+  :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "e" '(er/expand-region :which-key "expand")))
+#+end_src
+** Avy
+#+begin_src emacs-lisp :tangle yes
+(use-package avy
+  :bind (("M-c" . avy-goto-char-timer)
+      ("M-w" . avy-goto-word-1))
+  :config
+  (avy-setup-default))
 #+end_src
 
