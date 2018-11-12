@@ -147,7 +147,7 @@ To change output directory,
   (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
   :config
   (setq dashboard-startup-banner 'logo)
-  (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5)))
+  (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5) (bookmarks . 5)))
   (dashboard-setup-startup-hook))
 #+end_src
 * Yasnippet
@@ -175,6 +175,20 @@ To change output directory,
       (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
       (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")
       (yas-global-mode t))
+#+end_src
+* Bookmark
+#+begin_src emacs-lisp :tangle yes
+(use-package bookmark
+  :ensure t
+    :general
+  (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "cl" 'list-bookmarks
+        "cd" 'bookmark-delete
+        "cd" 'bookmark-delete
+        "cw" 'bookmark-save
+        "cs" 'bookmark-set))
 #+end_src
 * Evil
 #+begin_src emacs-lisp :tangle yes
@@ -349,6 +363,11 @@ To change output directory,
   (which-key-add-key-based-replacements
       "SPC f" "file")
   (require 'helm-config)
+ (setq helm-mini-default-sources
+      '(helm-source-buffers-list
+        helm-source-bookmarks
+        helm-source-recentf
+        helm-source-buffer-not-found))  
   (general-define-key
    :keymaps 'helm-map
    "C-c !" 'helm-toggle-suspend-update
@@ -1042,7 +1061,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
-        "c"  'my/reload-init-file
+        "qc"  'my/reload-init-file
         ))
 
   (which-key-add-key-based-replacements
