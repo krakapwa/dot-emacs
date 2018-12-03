@@ -983,7 +983,7 @@ Colors can be displayed with =M-x list-faces-display=
     ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
 
 (use-package org-ref
-    :ensure t
+    :after org
     :general
     (:keymaps 'bibtex-mode-map
         :states '(normal visual emacs)
@@ -991,15 +991,15 @@ Colors can be displayed with =M-x list-faces-display=
         :prefix "SPC"
         :which-key "bibtex"
         "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
-    :config
+    :init
     (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
-        org-ref-default-bibliography '("~/Documents/paper-notes/refs.bib")
-        org-ref-pdf-directory "~/ownCloud/papers/")
-    (setq bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
+        org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
+        org-ref-pdf-directory "~/ownCloud/papers/"
+        bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
         bibtex-completion-library-path "~/ownCloud/papers"
-        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
-    (setq org-latex-pdf-process
-'("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f")))
+        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org"
+     org-latex-pdf-process
+"latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
 
 (use-package reftex
     :diminish reftex-mode
