@@ -84,9 +84,9 @@ tangled, and the tangled file is compiled."
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 5)
-              ("melpa"     . 0)
-              ("myelpa"     . 5)
-              ("stable-melpa"     . 0)
+              ("melpa"     . 10)
+              ("myelpa"     . 0)
+              ("stable-melpa"     . 1)
               ("org"     . 0)
               ("elpy"        . 0)))
 (package-initialize nil)
@@ -432,118 +432,104 @@ Colors can be displayed with =M-x list-faces-display=
 ** Themes
 #+begin_src emacs-lisp :tangle yes
 
-(setq myfont "Hack")
-(cond
-((string-equal system-name "multichouette")
-  (set-face-attribute 'default nil :font myfont :height 130))
-((string-equal system-name "tc")
-  (set-face-attribute 'default nil :font myfont :height 164)))
+    (setq myfont "Hack")
+    (cond
+    ((string-equal system-name "multichouette")
+      (set-face-attribute 'default nil :font myfont :height 130))
+    ((string-equal system-name "tc")
+      (set-face-attribute 'default nil :font myfont :height 164)))
 
-(use-package airline-themes
-:init
-(progn
-    (require 'airline-themes)
-    (load-theme 'airline-doom-one t))
-:config
-(progn
-    (set-face-attribute 'mode-line          nil :font "Fira Mono for Powerline")
-    (set-face-attribute 'mode-line-inactive nil :font "Fira Mono for Powerline")
-    (setq powerline-utf-8-separator-left        #xe0b0
-        powerline-utf-8-separator-right       #xe0b2
-        airline-utf-glyph-separator-left      #xe0b0
-        airline-utf-glyph-separator-right     #xe0b2
-        airline-utf-glyph-subseparator-left   #xe0b1
-        airline-utf-glyph-subseparator-right  #xe0b3
-        airline-utf-glyph-branch              #xe0a0
-        airline-utf-glyph-readonly            #xe0a2
-airline-utf-glyph-linenumber #xe0a1)))
+  (use-package doom-modeline
+    :ensure t
+    :defer t
+    :hook (after-init . doom-modeline-init))
 
-(use-package doom-themes
-:init
-;;(load-theme 'doom-dracula t)
-(load-theme 'doom-one t)
-:config
-(progn
-    (doom-themes-neotree-config)
-
-(doom-themes-org-config)))
-(global-linum-mode t)
-(global-visual-line-mode 1)
-(diminish 'visual-line-mode)
-(diminish 'hi-lock-mode)
-(diminish 'evil-snipe-local-mode)
-
-;;Maximize on startup
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-(global-hl-line-mode +1)
-(blink-cursor-mode 0)
-(set-cursor-color "#f4d942")
-
-;;; appearance
-(if (display-graphic-p)
+  (use-package doom-themes
+    :init
+    ;;(load-theme 'doom-dracula t)
+    (load-theme 'doom-one t)
+    :config
     (progn
-        (tool-bar-mode 0)
-        (scroll-bar-mode 0)))
+        (doom-themes-neotree-config)
 
-;; more context when scrolling
-(setq next-screen-context-lines 4)
+    (doom-themes-org-config)))
+    (global-linum-mode t)
+    (global-visual-line-mode 1)
+    (diminish 'visual-line-mode)
+    (diminish 'hi-lock-mode)
+    (diminish 'evil-snipe-local-mode)
 
-;; y/n for yes/no
-(defalias 'yes-or-no-p 'y-or-n-p)
+    ;;Maximize on startup
+    (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; start week on Monday
-(setq calendar-week-start-day 1)
+    (global-hl-line-mode +1)
+    (blink-cursor-mode 0)
+    (set-cursor-color "#f4d942")
 
-;; window undo/redo
-(winner-mode)
+    ;;; appearance
+    (if (display-graphic-p)
+        (progn
+            (tool-bar-mode 0)
+            (scroll-bar-mode 0)))
 
-;; tabs are truly evil
-(setq-default indent-tabs-mode nil)
+    ;; more context when scrolling
+    (setq next-screen-context-lines 4)
 
-;; sentences end with one space
-(setq sentence-end-double-space nil)
+    ;; y/n for yes/no
+    (defalias 'yes-or-no-p 'y-or-n-p)
 
-;;; settings
-;; enable all commands
-(setq disabled-command-function nil)
+    ;; start week on Monday
+    (setq calendar-week-start-day 1)
 
-;; default truncate lines
-(setq-default truncate-lines t)
+    ;; window undo/redo
+    (winner-mode)
 
-;; disable bell
-(setq ring-bell-function 'ignore
-        visible-bell t)
+    ;; tabs are truly evil
+    (setq-default indent-tabs-mode nil)
 
-;; increase garbage collection threshold
-(setq gc-cons-threshold (* 10 1024 1024))
+    ;; sentences end with one space
+    (setq sentence-end-double-space nil)
 
-;; inhibit startup message
-(setq inhibit-startup-message t)
+    ;;; settings
+    ;; enable all commands
+    (setq disabled-command-function nil)
 
-;; kill settings
-(setq save-interprogram-paste-before-kill t
-        kill-do-not-save-duplicates t
-        kill-whole-line t)
+    ;; default truncate lines
+    (setq-default truncate-lines t)
 
-;; repeat mark pop
-(setq-default set-mark-command-repeat-pop t)
+    ;; disable bell
+    (setq ring-bell-function 'ignore
+            visible-bell t)
 
-;; set terminfo
-(setq system-uses-terminfo nil)
+    ;; increase garbage collection threshold
+    (setq gc-cons-threshold (* 10 1024 1024))
 
-;;; extensions
-;; adaptive word wrapping
-(use-package adaptive-wrap
-    :config (adaptive-wrap-prefix-mode)
-    :diminish adaptive-wrap-prefix-mode
-)
+    ;; inhibit startup message
+    (setq inhibit-startup-message t)
 
-;; which-key
-(use-package which-key
-:diminish which-key-mode
-:config (which-key-mode))
+    ;; kill settings
+    (setq save-interprogram-paste-before-kill t
+            kill-do-not-save-duplicates t
+            kill-whole-line t)
+
+    ;; repeat mark pop
+    (setq-default set-mark-command-repeat-pop t)
+
+    ;; set terminfo
+    (setq system-uses-terminfo nil)
+
+    ;;; extensions
+    ;; adaptive word wrapping
+    (use-package adaptive-wrap
+        :config (adaptive-wrap-prefix-mode)
+        :diminish adaptive-wrap-prefix-mode
+    )
+
+    ;; which-key
+    (use-package which-key
+    :diminish which-key-mode
+    :config (which-key-mode))
 #+end_src
 
 ** Text zoom
@@ -968,16 +954,15 @@ airline-utf-glyph-linenumber #xe0a1)))
 (use-package company-auctex
     :ensure t
     :config
-    (company-auctex-init)
-)
+    (company-auctex-init))
 
 
 (use-package helm-bibtex
 :ensure t
 :after org-ref
 :config
-    ;; (helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
-    ;; (helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
+    ;;(helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
+    ;;(helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
     (setq bibtex-completion-pdf-open-function
     (lambda (fpath)
     (call-process "evince" nil 0 nil fpath)))
@@ -997,6 +982,7 @@ airline-utf-glyph-linenumber #xe0a1)))
     ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
 
 (use-package org-ref
+    :ensure t
     :general
     (:keymaps 'bibtex-mode-map
         :states '(normal visual emacs)
@@ -1012,10 +998,7 @@ airline-utf-glyph-linenumber #xe0a1)))
         bibtex-completion-library-path "~/ownCloud/papers"
         bibtex-completion-notes-path "~/Documents/paper-notes/notes.org")
     (setq org-latex-pdf-process
-'("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
-    (setq bibtex-completion-notes-template-one-file
-        (format
-        "\n** ${author} (${year}): ${title} [cite:${key}]\n  :PROPERTIES:\n  :Custom_ID: \n  :END:\n")))
+'("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f")))
 
 (use-package reftex
     :diminish reftex-mode
