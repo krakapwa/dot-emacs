@@ -85,7 +85,7 @@ tangled, and the tangled file is compiled."
       package-archive-priorities
             '(("gnu" . 5)
               ("melpa"     . 10)
-              ("myelpa"     . 0)
+              ("myelpa"     . 15)
               ("stable-melpa"     . 1)
               ("org"     . 0)
               ("elpy"        . 0)))
@@ -998,8 +998,9 @@ Colors can be displayed with =M-x list-faces-display=
         bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
         bibtex-completion-library-path "~/ownCloud/papers"
         bibtex-completion-notes-path "~/Documents/paper-notes/notes.org"
-     org-latex-pdf-process
-"latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
+        org-latex-pdf-process
+"latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"
+        bibtex-completion-notes-template-one-file "* ${author-or-editor} (${year}): ${title} [cite:${=key=}] \n:PROPERTIES: \n :Custom_ID: ${=key=} \n :END:"))
 
 (use-package reftex
     :diminish reftex-mode
