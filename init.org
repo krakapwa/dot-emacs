@@ -562,113 +562,154 @@ Colors can be displayed with =M-x list-faces-display=
 #+end_src
 * Org
 #+begin_src emacs-lisp :tangle yes
-;; org mode extensions
+  ;; org mode extensions
+  (defun my-bibtex-completion-exit-notes-buffer ()
+  "Exit notes buffer and delete its window.
+  This will also disable `bibtex-completion-notes-mode' and remove the header
+  line."
+  (interactive)
+  (widen)
+  (bibtex-completion-notes-global-mode -1)
+  (setq-local
+  header-line-format nil)
+  (save-buffer)
+  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
+      (if (and window (not (one-window-p window)))
+          (delete-window window))))
 
-(use-package org
-  :ensure t
-  :general
-  (:keymaps 'org-mode-map
-    :states '(normal visual emacs)
-    :major-mode 'org-mode
-    :prefix "SPC"
-    :non-normal-prefix "M-SPC"
-    :which-key "org"
-    "me" 'org-export-dispatch
-    "mo" 'org-open-at-point
-    "mr" 'org-refile
-    "mc" 'org-ref-helm-insert-cite-link)
-  (:keymaps 'override
-    :states '(normal visual emacs)
-    :prefix "SPC"
-    :which-key "org"
-        "oa" '(my-pop-to-org-agenda :which-key "agenda")
-        "oc" 'org-capture
-        "os" 'org-store-link
-        "ol" 'org-insert-link
-        "or" 'org-refile
-        "of" 'bibtex-completion-exit-notes-buffer)
-  :config
-    (which-key-add-key-based-replacements
-        "SPC o" "org")
-    (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
+  (use-package org
+    :ensure t
 
-  ;;where to save todo items
-  (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
-  
-  ;;skips highest priority for custom agenda view
-  (defun my-org-skip-subtree-if-priority (priority)
-  "Skip an agenda subtree if it has a priority of PRIORITY.
-    PRIORITY may be one of the characters ?A, ?B, or ?C."
-  (let ((subtree-end (save-excursion (org-end-of-subtree t)))
-        (pri-value (* 1000 (- org-lowest-priority priority)))
-        (pri-current (org-get-priority (thing-at-point 'line t))))
-    (if (= pri-value pri-current)
-        subtree-end
-      nil)))
-      
-  (defun my-pop-to-org-agenda ()
-    "Visit the org agenda, in the current window or a SPLIT."
-    (interactive)
-    (org-agenda nil "c"))      
-      
-  ;;set priority range from A to C with default A
-  (setq org-highest-priority ?A)
-  (setq org-lowest-priority ?C)
-  (setq org-default-priority ?A)
-  
-  ;;org custom agenda
-  (setq org-agenda-custom-commands
-      '(("c" "Simple agenda view"
-         ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
-                ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org")) 
-                (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
-                 (org-agenda-overriding-header "High-priority unfinished tasks:")))
-          (agenda "")
-          (alltodo ""
-                   ((org-agenda-skip-function
-                     '(or (my-org-skip-subtree-if-priority ?A)
-                          (org-agenda-skip-if nil '(scheduled deadline))))))))))
- 
+    :general
+    (:keymaps 'org-mode-map
+      :states '(normal visual emacs)
+      :major-mode 'org-mode
+      :prefix "SPC"
+      :non-normal-prefix "M-SPC"
+      :which-key "org"
+      "me" 'org-export-dispatch
+      "mo" 'org-open-at-point
+      "mr" 'org-refile
+      "mc" 'org-ref-helm-insert-cite-link)
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+      :which-key "org"
+          "oa" '(my-pop-to-org-agenda :which-key "agenda")
+          "oc" 'org-capture
+          "os" 'org-store-link
+          "ol" 'org-insert-link
+          "or" 'org-refile
+          "of" 'my-bibtex-completion-exit-notes-buffer)
+    :config
+      (which-key-add-key-based-replacements
+          "SPC o" "org")
+      (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
 
+    ;; TODO: increase maxlevel and filter out based on tag?
+  ;; (defun bh/verify-refile-target ()
+  ;;   ; Exclude DONE state tasks from refile targets
+  ;;   "Exclude todo keywords with a done state from refile targets"
+  ;;   (not (member (nth 2 (org-heading-components)) org-done-keywords)))
 
-  ;;(setq-default org-display-custom-times t)
-  ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
-  ;;open agenda in current window
-  (setq org-agenda-window-setup (quote current-window))
-  (setq org-capture-templates
-  '(("t" "todo" entry (file+headline "~/ownCloud/org/agenda/tasks.org" "Tasks")
-         "* TODO [#A] %? \n %T")
-    ("m" "meeting" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Meetings")
-    "* %? \n %T")
-    ("d" "deadline" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Deadlines")
-    "* TODO %? \n DEADLINE: %T")
-    ("n" "note" entry (file+headline "~/ownCloud/org/agenda/notes.org" "Notes")
-    "* %? \n %T")
-)))
+  ;; (setq org-refile-target-verify-function 'bh/verify-refile-target)
 
-;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
-(add-hook 'org-mode-hook
-      '(lambda ()
-         (delete '("\\.pdf\\'" . default) org-file-apps)
-         (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+    ;;where to save items
+    (setq org-refile-targets '((org-agenda-files . (:maxlevel . 1))))
 
-(general-define-key :states '(normal emacs)
-                    :major-mode 'org-agenda-mode
-                    :keymaps 'org-agenda-mode-map
-                    "k" 'org-agenda-previous-line
-                    "j" 'org-agenda-next-line
-                    "C-k" 'org-priority-down
-                    "C-j" 'org-priority-up
-                    "S-k" 'org-timestamp-down
-                    "S-j" 'org-timestamp-up
-                    "j" 'org-agenda-next-line
-                    "c" 'org-capture)
-                    
-(setq org-reveal-root "~/.dotfiles/reveal.js/")
-(setq org-reveal-mathjax t)
-(setq org-src-fontify-natively t)
+    ;;skips highest priority for custom agenda view
+    (defun my-org-skip-subtree-if-priority (priority)
+    "Skip an agenda subtree if it has a priority of PRIORITY.
+      PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
 
-(menu-bar-mode -1)
+      (defun my-org-agenda-skip-tag (tag &optional others)
+      "Skip all entries that correspond to TAG.
+
+      If OTHERS is true, skip all entries that do not correspond to TAG."
+    (let ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
+          (current-headline (or (and (org-at-heading-p)
+                                     (point))
+                                (save-excursion (org-back-to-heading)))))
+      (if others
+          (if (not (member tag (org-get-tags-at current-headline)))
+              next-headline
+            nil)
+        (if (member tag (org-get-tags-at current-headline))
+            next-headline
+          nil)))) 
+
+    (defun my-pop-to-org-agenda ()
+      "Visit the org agenda, in the current window or a SPLIT."
+      (interactive)
+      (org-agenda nil "c"))      
+
+    ;;set priority range from A to C with default A
+    (setq org-highest-priority ?A)
+    (setq org-lowest-priority ?C)
+    (setq org-default-priority ?A)
+
+    ;; hide tags in agenda view
+    ;; (setq org-agenda-hide-tags-regexp "tag1\\|tag2\\|tags3")
+    (setq org-agenda-hide-tags-regexp "hide")
+
+    ;;org custom agenda
+    (setq org-agenda-custom-commands
+        '(("c" "Simple agenda view"
+           ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
+                  ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org")) 
+                  (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                   (org-agenda-overriding-header "High-priority unfinished tasks:")))
+            (agenda "")
+            (alltodo ""
+                     ((org-agenda-skip-function
+                       '(or (my-org-skip-subtree-if-priority ?A)
+                            (my-org-agenda-skip-tag nil '(hide))
+                            (org-agenda-skip-if nil '(scheduled deadline))))))))))
+
+    ;;(setq-default org-display-custom-times t)
+    ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
+    ;;open agenda in current window
+    (setq org-agenda-window-setup (quote current-window))
+    (setq org-capture-templates
+    '(("t" "todo" entry (file+headline "~/ownCloud/org/agenda/tasks.org" "Tasks")
+           "* TODO [#A] %? \n %T")
+      ("m" "meeting" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Meetings")
+      "* %? \n %T")
+      ("d" "deadline" entry (file+headline "~/ownCloud/org/agenda/agenda.org" "Deadlines")
+      "* TODO %? \n DEADLINE: %T")
+      ("n" "note" entry (file+headline "~/ownCloud/org/agenda/notes.org" "Notes")
+      "* %? \n %T")
+  )))
+
+  ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
+  (add-hook 'org-mode-hook
+        '(lambda ()
+           (delete '("\\.pdf\\'" . default) org-file-apps)
+           (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+
+  (general-define-key :states '(normal emacs)
+                      :major-mode 'org-agenda-mode
+                      :keymaps 'org-agenda-mode-map
+                      "k" 'org-agenda-previous-line
+                      "j" 'org-agenda-next-line
+                      "C-k" 'org-priority-down
+                      "C-j" 'org-priority-up
+                      "S-k" 'org-timestamp-down
+                      "S-j" 'org-timestamp-up
+                      "j" 'org-agenda-next-line
+                      "c" 'org-capture)
+
+  (setq org-reveal-root "~/.dotfiles/reveal.js/")
+  (setq org-reveal-mathjax t)
+  (setq org-src-fontify-natively t)
+
+  (menu-bar-mode -1)
 #+end_src
 * Python
 #+begin_src emacs-lisp :tangle yes
@@ -843,6 +884,17 @@ Colors can be displayed with =M-x list-faces-display=
   ;; RTags creates more accurate overlays.
   (setq-local flycheck-highlighting-mode nil)
   (setq-local flycheck-check-syntax-automatically nil))
+  
+(use-package clang-format
+    :ensure t
+    :general
+    (:keymaps '(c-mode-map c++-mode-map)
+        :states '(normal visual emacs)
+        :major-mode '(c-mode c++-mode-map)
+        :prefix "SPC"
+        :which-key "C/C++"
+        "mf" 'clang-format-buffer)
+    :commands clang-format clang-format-buffer clang-format-region)
 
 (use-package rtags
   :ensure t
@@ -893,123 +945,126 @@ Colors can be displayed with =M-x list-faces-display=
 #+end_src
 * Tex
 #+begin_src emacs-lisp :tangle yes
-(use-package tex
-:ensure auctex
-:general
-(:keymaps 'LaTeX-mode-map
-    :states '(normal emacs)
-    :major-mode 'LaTeX-mode
-    :prefix "SPC"
-    :which-key "Latex"
-    "mm" 'TeX-command-master
-    "mv" 'TeX-command-run-all
-    "mc" 'helm-bibtex-with-local-bibliography
-    "mt" 'reftex-toc
-    "mr" 'reftex-reference
-    "ml" 'reftex-label
+      (use-package tex
+      :ensure auctex
+      :general
+      (:keymaps 'LaTeX-mode-map
+          :states '(normal emacs)
+          :major-mode 'LaTeX-mode
+          :prefix "SPC"
+          :which-key "Latex"
+          "mm" 'TeX-command-master
+          "mv" 'TeX-command-run-all
+          "mc" 'helm-bibtex-with-local-bibliography
+          "mt" 'reftex-toc
+          "mr" 'reftex-reference
+          "ml" 'reftex-label
+          )
+      :init
+      (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
+      :config
+      (setq reftex-ref-macro-prompt nil)
+      (progn
+          (use-package auto-complete
+          :config
+          (progn
+              (ac-flyspell-workaround)
+              (setq ac-auto-show-menu 0.01
+                  ac-auto-start 1
+                  ac-delay 0.01)))
+
+          (use-package ispell
+          :ensure t
+          :config
+          (progn
+              (make-local-variable 'ispell-parser)
+              (setq ispell-parser 'tex)))
+
+          (use-package ac-ispell
+          :ensure t
+          :requires auto-complete ispell
+          )
+
+          (use-package writegood-mode
+          :ensure t
+          :diminish writegood-mode
+          :config
+          (writegood-mode))
+
+          (use-package smartparens-latex
+          :disabled t ;; Does not seem to be available
+          :ensure t
+          :config
+          (smartparens-mode +1))
+
+          (use-package ac-math
+          :ensure t)
+      (setq Tex-auto-save t)
+      (setq Tex-parse-self t)
+      (setq TeX-save-query nil)
+      (setq reftex-plug-into-AUCTeX t)))
+
+      (use-package company-auctex
+          :ensure t
+          :config
+          (company-auctex-init))
+
+      (use-package helm-bibtex
+      :ensure t
+        :after helm)
+
+      (use-package org-ref
+          :after org
+          :ensure t
+          :general
+          (:keymaps 'bibtex-mode-map
+              :states '(normal visual emacs)
+              :major-mode 'bibtex-mode
+              :prefix "SPC"
+              :which-key "bibtex"
+              "mo" 'org-ref-bibtex-pdf :which-key "open pdf"
+              "mc" 'helm-bibtex)
+          :init
+          (setq org-ref-bibtex-completion-actions
+          (quote
+              (("Edit notes" . helm-bibtex-edit-notes)
+              ("Open PDF, URL or DOI" . helm-bibtex-open-any)
+              ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
+              ("Show entry" . helm-bibtex-show-entry)
+              ("Insert citation" . helm-bibtex-insert-citation)
+              ("Insert reference" . helm-bibtex-insert-reference)
+              ("Insert BibTeX key" . helm-bibtex-insert-key)
+              ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
+              ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
+              ("Add keywords to entries" . org-ref-helm-tag-entries)
+              ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
+              ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
+          (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+              org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
+              bibtex-completion-bibliography org-ref-default-bibliography
+              org-ref-pdf-directory "~/ownCloud/papers/"
+              bibtex-completion-library-path "~/ownCloud/papers"
+              bibtex-completion-notes-path "~/Documents/paper-notes/notes.org"
+              org-latex-pdf-process
+      "latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"
+            bibtex-completion-pdf-open-function
+            (lambda (fpath)
+            (call-process "evince" nil 0 nil fpath))
+              ;; bibtex-completion-notes-template-one-file "* ${author-or-editor} (${year}): ${title} [[cite:${=key=}]] \n:PROPERTIES: \n :Custom_ID: ${=key=} \n :END:"
+  )
     )
-:init
-(progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
-:config
-(setq reftex-ref-macro-prompt nil)
-(progn
-    (use-package auto-complete
-    :config
-    (progn
-        (ac-flyspell-workaround)
-        (setq ac-auto-show-menu 0.01
-            ac-auto-start 1
-            ac-delay 0.01)))
-
-    (use-package ispell
-    :ensure t
-    :config
-    (progn
-        (make-local-variable 'ispell-parser)
-        (setq ispell-parser 'tex)))
-
-    (use-package ac-ispell
-    :ensure t
-    :requires auto-complete ispell
-    )
-
-    (use-package writegood-mode
-    :ensure t
-    :diminish writegood-mode
-    :config
-    (writegood-mode))
-
-    (use-package smartparens-latex
-    :disabled t ;; Does not seem to be available
-    :ensure t
-    :config
-    (smartparens-mode +1))
-
-    (use-package ac-math
-    :ensure t)
-(setq Tex-auto-save t)
-(setq Tex-parse-self t)
-(setq TeX-save-query nil)
-(setq reftex-plug-into-AUCTeX t)))
-
-(use-package company-auctex
-    :ensure t
-    :config
-    (company-auctex-init))
 
 
-(use-package helm-bibtex
-:ensure t
-:after org-ref
-:config
-    ;;(helm-delete-action-from-source "Edit notes" helm-bibtex-edit-notes)
-    ;;(helm-add-action-to-source "Edit notes" 'bibtex-completion-edit-notes helm-bibtex-edit-notes 0)
-    (setq bibtex-completion-pdf-open-function
-    (lambda (fpath)
-    (call-process "evince" nil 0 nil fpath)))
-(setq org-ref-bibtex-completion-actions
-(quote
-    (("Edit notes" . helm-bibtex-edit-notes)
-    ("Open PDF, URL or DOI" . helm-bibtex-open-any)
-    ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
-    ("Show entry" . helm-bibtex-show-entry)
-    ("Insert citation" . helm-bibtex-insert-citation)
-    ("Insert reference" . helm-bibtex-insert-reference)
-    ("Insert BibTeX key" . helm-bibtex-insert-key)
-    ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-    ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
-    ("Add keywords to entries" . org-ref-helm-tag-entries)
-    ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
-    ("Add PDF to library" . helm-bibtex-add-pdf-to-library)))))
 
-(use-package org-ref
-    :after org
-    :general
-    (:keymaps 'bibtex-mode-map
-        :states '(normal visual emacs)
-        :major-mode 'bibtex-mode
-        :prefix "SPC"
-        :which-key "bibtex"
-        "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
-    :init
-    (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
-        org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
-        org-ref-pdf-directory "~/ownCloud/papers/"
-        bibtex-completion-bibliography "~/Documents/paper-notes/refs.bib"
-        bibtex-completion-library-path "~/ownCloud/papers"
-        bibtex-completion-notes-path "~/Documents/paper-notes/notes.org"
-        org-latex-pdf-process
-"latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"
-        bibtex-completion-notes-template-one-file "* ${author-or-editor} (${year}): ${title} [cite:${=key=}] \n:PROPERTIES: \n :Custom_ID: ${=key=} \n :END:"))
-
-(use-package reftex
-    :diminish reftex-mode
-    :commands turn-on-reftex
-    :init
-    (progn
-    (setq reftex-plug-into-AUCTeX t))
-    :config
-    (reftex-mode))
+      (use-package reftex
+          :defer t
+          :diminish reftex-mode
+          :commands turn-on-reftex
+          :init
+          (progn
+          (setq reftex-plug-into-AUCTeX t))
+          :config
+          (reftex-mode))
 
 #+end_src
 * Define keys
