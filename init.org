@@ -132,6 +132,11 @@ To change output directory,
 (require 'elpa-mirror)
 
 #+end_src
+* Backup
+#+begin_src emacs-lisp :tangle yes
+(setq backup-directory-alist `(("." . "~/.emacs.d/saves")))
+#+end_src
+  
 * Dashboard
 #+begin_src emacs-lisp :tangle yes
 (use-package dashboard
@@ -164,7 +169,9 @@ To change output directory,
     (:keymaps 'override
       :states '(normal visual emacs)
       :prefix "SPC"
-          "y" '(yas-insert-snippet :which-key "insert-snippet"))
+          "yi" '(yas-insert-snippet :which-key "insert-snippet")
+          "yr" '(yas-reload-all :which-key "reload-all")
+          "yn" '(yas-new-snippet :which-key "new-snippet"))
     :config 
         (setq
             yas-verbosity 1)
@@ -172,8 +179,8 @@ To change output directory,
       (add-hook 'org-mode-hook #'yas-minor-mode)
       (add-hook 'inferior-python-mode-hook #'yas-minor-mode)
       ;; (yas-reload-all)
-      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
-      (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")
+      ;; (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/snippets")
+      ;; (add-to-list 'yas-snippet-dirs "$HOME/.emacs.d/yasnippet-snippets")
       (yas-global-mode t))
 #+end_src
 * Bookmark
@@ -433,104 +440,106 @@ Colors can be displayed with =M-x list-faces-display=
 ** Themes
 #+begin_src emacs-lisp :tangle yes
 
-    (setq myfont "Hack")
-    (cond
-    ((string-equal system-name "multichouette")
-      (set-face-attribute 'default nil :font myfont :height 130))
-    ((string-equal system-name "tc")
-      (set-face-attribute 'default nil :font myfont :height 164)))
+      (setq myfont "Source Code Pro Semibold")
+      ;; (setq myfont "Hack")
+      (cond
+      ((string-equal system-name "multichouette")
+        (set-face-attribute 'default nil :font myfont :height 116))
+      ((string-equal system-name "tc")
+        (set-face-attribute 'default nil :font myfont :height 164)))
 
-  (use-package doom-modeline
-    :ensure t
-    :defer t
-    :hook (after-init . doom-modeline-init))
+    (use-package doom-modeline
+      :ensure t
+      :defer t
+      :hook (after-init . doom-modeline-init))
+
 
   (use-package doom-themes
     :init
-    ;;(load-theme 'doom-dracula t)
-    (load-theme 'doom-one t)
+    (load-theme 'doom-dracula t)
+    ;; (load-theme 'doom-nord t)
     :config
     (progn
         (doom-themes-neotree-config)
-
     (doom-themes-org-config)))
-    (global-linum-mode t)
-    (global-visual-line-mode 1)
-    (diminish 'visual-line-mode)
-    (diminish 'hi-lock-mode)
-    (diminish 'evil-snipe-local-mode)
 
-    ;;Maximize on startup
-    (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-    (add-to-list 'default-frame-alist '(fullscreen . maximized))
+      (global-linum-mode t)
+      (global-visual-line-mode 1)
+      (diminish 'visual-line-mode)
+      (diminish 'hi-lock-mode)
+      (diminish 'evil-snipe-local-mode)
 
-    (global-hl-line-mode +1)
-    (blink-cursor-mode 0)
-    (set-cursor-color "#f4d942")
+      ;;Maximize on startup
+      (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+      (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-    ;;; appearance
-    (if (display-graphic-p)
-        (progn
-            (tool-bar-mode 0)
-            (scroll-bar-mode 0)))
+      (global-hl-line-mode +1)
+      (blink-cursor-mode 0)
+      (set-cursor-color "#f4d942")
 
-    ;; more context when scrolling
-    (setq next-screen-context-lines 4)
+      ;;; appearance
+      (if (display-graphic-p)
+          (progn
+              (tool-bar-mode 0)
+              (scroll-bar-mode 0)))
 
-    ;; y/n for yes/no
-    (defalias 'yes-or-no-p 'y-or-n-p)
+      ;; more context when scrolling
+      (setq next-screen-context-lines 4)
 
-    ;; start week on Monday
-    (setq calendar-week-start-day 1)
+      ;; y/n for yes/no
+      (defalias 'yes-or-no-p 'y-or-n-p)
 
-    ;; window undo/redo
-    (winner-mode)
+      ;; start week on Monday
+      (setq calendar-week-start-day 1)
 
-    ;; tabs are truly evil
-    (setq-default indent-tabs-mode nil)
+      ;; window undo/redo
+      (winner-mode)
 
-    ;; sentences end with one space
-    (setq sentence-end-double-space nil)
+      ;; tabs are truly evil
+      (setq-default indent-tabs-mode nil)
 
-    ;;; settings
-    ;; enable all commands
-    (setq disabled-command-function nil)
+      ;; sentences end with one space
+      (setq sentence-end-double-space nil)
 
-    ;; default truncate lines
-    (setq-default truncate-lines t)
+      ;;; settings
+      ;; enable all commands
+      (setq disabled-command-function nil)
 
-    ;; disable bell
-    (setq ring-bell-function 'ignore
-            visible-bell t)
+      ;; default truncate lines
+      (setq-default truncate-lines t)
 
-    ;; increase garbage collection threshold
-    (setq gc-cons-threshold (* 10 1024 1024))
+      ;; disable bell
+      (setq ring-bell-function 'ignore
+              visible-bell t)
 
-    ;; inhibit startup message
-    (setq inhibit-startup-message t)
+      ;; increase garbage collection threshold
+      (setq gc-cons-threshold (* 10 1024 1024))
 
-    ;; kill settings
-    (setq save-interprogram-paste-before-kill t
-            kill-do-not-save-duplicates t
-            kill-whole-line t)
+      ;; inhibit startup message
+      (setq inhibit-startup-message t)
 
-    ;; repeat mark pop
-    (setq-default set-mark-command-repeat-pop t)
+      ;; kill settings
+      (setq save-interprogram-paste-before-kill t
+              kill-do-not-save-duplicates t
+              kill-whole-line t)
 
-    ;; set terminfo
-    (setq system-uses-terminfo nil)
+      ;; repeat mark pop
+      (setq-default set-mark-command-repeat-pop t)
 
-    ;;; extensions
-    ;; adaptive word wrapping
-    (use-package adaptive-wrap
-        :config (adaptive-wrap-prefix-mode)
-        :diminish adaptive-wrap-prefix-mode
-    )
+      ;; set terminfo
+      (setq system-uses-terminfo nil)
 
-    ;; which-key
-    (use-package which-key
-    :diminish which-key-mode
-    :config (which-key-mode))
+      ;;; extensions
+      ;; adaptive word wrapping
+      (use-package adaptive-wrap
+          :config (adaptive-wrap-prefix-mode)
+          :diminish adaptive-wrap-prefix-mode
+      )
+
+      ;; which-key
+      (use-package which-key
+      :diminish which-key-mode
+      :config (which-key-mode))
 #+end_src
 
 ** Text zoom
@@ -555,10 +564,31 @@ Colors can be displayed with =M-x list-faces-display=
   :ensure t
   :defer t)
       
-(defhydra hydra-zoom()
-"zoom"
-  ("g" my/zoom-in)
-  ("l" my/zoom-out))
+#+end_src
+
+** Fill-column-indicator
+#+begin_src emacs-lisp :tangle yes
+(use-package fill-column-indicator
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (add-hook 'prog-mode-hook #'fci-mode)
+    (add-hook 'python-mode-hook #'fci-mode)
+    (add-hook 'text-mode-hook #'fci-mode))
+  :config
+  (progn
+    ;; Workarounds for popup library.
+
+    (defadvice popup-create (before suppress-fci-mode activate compile)
+      "Suspend fci-mode while popups are visible"
+      (when fci-mode
+        (turn-off-fci-mode)))
+
+    (defadvice popup-delete (after restore-fci-mode activate compile)
+      "Restore fci-mode when all popups have closed"
+      (unless fci-mode
+(turn-on-fci-mode)))))
 #+end_src
 * Org
 #+begin_src emacs-lisp :tangle yes
@@ -577,6 +607,12 @@ Colors can be displayed with =M-x list-faces-display=
       (if (and window (not (one-window-p window)))
           (delete-window window))))
 
+  (use-package helm-org-rifle
+  :ensure t
+  :config
+  (setq org-directory '("~/ownCloud/org"))
+
+)
   (use-package org
     :ensure t
 
@@ -597,7 +633,7 @@ Colors can be displayed with =M-x list-faces-display=
       :which-key "org"
           "oa" '(my-pop-to-org-agenda :which-key "agenda")
           "oc" 'org-capture
-          "os" 'org-store-link
+          "os" 'helm-org-rifle-org-directory
           "ol" 'org-insert-link
           "or" 'org-refile
           "of" 'my-bibtex-completion-exit-notes-buffer)
@@ -705,9 +741,16 @@ Colors can be displayed with =M-x list-faces-display=
                       "j" 'org-agenda-next-line
                       "c" 'org-capture)
 
+(use-package ox-reveal
+    :ensure t
+    :init
+        (setq org-reveal-mathjax t)
+        (setq org-src-fontify-natively t))
+
+(use-package htmlize
+:ensure t)
   (setq org-reveal-root "~/.dotfiles/reveal.js/")
   (setq org-reveal-mathjax t)
-  (setq org-src-fontify-natively t)
 
   (menu-bar-mode -1)
 #+end_src
@@ -1075,6 +1118,11 @@ Colors can be displayed with =M-x list-faces-display=
 (defun my/reload-init-file ()
   (interactive)
   (load-file user-init-file))
+  
+(defhydra hydra-zoom()
+"zoom"
+  ("g" my/zoom-in)
+  ("l" my/zoom-out))
 
 (use-package general
 :ensure t
@@ -1317,13 +1365,5 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
     :states '(normal visual emacs)
     :prefix "SPC"
         "e" '(er/expand-region :which-key "expand")))
-#+end_src
-** Avy
-#+begin_src emacs-lisp :tangle yes
-(use-package avy
-  :bind (("M-c" . avy-goto-char-timer)
-      ("M-w" . avy-goto-word-1))
-  :config
-  (avy-setup-default))
 #+end_src
 
