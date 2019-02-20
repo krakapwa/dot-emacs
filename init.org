@@ -446,7 +446,7 @@ Colors can be displayed with =M-x list-faces-display=
       ((string-equal system-name "multichouette")
         (set-face-attribute 'default nil :font myfont :height 116))
       ((string-equal system-name "tc")
-        (set-face-attribute 'default nil :font myfont :height 164)))
+        (set-face-attribute 'default nil :font myfont :height 116)))
 
     (use-package doom-modeline
       :ensure t
@@ -640,7 +640,7 @@ Colors can be displayed with =M-x list-faces-display=
     :config
       (which-key-add-key-based-replacements
           "SPC o" "org")
-      (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
+      (setq org-agenda-files '("~/ownCloud/org/agenda")) 
 
     ;; TODO: increase maxlevel and filter out based on tag?
   ;; (defun bh/verify-refile-target ()
