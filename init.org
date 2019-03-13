@@ -544,22 +544,6 @@ Colors can be displayed with =M-x list-faces-display=
 
 ** Text zoom
 #+begin_src emacs-lisp :tangle yes
-(defun my/zoom-in ()
-"Increase font size by 10 points"
-(interactive)
-(set-face-attribute 'default nil
-                    :height
-                    (+ (face-attribute 'default :height)
-                        10)))
-
-(defun my/zoom-out ()
-  "Decrease font size by 10 points"
-  (interactive)
-  (set-face-attribute 'default nil
-                      :height
-                      (- (face-attribute 'default :height)
-                         10)))
-                         
 (use-package hydra
   :ensure t
   :defer t)
@@ -633,7 +617,7 @@ Colors can be displayed with =M-x list-faces-display=
       :which-key "org"
           "oa" '(my-pop-to-org-agenda :which-key "agenda")
           "oc" 'org-capture
-          "os" 'helm-org-rifle-org-directory
+          "os" 'org-save-all-org-buffers
           "ol" 'org-insert-link
           "or" 'org-refile
           "of" 'my-bibtex-completion-exit-notes-buffer)
@@ -797,6 +781,11 @@ Colors can be displayed with =M-x list-faces-display=
       (defvar python-master-file))
       
   (defun python-kill ()
+    (interactive)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*"))
+    
+  (defun python-quit-dbg ()
     (interactive)
     (elpy-shell-kill)
     (kill-buffer "*Python*"))
@@ -1118,6 +1107,22 @@ Colors can be displayed with =M-x list-faces-display=
 (defun my/reload-init-file ()
   (interactive)
   (load-file user-init-file))
+(defun my/zoom-in ()
+
+"Increase font size by 10 points"
+(interactive)
+(set-face-attribute 'default nil
+                    :height
+                    (+ (face-attribute 'default :height)
+                        10)))
+
+(defun my/zoom-out ()
+  "Decrease font size by 10 points"
+  (interactive)
+  (set-face-attribute 'default nil
+                      :height
+                      (- (face-attribute 'default :height)
+                         10)))
   
 (defhydra hydra-zoom()
 "zoom"
