@@ -4,4 +4,3 @@
 # group : general
 # --
 import matplotlib.pyplot as plt
-$0

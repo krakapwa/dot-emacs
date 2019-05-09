@@ -340,6 +340,7 @@ To change output directory,
     :which-key "projectile"
         "pf" '(helm-projectile-find-file :which-key "find-file")
         "pb" '(projectile-compile-project :which-key "build")
+        "pr" '(projectile-replace :which-key "replace")
         "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
         "pa" '(helm-projectile-ag :which-key "ag")
         "pg" '(helm-projectile-grep :which-key "grep")
@@ -542,12 +543,35 @@ Colors can be displayed with =M-x list-faces-display=
       :config (which-key-mode))
 #+end_src
 
-** Text zoom
+** Hydra
 #+begin_src emacs-lisp :tangle yes
 (use-package hydra
   :ensure t
-  :defer t)
-      
+  :defer t
+  :config
+    (defun my/zoom-in ()
+        "Increase font size"
+        (interactive)
+        (set-face-attribute 'default nil
+                            :height
+                            (+ (face-attribute 'default :height)
+                                5)))
+    (defun my/zoom-out ()
+    "Decrease font size "
+    (interactive)
+    (set-face-attribute 'default nil
+                        :height
+                        (- (face-attribute 'default :height)
+                            5)))
+    (defhydra hydra-zoom()
+    "zoom"
+    ("g" my/zoom-in)
+    ("l" my/zoom-out))
+  :general
+    (:keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+          "z" '(hydra-zoom/body :which-key "zoom")))
 #+end_src
 
 ** Fill-column-indicator
@@ -775,6 +799,7 @@ Colors can be displayed with =M-x list-faces-display=
   (electric-indent-local-mode -1)
   (delete 'elpy-module-highlight-indentation elpy-modules)
   (delete 'elpy-module-flymake elpy-modules)
+  (setq elpy-shell-use-project-root nil)
   (setq elpy-rpc-backend "jedi")
   
   (eval-when-compile
@@ -996,6 +1021,7 @@ Colors can be displayed with =M-x list-faces-display=
       (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
       :config
       (setq reftex-ref-macro-prompt nil)
+      (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o"))) 
       (progn
           (use-package auto-complete
           :config
@@ -1107,28 +1133,7 @@ Colors can be displayed with =M-x list-faces-display=
 (defun my/reload-init-file ()
   (interactive)
   (load-file user-init-file))
-(defun my/zoom-in ()
-
-"Increase font size by 10 points"
-(interactive)
-(set-face-attribute 'default nil
-                    :height
-                    (+ (face-attribute 'default :height)
-                        10)))
-
-(defun my/zoom-out ()
-  "Decrease font size by 10 points"
-  (interactive)
-  (set-face-attribute 'default nil
-                      :height
-                      (- (face-attribute 'default :height)
-                         10)))
   
-(defhydra hydra-zoom()
-"zoom"
-  ("g" my/zoom-in)
-  ("l" my/zoom-out))
-
 (use-package general
 :ensure t
 :config
@@ -1338,17 +1343,17 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ** Iflipb
 
 #+begin_src emacs-lisp :tangle yes
-(use-package iflipb
-:ensure t
-  :general
-  (
-    :keymaps 'override
-    :states '(normal visual emacs)
-    :prefix "SPC"
-      "k" '(iflipb-next-buffer :which-key "next-buffer")
-      "j" '(iflipb-previous-buffer :which-key "previous-buffer"))
-  :config
-  (setq iflipb-ignore-buffers '("^[*]")))
+  (use-package iflipb
+  :ensure t
+    :general
+    (
+      :keymaps 'override
+      :states '(normal visual emacs)
+      :prefix "SPC"
+        "k" '(iflipb-next-buffer :which-key "next-buffer")
+        "j" '(iflipb-previous-buffer :which-key "previous-buffer"))
+    :config
+    (setq iflipb-ignore-buffers '("(?!(\*Python\*))(^[*])")))
 #+end_src
 ** CMake
 
