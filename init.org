@@ -119,6 +119,36 @@ tangled, and the tangled file is compiled."
 
 (use-package diminish
     :ensure t)
+
+
+(use-package general
+:ensure t
+:config
+(general-evil-setup t)
+(general-define-key
+  :states '(normal visual)
+  :keymaps 'override
+  :prefix "SPC"
+        "fs" 'save-buffer
+        "tw" 'whitespace-mode
+        "qr" 'restart-emacs
+        "qq" 'save-buffers-kill-emacs
+        "wf" 'make-frame-command
+        "wv" 'split-window-right
+        "wh" 'split-window-below
+        "wf" 'split-window-fairly
+        "wd" 'delete-window
+        "TAB" 'ace-window
+        "x" 'kill-this-buffer
+        "z" '(hydra-zoom/body :which-key "zoom")
+        "af" 'helm-ag-this-file
+        "hb" 'describe-bindings
+        "hv" 'describe-variable
+        "hf" 'describe-function
+        "hp" 'describe-package
+        "qc"  'my/reload-init-file
+        ))
+
 #+end_src
 ** Elpa-mirror
 =M-x elpamr-create-mirror-for-installed= to create local repository.
@@ -477,7 +507,7 @@ Colors can be displayed with =M-x list-faces-display=
       ((string-equal system-name "multichouette")
         (set-face-attribute 'default nil :font myfont :height 116))
       ((string-equal system-name "tc")
-        (set-face-attribute 'default nil :font myfont :height 164)))
+        (set-face-attribute 'default nil :font myfont :height 116)))
 
     (use-package doom-modeline
       :ensure t
@@ -678,7 +708,7 @@ Colors can be displayed with =M-x list-faces-display=
     :config
       (which-key-add-key-based-replacements
           "SPC o" "org")
-      (setq org-agenda-files '("~/ownCloud/org/agenda" "~/Documents/paper-notes/notes.org")) 
+      (setq org-agenda-files '("~/ownCloud/org/agenda")) 
 
     ;; TODO: increase maxlevel and filter out based on tag?
   ;; (defun bh/verify-refile-target ()
@@ -1189,6 +1219,11 @@ Colors can be displayed with =M-x list-faces-display=
         "hp" 'describe-package
         "qc"  'my/reload-init-file
         ))
+(defhydra hydra-zoom()
+"zoom"
+  ("g" my/zoom-in)
+  ("l" my/zoom-out))
+
 
   (which-key-add-key-based-replacements
       "SPC a" "ag"
