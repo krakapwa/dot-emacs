@@ -213,7 +213,7 @@ To change output directory,
             evil-cross-lines t
             evil-disable-insert-state-bindings t)
             (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-        (define-key Info-mode-map "g" nil)
+            (define-key Info-mode-map "g" nil)
     (use-package evil-org
     :init (add-hook 'org-mode-hook 'evil-org-mode)
     :diminish evil-org-mode
@@ -346,12 +346,20 @@ To change output directory,
         "pg" '(helm-projectile-grep :which-key "grep")
         "ps" '(helm-projectile-switch-project :which-key "switch-project")))
   :config
+  (defun my/projectile-switch-project-action ()
+    (interactive)
+    (helm-projectile)
+    (neotree-projectile-action)
+    (ace-select-window))
+        
+    (setq projectile-switch-project-action
+        'my/projectile-switch-project-action)
+        
   (which-key-add-key-based-replacements
       "SPC p" "projectile")
   (setq projectile-enable-caching t
         projectile-mode t
-        projectile-completion-system 'helm
-        projectile-switch-project-action 'helm-projectile)
+        projectile-completion-system 'helm)
   (projectile-mode)
   )
 
@@ -399,6 +407,28 @@ To change output directory,
      :config (helm-descbinds-mode))
 
      (use-package helm-gitignore)))
+#+end_src
+
+* Neotree
+#+begin_src emacs-lisp :tangle yes
+(use-package neotree
+            :commands (neotree-toggle my/neotree-projectile-toggle)
+            :config
+            (setq neo-theme (if window-system 'icons 'arrows))
+            (general-define-key :states '(normal emacs)
+                                :keymaps 'neotree-mode-map
+                                "j" 'neotree-next-line
+                                "k" 'neotree-previous-line
+                                "h" 'neotree-hidden-file-toggle
+                                "y" 'neotree-copy-node
+                                "c" 'neotree-create-node
+                                "R" 'neotree-rename-node
+                                "r" 'neotree-refresh
+                                "o" 'neotree-open-file-in-system-application
+                                "d" 'neotree-delete-node
+                                "SPC" 'neotree-quick-look
+                                "RET" 'neotree-enter))
+
 #+end_src
 
 * Appearance
@@ -765,172 +795,169 @@ Colors can be displayed with =M-x list-faces-display=
 * Python
 #+begin_src emacs-lisp :tangle yes
 
-(use-package exec-path-from-shell
-  :disabled (not (equal system-type 'darwin))
-  :config
-  (progn
-    ;; For debugging
-    (when nil
-      (message "path: %s, setup: %s" (getenv "PATH")
-               (getenv "ENVIRONMENT_SETUP_DONE"))
-      (setq exec-path-from-shell-debug t))
-    (setq exec-path-from-shell-arguments (list "-l"))
-    (setq exec-path-from-shell-check-startup-files nil)
-    (add-to-list 'exec-path-from-shell-variables "SHELL")
-    (add-to-list 'exec-path-from-shell-variables "GOPATH")
-    (add-to-list 'exec-path-from-shell-variables "ENVIRONMENT_SETUP_DONE")
-    (add-to-list 'exec-path-from-shell-variables "PYTHONPATH")
-    (exec-path-from-shell-initialize)))
+  (use-package exec-path-from-shell
+    :disabled (not (equal system-type 'darwin))
+    :config
+    (progn
+      ;; For debugging
+      (when nil
+        (message "path: %s, setup: %s" (getenv "PATH")
+                 (getenv "ENVIRONMENT_SETUP_DONE"))
+        (setq exec-path-from-shell-debug t))
+      (setq exec-path-from-shell-arguments (list "-l"))
+      (setq exec-path-from-shell-check-startup-files nil)
+      (add-to-list 'exec-path-from-shell-variables "SHELL")
+      (add-to-list 'exec-path-from-shell-variables "GOPATH")
+      (add-to-list 'exec-path-from-shell-variables "ENVIRONMENT_SETUP_DONE")
+      (add-to-list 'exec-path-from-shell-variables "PYTHONPATH")
+      (exec-path-from-shell-initialize)))
 
-; Highlight the call to pdb
-(defun annotate-pdb ()
-  (interactive)
-    (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
-(add-hook 'python-mode-hook 'annotate-pdb)
+  (use-package elpy
+    :defer t
+    :ensure t
+    :commands elpy-enable
+    :init (with-eval-after-load 'python (elpy-enable))
 
-(use-package elpy
-  :defer t
-  :ensure t
-  :commands elpy-enable
-  :init (with-eval-after-load 'python (elpy-enable))
-
-  :config
-  (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()")
-  (electric-indent-local-mode -1)
-  (delete 'elpy-module-highlight-indentation elpy-modules)
-  (delete 'elpy-module-flymake elpy-modules)
-  (setq elpy-shell-use-project-root nil)
-  (setq elpy-rpc-backend "jedi")
+    :config
+    (highlight-phrase "import pdb; pdb.set_trace()")
+    ;; (highlight-phrase "import pdb;")
+    ;; (highlight-phrase "import pdb")
+    ;; (highlight-phrase "pdb.set_trace()")
+    (electric-indent-local-mode -1)
+    (delete 'elpy-module-highlight-indentation elpy-modules)
+    (delete 'elpy-module-flymake elpy-modules)
+    (setq elpy-shell-use-project-root nil)
+    (setq elpy-rpc-backend "jedi")
   
-  (eval-when-compile
-      (defvar python-master-file))
+    (eval-when-compile
+        (defvar python-master-file))
       
-  (defun python-kill ()
-    (interactive)
-    (elpy-shell-kill)
-    (kill-buffer "*Python*"))
+    (defun python-kill ()
+      (interactive)
+      (elpy-shell-kill)
+      (kill-buffer "*Python*"))
     
-  (defun python-quit-dbg ()
-    (interactive)
-    (elpy-shell-kill)
-    (kill-buffer "*Python*"))
+    (defun python-quit-dbg ()
+      (interactive)
+      (elpy-shell-kill)
+      (kill-buffer "*Python*"))
       
-  (defun python-rerun-master-file ()
-    (interactive)
-    (python-switch-to-master-file)
-    (elpy-shell-kill)
-    (kill-buffer "*Python*")
-    (elpy-shell-send-region-or-buffer))
+    (defun python-rerun-master-file ()
+      (interactive)
+      (python-switch-to-master-file)
+      (elpy-shell-kill)
+      (kill-buffer "*Python*")
+      (elpy-shell-send-region-or-buffer))
 
-  (defun python-run-master-file ()
-    (interactive)
-    (python-switch-to-master-file)
-    (elpy-shell-send-region-or-buffer))
+    (defun python-run-master-file ()
+      (interactive)
+      (python-switch-to-master-file)
+      (elpy-shell-send-region-or-buffer))
 
-  (defun python-set-master-file ()
-    (interactive)
-    (setq python-master-file (buffer-name))
-    (message "Set %s as python master file" (buffer-file-name)))
+    (defun python-set-master-file ()
+      (interactive)
+      (setq python-master-file (buffer-name))
+      (message "Set %s as python master file" (buffer-file-name)))
 
-  (defun python-switch-to-master-file ()
-    (interactive)
-    (switch-to-buffer python-master-file))
+    (defun python-switch-to-master-file ()
+      (interactive)
+      (switch-to-buffer python-master-file))
 
-  (defun python-add-breakpoint ()
-    "Add a break point"
-    (interactive)
-    (evil-open-above 1)
-    (insert "import pdb; pdb.set_trace()")
-    (evil-escape)
-    (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
+    (defun python-add-breakpoint ()
+      "Add a break point"
+      (interactive)
+      (evil-open-above 1)
+      (insert "import pdb; pdb.set_trace()")
+      (evil-escape)
+      (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()"))
 
-      :diminish elpy-mode)
+        :diminish elpy-mode)
 
-  (defun ha/elpy-goto-definition ()
-    (interactive)
-    (condition-case err
-        (elpy-goto-definition)
-      ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
+    (defun ha/elpy-goto-definition ()
+      (interactive)
+      (condition-case err
+          (elpy-goto-definition)
+        ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
 
-(use-package pyenv-mode
-  :defer t
-  :ensure t
-  :init 
-    (add-to-list 'exec-path "~/.pyenv/shims")
-    (setenv "WORKON_HOME" "~/.pyenv/versions/")
-  :config
-    (pyenv-mode)
-    (defun projectile-pyenv-mode-set ()
-      "Set pyenv version matching project name."
-      (let ((project (projectile-project-name)))
-        (if (member project (pyenv-mode-versions))
-            (pyenv-mode-set project)
-          (pyenv-mode-unset))))
+  (use-package pyenv-mode
+    :defer t
+    :ensure t
+    :init 
+      (add-to-list 'exec-path "~/.pyenv/shims")
+      (setenv "WORKON_HOME" "~/.pyenv/versions/")
+    :config
+      (pyenv-mode)
+      (defun projectile-pyenv-mode-set ()
+        "Set pyenv version matching project name."
+        (let ((project (projectile-project-name)))
+          (if (member project (pyenv-mode-versions))
+              (pyenv-mode-set project)
+            (pyenv-mode-unset))))
 
-    (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
-    (add-hook 'python-mode-hook 'pyenv-mode))
+      (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
+      (add-hook 'python-mode-hook 'pyenv-mode))
 
- (use-package jedi
-  :ensure t
-  :init
-  (setq company-jedi-python-bin "~/.pyenv/shims/python")
-  :config
-  (use-package company-jedi
+   (use-package jedi
     :ensure t
     :init
-    (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
-    (setq company-jedi-python-bin "python")))   
-
-(use-package python
-  :defer t
-  :general
-  (:keymaps '(python-mode-map inferior-python-mode-map)
-    :states '(normal visual emacs)
-    :major-mode '(python-mode inferior-python-mode)
-    :prefix "SPC"
-    :which-key "Python"
-    "mv" 'pyenv-mode-set
-    "mb" 'elpy-shell-send-region-or-buffer
-    "mq" 'python-kill
-    "ms" 'python-set-master-file
-    "mm" 'python-switch-to-master-file
-    "mr" 'python-run-master-file
-    "me" 'python-rerun-master-file
-    "md" 'python-add-breakpoint
-    "mg" 'elpy-goto-definition
-    "mf" 'elpy-yapf-fix-code
-    "mh" 'elpy-doc
-    "mi" 'run-python)
+    (setq company-jedi-python-bin "~/.pyenv/shims/python")
     :config
-      (setq python-indent-offset 4)
-      (elpy-enable)
-        (add-hook 'python-mode-hook
-        (lambda ()
-            (setq flycheck-python-pylint-executable "/usr/bin/pylint")
-            (setq tab-width 4)
-            (setq flycheck-pylintrc "~/.pylintrc")))
+    (use-package company-jedi
+      :ensure t
+      :init
+      (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
+      (setq company-jedi-python-bin "python")))   
 
-)
+  (use-package python
+    :defer t
+    :general
+    (:keymaps '(python-mode-map inferior-python-mode-map)
+      :states '(normal visual emacs)
+      :major-mode '(python-mode inferior-python-mode)
+      :prefix "SPC"
+      :which-key "Python"
+      "mv" 'pyenv-mode-set
+      "mb" 'elpy-shell-send-region-or-buffer
+      "mq" 'python-kill
+      "ms" 'python-set-master-file
+      "mm" 'python-switch-to-master-file
+      "mr" 'python-run-master-file
+      "me" 'python-rerun-master-file
+      "md" 'python-add-breakpoint
+      "mg" 'elpy-goto-definition
+      "mf" 'elpy-yapf-fix-code
+      "mh" 'elpy-doc
+      "mi" 'run-python)
+      :config
+        (setq python-indent-offset 4)
+        (elpy-enable)
+          (add-hook 'python-mode-hook
+          (lambda ()
+              (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+              (setq tab-width 4)
+              (setq flycheck-pylintrc "~/.pylintrc")))
 
-(general-define-key :states '(normal insert emacs)
-                    :major-mode 'inferior-python-mode
-                    :keymaps 'inferior-python-mode-map
-                    "C-r" 'comint-history-isearch-backward
-                    "C-k" 'comint-previous-input
-                    "C-j" 'comint-next-input)
+  )
 
-(setq python-shell-interpreter "ipython"
-    python-shell-interpreter-args "--simple-prompt -i")
+  (general-define-key :states '(normal insert emacs)
+                      :major-mode 'inferior-python-mode
+                      :keymaps 'inferior-python-mode-map
+                      "C-r" 'comint-history-isearch-backward
+                      "C-k" 'comint-previous-input
+                      "C-j" 'comint-next-input)
 
-(with-eval-after-load 'python
-  (defun python-shell-completion-native-try ()
-    "Return non-nil if can trigger native completion."
-    (let ((python-shell-completion-native-enable t)
-          (python-shell-completion-native-output-timeout
-           python-shell-completion-native-try-output-timeout))
-      (python-shell-completion-native-get-completions
-       (get-buffer-process (current-buffer))
-       nil "_"))))
+  (setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "--simple-prompt -i")
+
+  (with-eval-after-load 'python
+    (defun python-shell-completion-native-try ()
+      "Return non-nil if can trigger native completion."
+      (let ((python-shell-completion-native-enable t)
+            (python-shell-completion-native-output-timeout
+             python-shell-completion-native-try-output-timeout))
+        (python-shell-completion-native-get-completions
+         (get-buffer-process (current-buffer))
+         nil "_"))))
 
 #+end_src
 * C/C++
@@ -1152,6 +1179,7 @@ Colors can be displayed with =M-x list-faces-display=
         "wf" 'split-window-fairly
         "wd" 'delete-window
         "TAB" 'ace-window
+        "n" 'neotree
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
         "af" 'helm-ag-this-file
@@ -1333,7 +1361,12 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
 (use-package ace-window
-:ensure t
+    :ensure t
+    :custom
+      (ace-window-display-mode t)
+      :config
+    (dolist (buffer '(neotree-mode))
+        (add-to-list 'aw-ignored-buffers buffer))
   :general
   (:keymaps 'override
     :states '(normal visual emacs)
