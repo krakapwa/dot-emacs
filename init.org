@@ -445,6 +445,13 @@ To change output directory,
             :commands (neotree-toggle my/neotree-projectile-toggle)
             :config
             (setq neo-theme (if window-system 'icons 'arrows))
+            (add-hook 'neo-after-create-hook
+                #'(lambda (_)
+                (with-current-buffer (get-buffer neo-buffer-name)
+                (setq truncate-lines t)
+                (setq word-wrap nil)
+                (make-local-variable 'auto-hscroll-mode)
+                (setq auto-hscroll-mode nil))))
             (general-define-key :states '(normal emacs)
                                 :keymaps 'neotree-mode-map
                                 "j" 'neotree-next-line
@@ -522,7 +529,7 @@ Colors can be displayed with =M-x list-faces-display=
     :config
     (progn
         (doom-themes-neotree-config)
-    (doom-themes-org-config)))
+        (doom-themes-org-config)))
 
       (global-linum-mode t)
       (global-visual-line-mode 1)
@@ -845,6 +852,7 @@ Colors can be displayed with =M-x list-faces-display=
   (use-package elpy
     :defer t
     :ensure t
+    :after python
     :commands elpy-enable
     :init (with-eval-after-load 'python (elpy-enable))
 
@@ -858,6 +866,8 @@ Colors can be displayed with =M-x list-faces-display=
     (delete 'elpy-module-flymake elpy-modules)
     (setq elpy-shell-use-project-root nil)
     (setq elpy-rpc-backend "jedi")
+    (setq python-shell-interpreter "ipython")
+    (setq python-shell-interpreter-args "--simple-prompt -i")
   
     (eval-when-compile
         (defvar python-master-file))
@@ -878,7 +888,16 @@ Colors can be displayed with =M-x list-faces-display=
       (elpy-shell-kill)
       (kill-buffer "*Python*")
       (elpy-shell-send-region-or-buffer))
-
+      
+    (defun elpy-shell-send-file-as-script ()
+      "Send current buffer to python shell as a script"
+      (interactive)
+      (python-kill)
+      (run-python (format "%s -i --simple-prompt %s"
+                          (python-shell-calculate-command)
+                          (buffer-name))
+                  nil t))
+      
     (defun python-run-master-file ()
       (interactive)
       (python-switch-to-master-file)
@@ -948,6 +967,7 @@ Colors can be displayed with =M-x list-faces-display=
       :which-key "Python"
       "mv" 'pyenv-mode-set
       "mb" 'elpy-shell-send-region-or-buffer
+      "ma" 'elpy-shell-send-file-as-script
       "mq" 'python-kill
       "ms" 'python-set-master-file
       "mm" 'python-switch-to-master-file
@@ -975,9 +995,6 @@ Colors can be displayed with =M-x list-faces-display=
                       "C-r" 'comint-history-isearch-backward
                       "C-k" 'comint-previous-input
                       "C-j" 'comint-next-input)
-
-  (setq python-shell-interpreter "ipython"
-      python-shell-interpreter-args "--simple-prompt -i")
 
   (with-eval-after-load 'python
     (defun python-shell-completion-native-try ()
