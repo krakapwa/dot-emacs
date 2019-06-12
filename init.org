@@ -664,12 +664,10 @@ To change output directory,
     :ensure t
     :after python
     :commands elpy-enable
-    :init (with-eval-after-load 'python (elpy-enable))
+    :init 
+    (with-eval-after-load 'python (elpy-enable))
 
     :config
-    (highlight-phrase "import pdb; pdb.set_trace()")
-    (highlight-phrase "import pdb;")
-    (highlight-phrase "pdb.set_trace()")
     (electric-indent-local-mode -1)
     (delete 'elpy-module-highlight-indentation elpy-modules)
     (delete 'elpy-module-flymake elpy-modules)
@@ -720,13 +718,24 @@ To change output directory,
     (defun python-switch-to-master-file ()
       (interactive)
       (switch-to-buffer python-master-file))
-
-    (defun python-add-breakpoint ()
-      "Add a break point"
-      (interactive)
-      (evil-open-above 1)
-      (insert "import pdb; pdb.set_trace()")
-      (evil-escape))
+      
+      (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
+      "Python breakpoint string used by `python-insert-breakpoint'")     
+     (defun python--add-debug-highlight ()
+     "Adds a highlighter for use by `python--pdb-breakpoint-string'"
+     (highlight-lines-matching-regexp "## DEBUG ##\\s-*$" 'hi-red-b)) 
+     
+     (add-hook 'python-mode-hook 'python--add-debug-highlight)
+     
+      (defun python-add-breakpoint ()
+      "Inserts a python breakpoint using `pdb'"
+        (interactive)
+        (back-to-indentation)
+        ;; this preserves the correct indentation in case the line above
+        ;; point is a nested block
+        (split-line)
+        (insert python--pdb-breakpoint-string))
+  
 
         :diminish elpy-mode)
 
