@@ -723,7 +723,8 @@ To change output directory,
       "Python breakpoint string used by `python-insert-breakpoint'")     
      (defun python--add-debug-highlight ()
      "Adds a highlighter for use by `python--pdb-breakpoint-string'"
-     (highlight-lines-matching-regexp "## DEBUG ##\\s-*$" 'hi-red-b)) 
+     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
+     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
      
      (add-hook 'python-mode-hook 'python--add-debug-highlight)
      
@@ -1040,38 +1041,6 @@ To change output directory,
   (interactive)
   (load-file user-init-file))
   
-(use-package general
-:ensure t
-:config
-(general-evil-setup t)
-(general-define-key
-  :states '(normal visual)
-  :keymaps 'override
-  :prefix "SPC"
-        "fs" 'save-buffer
-        "tw" 'whitespace-mode
-        "qr" 'restart-emacs
-        "qq" 'save-buffers-kill-emacs
-        "wv" 'split-window-right
-        "wh" 'split-window-below
-        "wf" 'split-window-fairly
-        "wd" 'delete-window
-        "TAB" 'ace-window
-        "n" 'neotree
-        "x" 'kill-this-buffer
-        "z" '(hydra-zoom/body :which-key "zoom")
-        "af" 'helm-ag-this-file
-        "hb" 'describe-bindings
-        "hv" 'describe-variable
-        "hf" 'describe-function
-        "hp" 'describe-package
-        "qc"  'my/reload-init-file
-        ))
-(defhydra hydra-zoom()
-"zoom"
-  ("g" my/zoom-in)
-  ("l" my/zoom-out))
-
 
   (which-key-add-key-based-replacements
       "SPC a" "ag"
@@ -1334,9 +1303,7 @@ This sets the window title to buffer name. Use =%f= for full path.
 ** Hydra
 #+begin_src emacs-lisp :tangle yes
 (use-package hydra
-:defer t
   :ensure t
-  :defer t
   :config
     (defun my/zoom-in ()
         "Increase font size"
