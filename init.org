@@ -721,13 +721,6 @@ To change output directory,
       
       (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
       "Python breakpoint string used by `python-insert-breakpoint'")     
-     (defun python--add-debug-highlight ()
-     "Adds a highlighter for use by `python--pdb-breakpoint-string'"
-     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
-     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
-     
-     (add-hook 'python-mode-hook 'python--add-debug-highlight)
-     
       (defun python-add-breakpoint ()
       "Inserts a python breakpoint using `pdb'"
         (interactive)
@@ -805,6 +798,14 @@ To change output directory,
               (setq flycheck-python-pylint-executable "/usr/bin/pylint")
               (setq tab-width 4)
               (setq flycheck-pylintrc "~/.pylintrc")))
+              
+     (defun python-add-debug-highlight ()
+     "Adds a highlighter for use by `python--pdb-breakpoint-string'"
+     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
+     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
+     
+     (add-hook 'python-mode-hook 'python-add-debug-highlight)
+     
 
   )
 
