@@ -143,6 +143,7 @@ tangled, and the tangled file is compiled."
         "wf" 'split-window-fairly
         "wd" 'delete-window
         "TAB" 'ace-window
+        "n" 'neotree
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
         "af" 'helm-ag-this-file
@@ -804,6 +805,7 @@ To change output directory,
      (highlight-lines-matching-regexp "pdb" 'hi-red-b)
      (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
      
+     :init
      (add-hook 'python-mode-hook 'python-add-debug-highlight)
      
 
@@ -1084,20 +1086,23 @@ Company is a text completion framework for Emacs. The name stands for "complete 
 
 (use-package company
 :diminish company-mode
-:commands (company-complete company-mode)
 :defer t
 :config
-  (use-package company-c-headers))
 
-(with-eval-after-load 'company
-(global-company-mode)
-(define-key company-active-map (kbd "C-j") #'company-select-next)
-(define-key company-active-map (kbd "C-k") #'company-select-previous))
-
+    (setq company-tooltip-idle-delay nil)
+    (setq company-idle-delay nil)
+    (use-package company-c-headers))
+    
+;; this disables tooltips 
+(setq-default company-idle-delay nil)
+(setq-default company-tooltip-idle-delay nil)
+ 
 (use-package helm-company
   :ensure t
   :defer t
   :config
+(setq company-tooltip-idle-delay nil)
+  (setq company-idle-delay nil)
   (general-define-key
   :states '(insert)
   "TAB" 'helm-company))
