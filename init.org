@@ -799,17 +799,12 @@ To change output directory,
               (setq flycheck-python-pylint-executable "/usr/bin/pylint")
               (setq tab-width 4)
               (setq flycheck-pylintrc "~/.pylintrc")))
-              
+     :init
      (defun python-add-debug-highlight ()
      "Adds a highlighter for use by `python--pdb-breakpoint-string'"
      (highlight-lines-matching-regexp "pdb" 'hi-red-b)
      (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
-     
-     :init
-     (add-hook 'python-mode-hook 'python-add-debug-highlight)
-     
-
-  )
+     (add-hook 'python-mode-hook 'python-add-debug-highlight))
 
   (general-define-key :states '(normal insert emacs)
                       :major-mode 'inferior-python-mode
@@ -1229,6 +1224,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
     :prefix "SPC"
         "ur" '(ranger :which-key "ranger")))
 #+end_src
+
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
 (use-package ace-window
