@@ -478,19 +478,6 @@ To change output directory,
 * Org
 #+begin_src emacs-lisp :tangle yes
   ;; org mode extensions
-  (defun my-bibtex-completion-exit-notes-buffer ()
-  "Exit notes buffer and delete its window.
-  This will also disable `bibtex-completion-notes-mode' and remove the header
-  line."
-  (interactive)
-  (widen)
-  (bibtex-completion-notes-global-mode -1)
-  (setq-local
-  header-line-format nil)
-  (save-buffer)
-  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
-      (if (and window (not (one-window-p window)))
-          (delete-window window))))
 
   (use-package helm-org-rifle
   :ensure t
@@ -500,33 +487,43 @@ To change output directory,
 )
   (use-package org
     :ensure t
-
+    :commands (org-mode org-capture org-agenda)
     :general
-    (:keymaps 'org-mode-map
-      :states '(normal visual emacs)
+    (:keymaps 'org-capture-mode-map
+      :states '(normal visual)
       :major-mode 'org-mode
       :prefix "SPC"
-      :non-normal-prefix "M-SPC"
+      :which-key "org"
+      "of" 'org-capture-finalize
+      "or" 'org-refile)
+    (:keymaps 'bibtex-completion-notes-mode-map
+      :states '(normal visual)
+      :major-mode 'org-mode
+      :prefix "SPC"
+      :which-key "org"
+      "of" 'my-bibtex-completion-exit-notes-buffer)
+    (:keymaps 'org-mode-map
+      :states '(normal visual)
+      :major-mode 'org-mode
+      :prefix "SPC"
       :which-key "org"
       "me" 'org-export-dispatch
       "mo" 'org-open-at-point
-      "mr" 'org-refile
       "mc" 'org-ref-helm-insert-cite-link)
     (:keymaps 'override
-      :states '(normal visual emacs)
+      :states '(normal visual)
       :prefix "SPC"
       :which-key "org"
           "oa" '(my-pop-to-org-agenda :which-key "agenda")
           "oc" 'org-capture
           "os" 'org-save-all-org-buffers
           "ol" 'org-insert-link
-          "or" 'org-refile
-          "of" 'my-bibtex-completion-exit-notes-buffer)
+          )
     :config
       (which-key-add-key-based-replacements
           "SPC o" "org")
       (setq org-agenda-files '("~/ownCloud/org/agenda")) 
-
+      
     ;; TODO: increase maxlevel and filter out based on tag?
   ;; (defun bh/verify-refile-target ()
   ;;   ; Exclude DONE state tasks from refile targets
@@ -663,6 +660,7 @@ To change output directory,
   (use-package elpy
     :defer t
     :ensure t
+    :diminish elpy-mode
     :after python
     :commands elpy-enable
     :init 
@@ -684,7 +682,7 @@ To change output directory,
       (interactive)
       (elpy-shell-kill)
       (kill-buffer "*Python*"))
-
+      
     (defun python-quit-dbg ()
       (interactive)
       (elpy-shell-kill)
@@ -722,6 +720,7 @@ To change output directory,
       
       (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
       "Python breakpoint string used by `python-insert-breakpoint'")     
+      
       (defun python-add-breakpoint ()
       "Inserts a python breakpoint using `pdb'"
         (interactive)
@@ -729,10 +728,8 @@ To change output directory,
         ;; this preserves the correct indentation in case the line above
         ;; point is a nested block
         (split-line)
-        (insert python--pdb-breakpoint-string))
-  
-
-        :diminish elpy-mode)
+        (insert python--pdb-breakpoint-string)
+        (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()" 'hi-red-b)))
 
     (defun ha/elpy-goto-definition ()
       (interactive)
@@ -800,15 +797,13 @@ To change output directory,
               (setq tab-width 4)
               (setq flycheck-pylintrc "~/.pylintrc")))
               
-     (defun python-add-debug-highlight ()
+    (defun python-add-debug-highlight ()
      "Adds a highlighter for use by `python--pdb-breakpoint-string'"
+     (interactive)
      (highlight-lines-matching-regexp "pdb" 'hi-red-b)
      (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
      
-     :init
-     (add-hook 'python-mode-hook 'python-add-debug-highlight)
-     
-
+    (add-hook 'python-mode-hook 'python-add-debug-highlight)
   )
 
   (general-define-key :states '(normal insert emacs)
@@ -978,7 +973,30 @@ To change output directory,
 
       (use-package helm-bibtex
       :ensure t
-      :after helm)
+      :defer t
+      :after helm
+      :config
+  (defun my-bibtex-completion-exit-notes-buffer ()
+  "Exit notes buffer and delete its window.
+  This will also disable `bibtex-completion-notes-mode' and remove the header
+  line."
+  (interactive)
+  (widen)
+  (bibtex-completion-notes-global-mode -1)
+  (setq-local
+  header-line-format nil)
+  (save-buffer)
+  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
+      (if (and window (not (one-window-p window)))
+          (delete-window window))))
+      :general
+    (:keymaps 'bibtex-completion-notes-mode-map
+      :states '(normal visual)
+      :major-mode 'org-mode
+      :prefix "SPC"
+      :which-key "bibtex"
+      "mf" 'my-bibtex-completion-exit-notes-buffer
+      "mr" 'org-refile))
 
       (use-package org-ref
           :after org
