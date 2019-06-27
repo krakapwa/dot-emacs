@@ -723,7 +723,7 @@ To change output directory,
         ;; point is a nested block
         (split-line)
         (insert python--pdb-breakpoint-string)
-        (highlight-lines-matching-regexp "^[ ]*import pdb; pdb.set_trace()" 'hi-red-b)))
+        (python-set-debug-highlight)))
 
     (defun ha/elpy-goto-definition ()
       (interactive)
@@ -790,12 +790,15 @@ To change output directory,
               (setq flycheck-python-pylint-executable "/usr/bin/pylint")
               (setq tab-width 4)
               (setq flycheck-pylintrc "~/.pylintrc")))
+    (defun python-set-debug-highlight ()
+     (interactive)
+     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
+     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)))
               
     (defun python-add-debug-highlight ()
      "Adds a highlighter for use by `python--pdb-breakpoint-string'"
      (interactive)
-     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
-     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)) 
+     (python-set-debug-highlight)
      (add-hook 'python-mode-hook 'python-add-debug-highlight))
 
   (general-define-key :states '(normal insert emacs)
@@ -1102,25 +1105,17 @@ Company is a text completion framework for Emacs. The name stands for "complete 
 :diminish company-mode
 :defer t
 :config
-
-    (setq company-tooltip-idle-delay nil)
-    (setq company-idle-delay nil)
-    (use-package company-c-headers))
+    (setq company-frontends nil)
+    (use-package company-c-headers)
+:hook
+ (after-init . global-company-mode))
     
-;; this disables tooltips 
-(setq-default company-idle-delay nil)
-(setq-default company-tooltip-idle-delay nil)
+ (use-package helm-company
+  :general (general-def
+             :keymaps '(company-mode-map company-active-map)
+             "TAB" #'helm-company
+             "<tab>" #'helm-company))
  
-(use-package helm-company
-  :ensure t
-  :defer t
-  :config
-(setq company-tooltip-idle-delay nil)
-  (setq company-idle-delay nil)
-  (general-define-key
-  :states '(insert)
-  "TAB" 'helm-company))
-
 (setq company-backends
       '((company-files          ; files & directory
         company-keywords       ; keywords
