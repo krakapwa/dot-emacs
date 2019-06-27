@@ -494,20 +494,14 @@ To change output directory,
       :major-mode 'org-mode
       :prefix "SPC"
       :which-key "org"
-      "of" 'org-capture-finalize
-      "or" 'org-refile)
-    (:keymaps 'bibtex-completion-notes-mode-map
-      :states '(normal visual)
-      :major-mode 'org-mode
-      :prefix "SPC"
-      :which-key "org"
-      "of" 'my-bibtex-completion-exit-notes-buffer)
+      "of" 'org-capture-finalize)
     (:keymaps 'org-mode-map
       :states '(normal visual)
       :major-mode 'org-mode
       :prefix "SPC"
       :which-key "org"
       "me" 'org-export-dispatch
+      "mr" 'org-refile
       "mo" 'org-open-at-point
       "mc" 'org-ref-helm-insert-cite-link)
     (:keymaps 'override
@@ -974,11 +968,14 @@ To change output directory,
       :defer t
       :after helm
       :config
-  (defun my-bibtex-completion-exit-notes-buffer ()
-  "Exit notes buffer and delete its window.
+      
+  (defun bibtex-completion-exit-notes-buffer ()
+  " Trigger org-refile,
+  Exit notes buffer and delete its window.
   This will also disable `bibtex-completion-notes-mode' and remove the header
   line."
   (interactive)
+  (org-refile)
   (widen)
   (bibtex-completion-notes-global-mode -1)
   (setq-local
@@ -987,13 +984,14 @@ To change output directory,
   (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
       (if (and window (not (one-window-p window)))
           (delete-window window))))
+          
       :general
     (:keymaps 'bibtex-completion-notes-mode-map
       :states '(normal visual)
       :major-mode 'org-mode
       :prefix "SPC"
       :which-key "bibtex"
-      "mf" 'my-bibtex-completion-exit-notes-buffer
+      "mf" 'bibtex-completion-exit-notes-buffer
       "mr" 'org-refile))
 
       (use-package org-ref
