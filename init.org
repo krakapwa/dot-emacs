@@ -84,8 +84,8 @@ tangled, and the tangled file is compiled."
         ("myelpa" . "https://raw.githubusercontent.com/lejeunel/myelpa/master/"))
       package-archive-priorities
             '(("gnu" . 5)
-              ("melpa"     . 10)
-              ("myelpa"     . 15)
+              ("melpa"     . 15)
+              ("myelpa"     . 10)
               ("stable-melpa"     . 1)
               ("org"     . 0)
               ("elpy"        . 0)))
@@ -131,7 +131,7 @@ tangled, and the tangled file is compiled."
     
 (general-evil-setup t)
 (general-define-key
-  :states '(normal visual)
+  :states '(normal visual treemacs)
   :keymaps 'override
   :prefix "SPC"
         "fs" 'save-buffer
@@ -143,7 +143,7 @@ tangled, and the tangled file is compiled."
         "wf" 'split-window-fairly
         "wd" 'delete-window
         "TAB" 'ace-window
-        "n" 'neotree
+        "n" 'treemacs-select-window
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
         "af" 'helm-ag-this-file
@@ -266,18 +266,25 @@ To change output directory,
   ;; Relative line numbering
   (use-package linum-relative
     :ensure t
-    :init
-    (progn
+    :config
+    ;; this is to apply global-linum-mode with exceptions
+    (define-global-minor-mode my-global-linum-mode linum-mode
+      (lambda ()
+        (when (not (memq major-mode
+                        (list 'treemacs-mode)))
+          (linum-mode))))
 
-      (setq linum-relative-format "%3s ")
-      (setq linum-relative-current-symbol "")))
+    (my-global-linum-mode 1)
+    :init
+    (setq linum-relative-format "%3s ")
+    (setq linum-relative-current-symbol ""))
+      
   ;; Highlight indent
   (use-package highlight-indent-guides
     :ensure t
     :init
     (progn
       (setq linum-relative-format "%3s ")
-      (linum-mode)
       (linum-relative-mode)
       (setq highlight-indent-guides-method 'column))
     :diminish highlight-indent-guides-mode)
@@ -446,33 +453,84 @@ To change output directory,
      (use-package helm-gitignore)))
 #+end_src
 
-* Neotree
+* Treemacs
 #+begin_src emacs-lisp :tangle yes
-(use-package neotree
-            :commands (neotree-toggle my/neotree-projectile-toggle)
-            :config
-            (setq neo-theme (if window-system 'icons 'arrows))
-            (add-hook 'neo-after-create-hook
-                #'(lambda (_)
-                (with-current-buffer (get-buffer neo-buffer-name)
-                (setq truncate-lines t)
-                (setq word-wrap nil)
-                (make-local-variable 'auto-hscroll-mode)
-                (setq auto-hscroll-mode nil))))
-            (general-define-key :states '(normal emacs)
-                                :keymaps 'neotree-mode-map
-                                "j" 'neotree-next-line
-                                "k" 'neotree-previous-line
-                                "h" 'neotree-hidden-file-toggle
-                                "y" 'neotree-copy-node
-                                "c" 'neotree-create-node
-                                "R" 'neotree-rename-node
-                                "r" 'neotree-refresh
-                                "o" 'neotree-open-file-in-system-application
-                                "d" 'neotree-delete-node
-                                "SPC" 'neotree-quick-look
-                                "RET" 'neotree-enter))
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                 (if (executable-find "python3") 3 0)
+          treemacs-deferred-git-apply-delay      0.5
+          treemacs-display-in-side-window        t
+          treemacs-eldoc-display                 t
+          treemacs-file-event-delay              5000
+          treemacs-file-follow-delay             0.2
+          treemacs-follow-after-init             t
+          treemacs-git-command-pipe              ""
+          treemacs-goto-tag-strategy             'refetch-index
+          treemacs-indentation                   2
+          treemacs-indentation-string            " "
+          treemacs-is-never-other-window         nil
+          treemacs-max-git-entries               5000
+          treemacs-missing-project-action        'ask
+          treemacs-no-png-images                 nil
+          treemacs-no-delete-other-windows       t
+          treemacs-project-follow-cleanup        nil
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-recenter-distance             0.1
+          treemacs-recenter-after-file-follow    nil
+          treemacs-recenter-after-tag-follow     nil
+          treemacs-recenter-after-project-jump   'always
+          treemacs-recenter-after-project-expand 'on-distance
+          treemacs-show-cursor                   nil
+          treemacs-show-hidden-files             t
+          treemacs-silent-filewatch              nil
+          treemacs-silent-refresh                nil
+          treemacs-sorting                       'alphabetic-desc
+          treemacs-space-between-root-nodes      t
+          treemacs-tag-follow-cleanup            t
+          treemacs-tag-follow-delay              1.5
+          treemacs-width                         30)
+    (treemacs-resize-icons 11)
+	
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null (executable-find "python3"))))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
 
+(use-package treemacs-evil
+  :after treemacs evil
+    :ensure t)
+    
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+ 
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t) 
+  
+  (use-package treemacs-icons-dired
+    :after treemacs dired
+    :ensure t
+    :config (treemacs-icons-dired-mode))
 #+end_src
 
 * Org
@@ -1247,7 +1305,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
     :custom
       (ace-window-display-mode t)
       :config
-    (dolist (buffer '(neotree-mode))
+    (dolist (buffer '(treemacs-mode))
         (add-to-list 'aw-ignored-buffers buffer))
   :general
   (:keymaps 'override
@@ -1376,102 +1434,98 @@ This sets the window title to buffer name. Use =%f= for full path.
       :ensure t
       :defer t
       :hook (after-init . doom-modeline-init))
-
-
+    
   (use-package doom-themes
+    :ensure t
     :init
-    (load-theme 'doom-dracula t)
-    ;; (load-theme 'doom-nord t)
-    :config
-    (progn
-        (doom-themes-neotree-config)
-        (doom-themes-org-config)))
+    (doom-themes-org-config)
+    (doom-themes-treemacs-config)
+    (load-theme 'doom-dracula t))
+    
+    (global-visual-line-mode 1)
+    (diminish 'visual-line-mode)
+    (diminish 'hi-lock-mode)
+    (diminish 'evil-snipe-local-mode)
 
-      (global-linum-mode t)
-      (global-visual-line-mode 1)
-      (diminish 'visual-line-mode)
-      (diminish 'hi-lock-mode)
-      (diminish 'evil-snipe-local-mode)
+    ;;Maximize on startup
+    (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-      ;;Maximize on startup
-      (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-      (add-to-list 'default-frame-alist '(fullscreen . maximized))
+    (global-hl-line-mode +1)
+    (blink-cursor-mode 0)
 
-      (global-hl-line-mode +1)
-      (blink-cursor-mode 0)
-
-      ;;; appearance
-    (tool-bar-mode 0)
-    (scroll-bar-mode 0)
+        ;;; appearance
+      (tool-bar-mode 0)
+      (scroll-bar-mode 0)
 
  
-(setq myfont "source code pro semibold")
-;; (setq myfont "hack")
-(cond
-((string-equal system-name "multichouette")
-  (set-face-attribute 'default nil :font myfont :height 116))
-((string-equal system-name "tc")
-  (set-face-attribute 'default nil :font myfont :height 116)))
+  (setq myfont "source code pro semibold")
+  ;; (setq myfont "hack")
+  (cond
+  ((string-equal system-name "multichouette")
+    (set-face-attribute 'default nil :font myfont :height 116))
+  ((string-equal system-name "tc")
+    (set-face-attribute 'default nil :font myfont :height 100))
+  (t (set-face-attribute 'default nil :font myfont :height 116)))
 
-    (set-face-attribute 'default nil :font myfont :height 116)
-    ;; more context when scrolling
-    (setq next-screen-context-lines 4)
+      ;; more context when scrolling
+      (setq next-screen-context-lines 4)
 
-      ;; y/n for yes/no
-      (defalias 'yes-or-no-p 'y-or-n-p)
+        ;; y/n for yes/no
+        (defalias 'yes-or-no-p 'y-or-n-p)
 
-      ;; start week on Monday
-      (setq calendar-week-start-day 1)
+        ;; start week on Monday
+        (setq calendar-week-start-day 1)
 
-      ;; window undo/redo
-      (winner-mode)
+        ;; window undo/redo
+        (winner-mode)
 
-      ;; tabs are truly evil
-      (setq-default indent-tabs-mode nil)
+        ;; tabs are truly evil
+        (setq-default indent-tabs-mode nil)
 
-      ;; sentences end with one space
-      (setq sentence-end-double-space nil)
+        ;; sentences end with one space
+        (setq sentence-end-double-space nil)
 
-      ;;; settings
-      ;; enable all commands
-      (setq disabled-command-function nil)
+        ;;; settings
+        ;; enable all commands
+        (setq disabled-command-function nil)
 
-      ;; default truncate lines
-      (setq-default truncate-lines t)
+        ;; default truncate lines
+        (setq-default truncate-lines t)
 
-      ;; disable bell
-      (setq ring-bell-function 'ignore
-              visible-bell t)
+        ;; disable bell
+        (setq ring-bell-function 'ignore
+                visible-bell t)
 
-      ;; increase garbage collection threshold
-      (setq gc-cons-threshold (* 10 1024 1024))
+        ;; increase garbage collection threshold
+        (setq gc-cons-threshold (* 10 1024 1024))
 
-      ;; inhibit startup message
-      (setq inhibit-startup-message t)
+        ;; inhibit startup message
+        (setq inhibit-startup-message t)
 
-      ;; kill settings
-      (setq save-interprogram-paste-before-kill t
-              kill-do-not-save-duplicates t
-              kill-whole-line t)
+        ;; kill settings
+        (setq save-interprogram-paste-before-kill t
+                kill-do-not-save-duplicates t
+                kill-whole-line t)
 
-      ;; repeat mark pop
-      (setq-default set-mark-command-repeat-pop t)
+        ;; repeat mark pop
+        (setq-default set-mark-command-repeat-pop t)
 
-      ;; set terminfo
-      (setq system-uses-terminfo nil)
+        ;; set terminfo
+        (setq system-uses-terminfo nil)
 
-      ;;; extensions
-      ;; adaptive word wrapping
-      (use-package adaptive-wrap
-          :config (adaptive-wrap-prefix-mode)
-          :diminish adaptive-wrap-prefix-mode
-      )
+        ;;; extensions
+        ;; adaptive word wrapping
+        (use-package adaptive-wrap
+            :config (adaptive-wrap-prefix-mode)
+            :diminish adaptive-wrap-prefix-mode
+        )
 
-      ;; which-key
-      (use-package which-key
-      :diminish which-key-mode
-      :config (which-key-mode))
-(evil-set-cursor-color "#f4d942")
+        ;; which-key
+        (use-package which-key
+        :diminish which-key-mode
+        :config (which-key-mode))
+  (evil-set-cursor-color "#f4d942")
 #+end_src
 
 ** Colors for dired, helm, etc..
