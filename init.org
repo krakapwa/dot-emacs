@@ -135,7 +135,6 @@ tangled, and the tangled file is compiled."
   :keymaps 'override
   :prefix "SPC"
         "fs" 'save-buffer
-        "tw" 'whitespace-mode
         "qr" 'restart-emacs
         "qq" 'save-buffers-kill-emacs
         "wv" 'split-window-right
@@ -1030,21 +1029,21 @@ To change output directory,
       :after helm
       :config
       
-  (defun bibtex-completion-exit-notes-buffer ()
-  " Trigger org-refile,
-  Exit notes buffer and delete its window.
-  This will also disable `bibtex-completion-notes-mode' and remove the header
-  line."
-  (interactive)
-  (org-refile)
-  (widen)
-  (bibtex-completion-notes-global-mode -1)
-  (setq-local
-  header-line-format nil)
-  (save-buffer)
-  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
-      (if (and window (not (one-window-p window)))
-          (delete-window window))))
+    (defun bibtex-completion-exit-notes-buffer ()
+    " Trigger org-refile,
+    Exit notes buffer and delete its window.
+    This will also disable `bibtex-completion-notes-mode' and remove the header
+    line."
+    (interactive)
+    (org-refile)
+    (widen)
+    (bibtex-completion-notes-global-mode -1)
+    (setq-local
+    header-line-format nil)
+    (save-buffer)
+    (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
+        (if (and window (not (one-window-p window)))
+            (delete-window window))))
           
       :general
     (:keymaps 'bibtex-completion-notes-mode-map
@@ -1159,30 +1158,46 @@ To change output directory,
 Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
 #+begin_src emacs-lisp :tangle yes
 
-(use-package company
-:diminish company-mode
-:defer t
-:config
-    (setq company-frontends nil)
+  (use-package company
+  :diminish company-mode
+  :ensure t
+  :defer t
+  :init
+  ;; Fix fci-mode when used in conjunction with company-mode
+  ;; @see https://github.com/company-mode/company-mode/issues/180#issuecomment-55047120
+  (defvar-local company-fci-mode-on-p nil)
+
+  (defun company-turn-off-fci (&rest ignore)
+    (when (boundp 'fci-mode)
+      (setq company-fci-mode-on-p fci-mode)
+      (when fci-mode (fci-mode -1))))
+
+  (defun company-maybe-turn-on-fci (&rest ignore)
+    (when company-fci-mode-on-p (fci-mode 1)))
+  :config
+    (add-hook 'company-completion-started-hook 'company-turn-off-fci)
+    (add-hook 'company-completion-finished-hook 'company-maybe-turn-on-fci)
+    (add-hook 'company-completion-cancelled-hook 'company-maybe-turn-on-fci)
+    ;; (setq company-frontends nil)
     (use-package company-c-headers)
-:hook
- (after-init . global-company-mode))
+  :hook
+   (after-init . global-company-mode))
     
- (use-package helm-company
-  :general (general-def
-             :keymaps '(company-mode-map company-active-map)
-             "TAB" #'helm-company
-             "<tab>" #'helm-company))
+   (use-package helm-company
+    :general (general-def
+               :keymaps '(company-mode-map company-active-map)
+               "TAB" #'helm-company
+               "<tab>" #'helm-company))
  
-(setq company-backends
-      '((company-files          ; files & directory
-        company-keywords       ; keywords
-        company-capf
-        company-jedi
-        company-yasnippet
-        )
-        (company-abbrev company-dabbrev)
-))
+  (setq company-backends
+        '((company-files          ; files & directory
+          company-keywords       ; keywords
+          company-capf
+          company-jedi
+          company-yasnippet
+          )
+          (company-abbrev company-dabbrev)
+  ))
 #+end_src
 ** Demangle
 demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
