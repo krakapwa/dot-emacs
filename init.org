@@ -22,37 +22,37 @@ When this configuration is loaded for the first time, the =init.el= is the file 
 (byte-compile-file (concat user-emacs-directory "init.el"))#+end_src
 #+end_src
 It tangles the org-file, so that this file is overwritten with the actual
-   configuration.
+configuration.
 
-   There is no reason to track the =init.el= that is generated; by running
-   the following command =git= will not bother tracking it:
+There is no reason to track the =init.el= that is generated; by running
+the following command =git= will not bother tracking it:
 
-   #+BEGIN_SRC sh :tangle no
-   git update-index --assume-unchanged init.el
-   #+END_SRC
+#+BEGIN_SRC sh :tangle no
+git update-index --assume-unchanged init.el
+#+END_SRC
 
-   If one wishes to make changes to the repo-version of =init.el= start
-   tracking again with:
+If one wishes to make changes to the repo-version of =init.el= start
+tracking again with:
 
-   #+BEGIN_SRC sh :tangle no
-   git update-index --no-assume-unchanged init.el
-   #+END_SRC
+#+BEGIN_SRC sh :tangle no
+git update-index --no-assume-unchanged init.el
+#+END_SRC
 
-   I want lexical scoping for the init-file, which can be specified in the
-   header. The first line of the configuration is as follows:
+I want lexical scoping for the init-file, which can be specified in the
+header. The first line of the configuration is as follows:
 
-   #+BEGIN_SRC emacs-lisp
-   ;;; -*- lexical-binding: t -*-
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+;;; -*- lexical-binding: t -*-
+#+END_SRC
 
-   The =init.el= should (after the first run) mirror the source blocks in
-   the =init.org=. We can use =C-c C-v t= to run =org-babel-tangle=, which
-   extracts the code blocks from the current file into a source-specific
-   file (in this case a =.el=-file).
+The =init.el= should (after the first run) mirror the source blocks in
+the =init.org=. We can use =C-c C-v t= to run =org-babel-tangle=, which
+extracts the code blocks from the current file into a source-specific
+file (in this case a =.el=-file).
 
-   To avoid doing this each time a change is made we can add a function to
-   the =after-save-hook= ensuring to always tangle and byte-compile the
-   =org=-document after changes.
+To avoid doing this each time a change is made we can add a function to
+the =after-save-hook= ensuring to always tangle and byte-compile the
+=org=-document after changes.
 
 #+begin_src emacs-lisp :tangle yes
 (defun tangle-init ()
@@ -66,7 +66,6 @@ tangled, and the tangled file is compiled."
       (byte-compile-file (concat user-emacs-directory "init.el")))))
 
 (add-hook 'after-save-hook 'tangle-init)
-
 #+end_src
 * Packages
   This is where the mirrors and their priorities are set up.
@@ -119,41 +118,6 @@ tangled, and the tangled file is compiled."
 
 (use-package diminish
     :ensure t)
-
-
-(use-package general
-:ensure t
-:config
-
-  (defun my-term ()
-    (interactive)
-    (term "/usr/bin/zsh"))
-    
-(general-evil-setup t)
-(general-define-key
-  :states '(normal visual treemacs)
-  :keymaps 'override
-  :prefix "SPC"
-        "fs" 'save-buffer
-        "qr" 'restart-emacs
-        "qq" 'save-buffers-kill-emacs
-        "wv" 'split-window-right
-        "wh" 'split-window-below
-        "wf" 'split-window-fairly
-        "wd" 'delete-window
-        "TAB" 'ace-window
-        "n" 'treemacs-select-window
-        "x" 'kill-this-buffer
-        "z" '(hydra-zoom/body :which-key "zoom")
-        "af" 'helm-ag-this-file
-        "hb" 'describe-bindings
-        "ut" 'my-term
-        "hv" 'describe-variable
-        "hf" 'describe-function
-        "hp" 'describe-package
-        "qc"  'my/reload-init-file
-        ))
-
 #+end_src
 ** Elpa-mirror
 =M-x elpamr-create-mirror-for-installed= to create local repository.
@@ -167,29 +131,65 @@ To change output directory,
 (require 'elpa-mirror)
 
 #+end_src
+* Bindings
+#+begin_src emacs-lisp :tangle yes
+
+(global-set-key (kbd "<escape>")      'keyboard-escape-quit)
+
+(use-package general
+    :ensure t
+    :after helm
+    :config
+
+    (defun my-term ()
+        (interactive)
+        (term "/usr/bin/zsh"))
+
+    (defun my/reload-init-file ()
+        (interactive)
+        (load-file user-init-file))
+
+    (general-evil-setup t)
+
+    (define-key helm-map (kbd "C-j") 'helm-next-line)
+    (define-key helm-map (kbd "C-k") 'helm-previous-line)
+
+    (general-define-key
+    :states '(normal visual treemacs)
+    :keymaps 'override
+    :prefix "SPC"
+            "fs" 'save-buffer
+            "qr" 'restart-emacs
+            "qq" 'save-buffers-kill-emacs
+            "wv" 'split-window-right
+            "wh" 'split-window-below
+            "wf" 'split-window-fairly
+            "wd" 'delete-window
+            "TAB" 'ace-window
+            "n" 'treemacs-select-window
+            "x" 'kill-this-buffer
+            "z" '(hydra-zoom/body :which-key "zoom")
+            "af" 'helm-ag-this-file
+            "hb" 'describe-bindings
+            "ut" 'my-term
+            "hv" 'describe-variable
+            "hf" 'describe-function
+            "hp" 'describe-package
+            "qc"  'my/reload-init-file
+            ))
+
+(which-key-add-key-based-replacements
+    "SPC a" "ag"
+    "SPC h" "help"
+    "SPC t" "toggle"
+    "SPC w" "window"
+    "SPC m" "major-mode")
+#+end_src
 * Backup
 #+begin_src emacs-lisp :tangle yes
 (setq backup-directory-alist `(("." . "~/.emacs.d/saves")))
 #+end_src
-  
-* Dashboard
-#+begin_src emacs-lisp :tangle yes
-(use-package dashboard
-  :preface
-    (defun my/dashboard-banner ()
-    """Set a dashboard banner including information on package initialization
-    time and garbage collections."""
-    (setq dashboard-banner-logo-title
-            (format "Emacs ready in %.2f seconds with %d garbage collections."
-                    (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
-  :init
-  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-  (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
-  :config
-  (setq dashboard-startup-banner 'logo)
-  (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5) (bookmarks . 5)))
-  (dashboard-setup-startup-hook))
-#+end_src
+
 * Yasnippet
 #+begin_src emacs-lisp :tangle yes
   (use-package yasnippet
@@ -207,7 +207,7 @@ To change output directory,
           "yi" '(yas-insert-snippet :which-key "insert-snippet")
           "yr" '(yas-reload-all :which-key "reload-all")
           "yn" '(yas-new-snippet :which-key "new-snippet"))
-    :config 
+    :config
         (setq
             yas-verbosity 1)
       (add-hook 'python-mode-hook #'yas-minor-mode)
@@ -256,50 +256,8 @@ To change output directory,
   :config
     (add-hook 'git-commit-mode-hook 'evil-insert-state)
     (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-  ;; Relative line numbering
-  (use-package rainbow-delimiters
-    :ensure t
-    :init)
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
-  ;; Relative line numbering
-  (use-package linum-relative
-    :ensure t
-    :config
-    ;; this is to apply global-linum-mode with exceptions
-    (define-global-minor-mode my-global-linum-mode linum-mode
-      (lambda ()
-        (when (not (memq major-mode
-                        (list 'treemacs-mode)))
-          (linum-mode))))
-
-    (my-global-linum-mode 1)
-    :init
-    (setq linum-relative-format "%3s ")
-    (setq linum-relative-current-symbol ""))
-      
-  ;; Highlight indent
-  (use-package highlight-indent-guides
-    :ensure t
-    :init
-    (progn
-      (setq linum-relative-format "%3s ")
-      (linum-relative-mode)
-      (setq highlight-indent-guides-method 'column))
-    :diminish highlight-indent-guides-mode)
-  (use-package hlinum
-    :ensure t
-    :init
-    (hlinum-activate)
-  )
-  (use-package paren
-    :ensure t
-    :init
-    (progn
-      (setq show-paren-style 'parenthesis)
-      (show-paren-mode +1)
-      )))
-      
 
 (use-package evil-collection
   :after evil
@@ -369,14 +327,17 @@ To change output directory,
 (use-package evil-visualstar
   :init (global-evil-visualstar-mode))
 
+(use-package helm-projectile
+  :after projectile
+  :ensure t)
+
 ;; projectile
 (use-package projectile
   :ensure projectile
   :diminish projectile-mode
+  :after treemacs
   :init
-    (use-package helm-projectile
-    :ensure t
-    :general
+  :general
   (:keymaps 'override
     :states '(normal visual emacs)
     :prefix "SPC"
@@ -385,26 +346,28 @@ To change output directory,
         "pb" '(projectile-compile-project :which-key "build")
         "pr" '(projectile-replace :which-key "replace")
         "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
+        "pta" '(treemacs-add-project-to-workspace :which-key "treemacs-add")
+        "ptr" '(treemacs-remove-project-from-workspace
+                :which-key "treemacs-remove")
         "pa" '(helm-projectile-ag :which-key "ag")
         "pg" '(helm-projectile-grep :which-key "grep")
-        "ps" '(helm-projectile-switch-project :which-key "switch-project")))
+        "ps" '(helm-projectile-switch-project :which-key "switch-project"))
   :config
   (defun my/projectile-switch-project-action ()
     (interactive)
     (helm-projectile)
-    (neotree-projectile-action)
     (ace-select-window))
-        
+
     (setq projectile-switch-project-action
         'my/projectile-switch-project-action)
-        
+
   (which-key-add-key-based-replacements
-      "SPC p" "projectile")
+      "SPC p" "projectile"
+      "SPC pt" "treemacs")
   (setq projectile-enable-caching t
         projectile-mode t
         projectile-completion-system 'helm)
-  (projectile-mode)
-  )
+  (projectile-mode))
 
 #+end_src
 * Helm
@@ -427,7 +390,7 @@ To change output directory,
       '(helm-source-buffers-list
         helm-source-bookmarks
         helm-source-recentf
-        helm-source-buffer-not-found))  
+        helm-source-buffer-not-found))
   (general-define-key
    :keymaps 'helm-map
    "C-c !" 'helm-toggle-suspend-update
@@ -454,82 +417,79 @@ To change output directory,
 
 * Treemacs
 #+begin_src emacs-lisp :tangle yes
-(use-package treemacs
-  :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :config
-  (progn
-    (setq treemacs-collapse-dirs                 (if (executable-find "python3") 3 0)
-          treemacs-deferred-git-apply-delay      0.5
-          treemacs-display-in-side-window        t
-          treemacs-eldoc-display                 t
-          treemacs-file-event-delay              5000
-          treemacs-file-follow-delay             0.2
-          treemacs-follow-after-init             t
-          treemacs-git-command-pipe              ""
-          treemacs-goto-tag-strategy             'refetch-index
-          treemacs-indentation                   2
-          treemacs-indentation-string            " "
-          treemacs-is-never-other-window         nil
-          treemacs-max-git-entries               5000
-          treemacs-missing-project-action        'ask
-          treemacs-no-png-images                 nil
-          treemacs-no-delete-other-windows       t
-          treemacs-project-follow-cleanup        nil
-          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-          treemacs-recenter-distance             0.1
-          treemacs-recenter-after-file-follow    nil
-          treemacs-recenter-after-tag-follow     nil
-          treemacs-recenter-after-project-jump   'always
-          treemacs-recenter-after-project-expand 'on-distance
-          treemacs-show-cursor                   nil
-          treemacs-show-hidden-files             t
-          treemacs-silent-filewatch              nil
-          treemacs-silent-refresh                nil
-          treemacs-sorting                       'alphabetic-desc
-          treemacs-space-between-root-nodes      t
-          treemacs-tag-follow-cleanup            t
-          treemacs-tag-follow-delay              1.5
-          treemacs-width                         30)
-    (treemacs-resize-icons 11)
-	
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null (executable-find "python3"))))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'simple))))
-  :bind
-  (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t t"   . treemacs)
-        ("C-x t B"   . treemacs-bookmark)
-        ("C-x t C-t" . treemacs-find-file)
-        ("C-x t M-t" . treemacs-find-tag)))
+  (use-package treemacs
+      :ensure t
+      :defer t
+    :config
+    (progn
+      (setq treemacs-collapse-dirs                 (if (executable-find "python3") 3 0)
+            treemacs-deferred-git-apply-delay      0.5
+            treemacs-display-in-side-window        t
+            treemacs-eldoc-display                 t
+            treemacs-file-event-delay              5000
+            treemacs-file-follow-delay             0.2
+            treemacs-follow-after-init             t
+            treemacs-git-command-pipe              ""
+            treemacs-goto-tag-strategy             'refetch-index
+            treemacs-indentation                   2
+            treemacs-indentation-string            " "
+            treemacs-is-never-other-window         nil
+            treemacs-max-git-entries               5000
+            treemacs-missing-project-action        'ask
+            treemacs-no-png-images                 nil
+            treemacs-no-delete-other-windows       t
+            treemacs-project-follow-cleanup        nil
+            treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+            treemacs-recenter-distance             0.1
+            treemacs-recenter-after-file-follow    nil
+            treemacs-recenter-after-tag-follow     nil
+            treemacs-recenter-after-project-jump   'always
+            treemacs-recenter-after-project-expand 'on-distance
+            treemacs-show-cursor                   nil
+            treemacs-show-hidden-files             t
+            treemacs-silent-filewatch              nil
+            treemacs-silent-refresh                nil
+            treemacs-sorting                       'alphabetic-desc
+            treemacs-space-between-root-nodes      t
+            treemacs-tag-follow-cleanup            t
+            treemacs-tag-follow-delay              1.5
+            treemacs-width                         30)
+      (treemacs-resize-icons 11)
 
-(use-package treemacs-evil
-  :after treemacs evil
+      (treemacs-follow-mode t)
+      (treemacs-filewatch-mode t)
+      (treemacs-fringe-indicator-mode t)
+      (pcase (cons (not (null (executable-find "git")))
+                   (not (null (executable-find "python3"))))
+        (`(t . t)
+         (treemacs-git-mode 'deferred))
+        (`(t . _)
+         (treemacs-git-mode 'simple))))
+    :bind
+    (:map global-map
+          ("M-0"       . treemacs-select-window)
+          ("C-x t 1"   . treemacs-delete-other-windows)
+          ("C-x t t"   . treemacs)
+          ("C-x t B"   . treemacs-bookmark)
+          ("C-x t C-t" . treemacs-find-file)
+          ("C-x t M-t" . treemacs-find-tag)))
+
+  (use-package treemacs-evil
+    :after treemacs evil
+      :ensure t)
+
+  (use-package treemacs-projectile
+    :after treemacs projectile
     :ensure t)
-    
-(use-package treemacs-projectile
-  :after treemacs projectile
-  :ensure t)
- 
-(use-package treemacs-magit
-  :after treemacs magit
-  :ensure t) 
-  
-  (use-package treemacs-icons-dired
-    :after treemacs dired
-    :ensure t
-    :config (treemacs-icons-dired-mode))
+
+  (use-package treemacs-magit
+    :after treemacs magit
+    :ensure t)
+
+    (use-package treemacs-icons-dired
+      :after treemacs dired
+      :ensure t
+      :config (treemacs-icons-dired-mode))
 #+end_src
 
 * Org
@@ -573,8 +533,8 @@ To change output directory,
     :config
       (which-key-add-key-based-replacements
           "SPC o" "org")
-      (setq org-agenda-files '("~/ownCloud/org/agenda")) 
-      
+      (setq org-agenda-files '("~/ownCloud/org/agenda"))
+
     ;; TODO: increase maxlevel and filter out based on tag?
   ;; (defun bh/verify-refile-target ()
   ;;   ; Exclude DONE state tasks from refile targets
@@ -612,12 +572,12 @@ To change output directory,
             nil)
         (if (member tag (org-get-tags-at current-headline))
             next-headline
-          nil)))) 
+          nil))))
 
     (defun my-pop-to-org-agenda ()
       "Visit the org agenda, in the current window or a SPLIT."
       (interactive)
-      (org-agenda nil "c"))      
+      (org-agenda nil "c"))
 
     ;;set priority range from A to C with default A
     (setq org-highest-priority ?A)
@@ -631,8 +591,8 @@ To change output directory,
     ;;org custom agenda
     (setq org-agenda-custom-commands
         '(("c" "Simple agenda view"
-           ((tags-todo "PRIORITY=\"A\"\LEVEL>1" 
-                  ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org")) 
+           ((tags-todo "PRIORITY=\"A\"\LEVEL>1"
+                  ((org-agenda-files '("~/ownCloud/org/agenda/tasks.org" "~/ownCloud/org/agenda/agenda.org"))
                   (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
                    (org-agenda-overriding-header "High-priority unfinished tasks:")))
             (agenda "")
@@ -643,7 +603,7 @@ To change output directory,
                             (org-agenda-skip-if nil '(scheduled deadline))))))))))
 
     ;;(setq-default org-display-custom-times t)
-    ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>")) 
+    ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>"))
     ;;open agenda in current window
     (setq org-agenda-window-setup (quote current-window))
     (setq org-capture-templates
@@ -714,7 +674,7 @@ To change output directory,
     :diminish elpy-mode
     :after python
     :commands elpy-enable
-    :init 
+    :init
     (with-eval-after-load 'python (elpy-enable))
 
     :config
@@ -733,7 +693,7 @@ To change output directory,
       (interactive)
       (elpy-shell-kill)
       (kill-buffer "*Python*"))
-      
+
     (defun python-quit-dbg ()
       (interactive)
       (elpy-shell-kill)
@@ -768,10 +728,10 @@ To change output directory,
     (defun python-switch-to-master-file ()
       (interactive)
       (switch-to-buffer python-master-file))
-      
+
       (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
-      "Python breakpoint string used by `python-insert-breakpoint'")     
-      
+      "Python breakpoint string used by `python-insert-breakpoint'")
+
       (defun python-add-breakpoint ()
       "Inserts a python breakpoint using `pdb'"
         (interactive)
@@ -791,7 +751,7 @@ To change output directory,
   (use-package pyenv-mode
     :defer t
     :ensure t
-    :init 
+    :init
       (add-to-list 'exec-path "~/.pyenv/shims")
       (setenv "WORKON_HOME" "~/.pyenv/versions/")
     :config
@@ -816,7 +776,7 @@ To change output directory,
       :ensure t
       :init
       (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
-      (setq company-jedi-python-bin "python")))   
+      (setq company-jedi-python-bin "python")))
 
   (use-package python
     :defer t
@@ -851,7 +811,7 @@ To change output directory,
      (interactive)
      (highlight-lines-matching-regexp "pdb" 'hi-red-b)
      (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)))
-              
+
     (defun python-add-debug-highlight ()
      "Adds a highlighter for use by `python--pdb-breakpoint-string'"
      (interactive)
@@ -884,7 +844,7 @@ To change output directory,
   ;; RTags creates more accurate overlays.
   (setq-local flycheck-highlighting-mode nil)
   (setq-local flycheck-check-syntax-automatically nil))
-  
+
 (use-package clang-format
     :ensure t
     :defer t
@@ -924,19 +884,19 @@ To change output directory,
       :defer t
       :config
       (progn
-	(defun my-flycheck-setup ()
-	  (flycheck-select-checker 'rtags))
-	(add-hook 'c-mode-hook #'my-flycheck-setup)
-	(add-hook 'c++-mode-hook #'my-flycheck-setup))
+        (defun my-flycheck-setup ()
+          (flycheck-select-checker 'rtags))
+        (add-hook 'c-mode-hook #'my-flycheck-setup)
+        (add-hook 'c++-mode-hook #'my-flycheck-setup))
       )
     (use-package company-rtags
       :ensure t
       :defer t
       :config
       (progn
-    	(require 'company)
+        (require 'company)
         (add-to-list 'company-backends 'company-rtags)
-    	))
+        ))
     )
 )
 (add-hook 'c-mode-common-hook #'setup-flycheck-rtags)
@@ -970,7 +930,7 @@ To change output directory,
       (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
       :config
       (setq reftex-ref-macro-prompt nil)
-      (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o"))) 
+      (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o")))
       (progn
           (use-package auto-complete
           :config
@@ -1028,7 +988,7 @@ To change output directory,
       :defer t
       :after helm
       :config
-      
+
     (defun bibtex-completion-exit-notes-buffer ()
     " Trigger org-refile,
     Exit notes buffer and delete its window.
@@ -1044,7 +1004,7 @@ To change output directory,
     (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
         (if (and window (not (one-window-p window)))
             (delete-window window))))
-          
+
       :general
     (:keymaps 'bibtex-completion-notes-mode-map
       :states '(normal visual)
@@ -1109,26 +1069,6 @@ To change output directory,
           (reftex-mode))
 
 #+end_src
-* Define keys
-#+begin_src emacs-lisp :tangle yes
-;Single escape to exit "everything"
-(global-set-key (kbd "<escape>")      'keyboard-escape-quit)
-
-(defun my/reload-init-file ()
-  (interactive)
-  (load-file user-init-file))
-  
-
-  (which-key-add-key-based-replacements
-      "SPC a" "ag"
-      "SPC h" "help"
-      "SPC t" "toggle"
-      "SPC w" "window"
-      "SPC m" "major-mode")
-
-  (define-key helm-map (kbd "C-j") 'helm-next-line)
-  (define-key helm-map (kbd "C-k") 'helm-previous-line)
-  #+end_src
 * Others
 ** Restart emacs
   #+begin_src emacs-lisp :tangle yes
@@ -1182,13 +1122,13 @@ Company is a text completion framework for Emacs. The name stands for "complete 
     (use-package company-c-headers)
   :hook
    (after-init . global-company-mode))
-    
+
    (use-package helm-company
     :general (general-def
                :keymaps '(company-mode-map company-active-map)
                "TAB" #'helm-company
                "<tab>" #'helm-company))
- 
+
   (setq company-backends
         '((company-files          ; files & directory
           company-keywords       ; keywords
@@ -1250,7 +1190,7 @@ On the fly syntax/spelling checking.
   (use-package magit
   :defer t
   :commands (magit-status projectile-vc)
-  
+
   :general
     (:keymaps 'override
       :states '(normal visual emacs)
@@ -1443,20 +1383,64 @@ This sets the window title to buffer name. Use =%f= for full path.
       (unless fci-mode
 (turn-on-fci-mode)))))
 #+end_src
+** Relative line numbering
+#+begin_src emacs-lisp :tangle yes
+(use-package linum-relative
+    :ensure t
+    :after evil
+    :config
+    ;; this is to apply global-linum-mode with exceptions
+    (define-global-minor-mode my-global-linum-relative-mode linum-relative-mode
+        (lambda ()
+            (when (not (memq major-mode
+                    (list 'treemacs-mode 'dashboard-mode)))
+        (linum-relative-mode))))
+
+    (my-global-linum-relative-mode 1)
+    :init
+      (setq linum-relative-format "%3s ")
+      (setq linum-relative-current-symbol ""))
+#+end_src
+** Makes current line highlighted
+#+begin_src emacs-lisp :tangle yes
+(use-package hlinum
+    :ensure t
+    :init
+    (hlinum-activate))
+#+end_src
+** Show matching parentheses
+#+begin_src emacs-lisp :tangle yes
+(use-package paren
+    :ensure t
+    :init
+    (progn
+      (setq show-paren-style 'parenthesis)
+      (show-paren-mode +1)
+      ))
+#+end_src
+** Make imbricated parentheses of different colors
+#+begin_src emacs-lisp :tangle yes
+(use-package rainbow-delimiters
+    :ensure t
+    :init)
+#+end_src
 ** Themes
 #+begin_src emacs-lisp :tangle yes
-    (use-package doom-modeline
-      :ensure t
-      :defer t
-      :hook (after-init . doom-modeline-init))
-    
-  (use-package doom-themes
+(use-package doom-modeline
+  :ensure t
+  :defer t
+  :hook (after-init . doom-modeline-init))
+
+(use-package doom-themes
     :ensure t
+    :config
+    (setq doom-variable-pitch-font (font-spec :family "Noto Sans" :size 13))
+    (setq doom-themes-treemacs-enable-variable-pitch nil)
     :init
     (doom-themes-org-config)
     (doom-themes-treemacs-config)
     (load-theme 'doom-dracula t))
-    
+
     (global-visual-line-mode 1)
     (diminish 'visual-line-mode)
     (diminish 'hi-lock-mode)
@@ -1473,7 +1457,7 @@ This sets the window title to buffer name. Use =%f= for full path.
       (tool-bar-mode 0)
       (scroll-bar-mode 0)
 
- 
+
   (setq myfont "source code pro semibold")
   ;; (setq myfont "hack")
   (cond
@@ -1563,3 +1547,21 @@ Colors can be displayed with =M-x list-faces-display=
  )
 
 #+end_src
+** Dashboard
+ #+begin_src emacs-lisp :tangle yes
+ (use-package dashboard
+   :preface
+     (defun my/dashboard-banner ()
+     """Set a dashboard banner including information on package initialization
+     time and garbage collections."""
+     (setq dashboard-banner-logo-title
+             (format "Emacs ready in %.2f seconds with %d garbage collections."
+                     (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
+   :init
+   (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+   (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
+   :config
+   (setq dashboard-startup-banner 'logo)
+   (setq dashboard-items '((recents . 5) (projects . 5) (agenda . 5) (bookmarks . 5)))
+   (dashboard-setup-startup-hook))
+ #+end_src
