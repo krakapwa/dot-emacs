@@ -149,6 +149,7 @@ tangled, and the tangled file is compiled."
         "af" 'helm-ag-this-file
         "hb" 'describe-bindings
         "ut" 'my-term
+        "ud" 'dired
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
@@ -502,6 +503,7 @@ To change output directory,
       :which-key "org"
       "me" 'org-export-dispatch
       "mr" 'org-refile
+      "mf" 'bibtex-completion-exit-notes-buffer
       "mo" 'org-open-at-point
       "mc" 'org-ref-helm-insert-cite-link)
     (:keymaps 'override
@@ -518,17 +520,9 @@ To change output directory,
           "SPC o" "org")
       (setq org-agenda-files '("~/ownCloud/org/agenda")) 
       
-    ;; TODO: increase maxlevel and filter out based on tag?
-  ;; (defun bh/verify-refile-target ()
-  ;;   ; Exclude DONE state tasks from refile targets
-  ;;   "Exclude todo keywords with a done state from refile targets"
-  ;;   (not (member (nth 2 (org-heading-components)) org-done-keywords)))
-
-  ;; (setq org-refile-target-verify-function 'bh/verify-refile-target)
-
     ;;where to save items
     (setq org-refile-targets '((nil :maxlevel . 1)
-    (org-agenda-files . (:maxlevel . 1))))
+                               (org-agenda-files . (:maxlevel . 1))))
 
     ;;skips highest priority for custom agenda view
     (defun my-org-skip-subtree-if-priority (priority)
@@ -600,11 +594,10 @@ To change output directory,
       "* %? \n %T")
   )))
 
-  ;; PDFs visited in Org-mode are opened in Evince (and not in the default choice) https://stackoverflow.com/a/8836108/789593
   (add-hook 'org-mode-hook
         '(lambda ()
            (delete '("\\.pdf\\'" . default) org-file-apps)
-           (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+           (add-to-list 'org-file-apps '("\\.pdf\\'" . "zathura %s"))))
 
   (general-define-key :states '(normal emacs)
                       :major-mode 'org-agenda-mode
@@ -913,7 +906,7 @@ To change output directory,
       (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
       :config
       (setq reftex-ref-macro-prompt nil)
-      (setq TeX-view-program-list '(("Evince" "evince --page-index=%(outpage) %o"))) 
+      (setq TeX-view-program-list '(("Zathura" "zathura --page=%(outpage) %o"))) 
       (progn
           (use-package auto-complete
           :config
@@ -972,30 +965,21 @@ To change output directory,
       :after helm
       :config
       
-  (defun bibtex-completion-exit-notes-buffer ()
-  " Trigger org-refile,
-  Exit notes buffer and delete its window.
-  This will also disable `bibtex-completion-notes-mode' and remove the header
-  line."
-  (interactive)
-  (org-refile)
-  (widen)
-  (bibtex-completion-notes-global-mode -1)
-  (setq-local
-  header-line-format nil)
-  (save-buffer)
-  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
-      (if (and window (not (one-window-p window)))
-          (delete-window window))))
-          
-      :general
-    (:keymaps 'bibtex-completion-notes-mode-map
-      :states '(normal visual)
-      :major-mode 'org-mode
-      :prefix "SPC"
-      :which-key "bibtex"
-      "mf" 'bibtex-completion-exit-notes-buffer
-      "mr" 'org-refile))
+        (defun bibtex-completion-exit-notes-buffer ()
+        " Trigger org-refile,
+        Exit notes buffer and delete its window.
+        This will also disable `bibtex-completion-notes-mode' and remove the header
+        line."
+        (interactive)
+        (org-refile)
+        (widen)
+        (bibtex-completion-notes-global-mode -1)
+        (setq-local
+        header-line-format nil)
+        (save-buffer)
+        (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
+            (if (and window (not (one-window-p window)))
+                (delete-window window)))))
 
       (use-package org-ref
           :after org
@@ -1024,17 +1008,17 @@ To change output directory,
               ("Add keywords to entries" . org-ref-helm-tag-entries)
               ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
               ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
-          (setq org-ref-bibliography-notes "~/Documents/paper-notes/notes.org"
+          (setq org-ref-bibliography-notes "~/Documents/paper-notes/paper-notes.org"
               org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
               bibtex-completion-bibliography org-ref-default-bibliography
               org-ref-pdf-directory "~/ownCloud/papers/"
               bibtex-completion-library-path "~/ownCloud/papers"
-              bibtex-completion-notes-path "~/Documents/paper-notes/notes.org"
+              bibtex-completion-notes-path "~/Documents/paper-notes/paper-notes.org"
               org-latex-pdf-process
       "latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"
             bibtex-completion-pdf-open-function
             (lambda (fpath)
-            (call-process "evince" nil 0 nil fpath))
+            (call-process "zathura" nil 0 nil fpath))
               ;; bibtex-completion-notes-template-one-file "* ${author-or-editor} (${year}): ${title} [[cite:${=key=}]] \n:PROPERTIES: \n :Custom_ID: ${=key=} \n :END:"
   )
     )
@@ -1238,6 +1222,7 @@ Popwin is a popup window manager for Emacs which makes you free from the hell of
     :prefix "SPC"
         "ur" '(ranger :which-key "ranger")))
 #+end_src
+
 
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
