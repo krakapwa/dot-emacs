@@ -148,7 +148,7 @@ tangled, and the tangled file is compiled."
         "af" 'helm-ag-this-file
         "hb" 'describe-bindings
         "ut" 'my-term
-        "ud" 'dired
+        "ud" 'deer
         "hv" 'describe-variable
         "hf" 'describe-function
         "hp" 'describe-package
@@ -450,7 +450,7 @@ To change output directory,
  :init (progn
      (require 'helm-config)
      (helm-mode t)
-
+     (global-set-key (kbd "M-x") 'helm-M-x)
      (use-package helm-themes   :ensure t :defer 5)
      (use-package helm-ag
          :commands (helm-ag)
@@ -811,6 +811,9 @@ To change output directory,
 
  #+end_src
 * C/C++
+To use rtags, run cmake with flag CMAKE_EXPORT_COMPILE_COMMANDS, e.g.
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
+
 #+begin_src emacs-lisp :tangle yes
 (defun setup-flycheck-rtags ()
   (interactive)
@@ -848,6 +851,7 @@ To change output directory,
     (add-hook 'c-mode-hook 'rtags-start-process-unless-running)
     (add-hook 'c++-mode-hook 'rtags-start-process-unless-running)
 
+    (setq rtags-path '"/usr/bin")
     (setq rtags-autostart-diagnostics t)
     (rtags-diagnostics)
     (setq rtags-completions-enabled t)
@@ -1352,6 +1356,7 @@ This sets the window title to buffer name. Use =%f= for full path.
          "gs" '(magit-status :which-key "status")
          "gi" '(magit-init :which-key "init")
          "gr" '(magit-remote-popup :which-key "remote")
+         "gp" '(magit-push :which-key "push")
          "gf" '(with-editor-finish :which-key "finish"))
      :config
      (which-key-add-key-based-replacements
