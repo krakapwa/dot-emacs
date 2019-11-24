@@ -368,14 +368,23 @@ To change output directory,
 
  (use-package evil-matchit
      :config (global-evil-matchit-mode))
+    
+(use-package swiper-helm
+  :ensure t
+  :init
 
- (use-package evil-snipe
-     :diminish evil-snipe-mode
-     :init (evil-snipe-mode)
-     :config
-     (setq evil-snipe-smart-case t)
- )
-
+ (general-define-key :states '(normal emacs)
+                     "/" 'swiper-helm))
+  
+(use-package avy
+  :ensure t
+     :general
+     (:keymaps 'override
+     :states '(normal visual)
+     :prefix "SPC"
+     :which-key "avy"
+         "s" '(avy-goto-char-timer :which-key "avy")))
+  
  (use-package evil-surround
      :config (global-evil-surround-mode))
 
@@ -1035,6 +1044,15 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
           (reftex-mode))
  #+end_src
  * Others
+ ** Ranger
+ #+begin_src emacs-lisp :tangle yes
+ (use-package ranger :ensure t
+  :commands (ranger)
+  :config
+  (setq ranger-cleanup-eagerly t)
+  )
+
+ #+end_src
  ** Restart emacs
  #+begin_src emacs-lisp :tangle yes
  (use-package restart-emacs
@@ -1088,12 +1106,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
       (ace-window-display-mode t)
       :config
     (dolist (buffer '(neotree-mode))
-        (add-to-list 'aw-ignored-buffers buffer))
-  :general
-  (:keymaps 'override
-    :states '(normal visual emacs)
-    :prefix "SPC"
-        "s" '(ace-swap-window :which-key "swap-windows")))
+        (add-to-list 'aw-ignored-buffers buffer)))
 #+end_src
 ** Iflipb
 
@@ -1206,7 +1219,6 @@ This sets the window title to buffer name. Use =%f= for full path.
         (global-visual-line-mode 1)
         (diminish 'visual-line-mode)
         (diminish 'hi-lock-mode)
-        (diminish 'evil-snipe-local-mode)
 
         ;;Maximize on startup
         (add-to-list 'initial-frame-alist '(fullscreen . maximized))
