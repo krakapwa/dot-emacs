@@ -254,6 +254,7 @@ To change output directory,
  ; Feel free to add more commands to this
  ; list to suit your needs.
      :ensure t
+     :defer t
      :diminish yas-minor-mode
      :commands (yas-minor-mode yas-exapand yas-insert-snippet)
      :general
@@ -277,6 +278,7 @@ To change output directory,
  * Bookmark
  #+begin_src emacs-lisp :tangle yes
  (use-package bookmark
+ :defer t
  :ensure t
      :general
  (:keymaps 'override
@@ -312,6 +314,7 @@ To change output directory,
      (use-package evil-org
      :init (add-hook 'org-mode-hook 'evil-org-mode)
      :diminish evil-org-mode
+     :defer t
      :config  (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))))
      :config
      (add-hook 'git-commit-mode-hook 'evil-insert-state)
@@ -371,13 +374,15 @@ To change output directory,
     
 (use-package swiper-helm
   :ensure t
+  :defer t
   :init
 
  (general-define-key :states '(normal emacs)
-                     "/" 'swiper-helm))
+                     "C-s" 'swiper-helm))
   
 (use-package avy
   :ensure t
+  :defer t
      :general
      (:keymaps 'override
      :states '(normal visual)
@@ -393,10 +398,12 @@ To change output directory,
 
  (use-package helm-projectile
      :after projectile
+     :defer t
      :ensure t)
 
  ;; projectile
  (use-package projectile
+    :defer t
      :ensure t
      :diminish projectile-mode
      :init
@@ -411,7 +418,7 @@ To change output directory,
          "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
          "pa" '(helm-projectile-ag :which-key "ag")
          "pg" '(helm-projectile-grep :which-key "grep")
-         "ps" '(helm-projectile-switch-project :which-key "switch-project"))
+         "ps" '(helm-projectile :which-key "switch-project"))
      :config
      (defun my/projectile-switch-project-action ()
      (interactive)
@@ -432,6 +439,7 @@ To change output directory,
  #+begin_src emacs-lisp :tangle yes
  (use-package helm
  :ensure helm
+ :defer t
  :diminish helm-mode
  :general
  (:keymaps 'override
@@ -460,7 +468,7 @@ To change output directory,
      (require 'helm-config)
      (helm-mode t)
      (global-set-key (kbd "M-x") 'helm-M-x)
-     (use-package helm-themes   :ensure t :defer 5)
+     (use-package helm-themes   :ensure t :defer t)
      (use-package helm-ag
          :commands (helm-ag)
          :config
@@ -484,6 +492,7 @@ To change output directory,
  )
  (use-package org
      :ensure t
+     :defer t
      :commands (org-mode org-capture org-agenda)
      :general
      (:keymaps 'org-capture-mode-map
@@ -617,11 +626,13 @@ To change output directory,
 
  (use-package ox-reveal
      :ensure t
+     :defer t
      :init
          (setq org-reveal-mathjax t)
          (setq org-src-fontify-natively t))
 
  (use-package htmlize
+ :defer t
  :ensure t)
  (setq org-reveal-root "~/.dotfiles/reveal.js/")
  (setq org-reveal-mathjax t)
@@ -1046,7 +1057,9 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
  * Others
  ** Ranger
  #+begin_src emacs-lisp :tangle yes
- (use-package ranger :ensure t
+ (use-package ranger 
+    :ensure t
+    :defer t
   :commands (ranger)
   :config
   (setq ranger-cleanup-eagerly t)
@@ -1062,6 +1075,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
  #+begin_src emacs-lisp :tangle yes
  ;; yaml
  (use-package yaml-mode
+:defer t
  :mode "\\.ya?ml\'")
  #+end_src
 
