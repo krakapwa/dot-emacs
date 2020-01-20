@@ -412,7 +412,7 @@ To change output directory,
      :states '(normal visual emacs)
      :prefix "SPC"
      :which-key "projectile"
-         "pf" '(helm-projectile-find-file :which-key "find-file")
+         "pf" '(helm-projectile :which-key "find-file")
          "pb" '(projectile-compile-project :which-key "build")
          "pr" '(projectile-replace :which-key "replace")
          "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
@@ -675,8 +675,9 @@ To change output directory,
      (delete 'elpy-module-flymake elpy-modules)
      (setq elpy-shell-use-project-root nil)
      (setq elpy-rpc-backend "jedi")
+     (setq elpy-rpc-virtualenv-path "~/.pyenv/versions/my-3.7")
      (setq python-shell-interpreter "ipython")
-     (setq python-shell-interpreter-args "--simple-prompt -i")
+     ;;(setq python-shell-interpreter-args "--simple-prompt -i")
 
      (eval-when-compile
          (defvar python-master-file))
@@ -742,13 +743,20 @@ To change output directory,
          ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
 
  (use-package pyenv-mode
-     :defer t
      :ensure t
      :init
      (add-to-list 'exec-path "~/.pyenv/shims")
      (setenv "WORKON_HOME" "~/.pyenv/versions/")
      :config
      (pyenv-mode)
+    
+    (defun pyenv-init()
+    "Initialize pyenv's current version to the global one."
+    (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
+        (message (concat "Setting pyenv version to " global-pyenv))
+        (pyenv-mode-set global-pyenv)
+        (setq pyenv-current-version global-pyenv)))
+
      (defun projectile-pyenv-mode-set ()
          "Set pyenv version matching project name."
          (let ((project (projectile-project-name)))
@@ -757,7 +765,8 @@ To change output directory,
              (pyenv-mode-unset))))
 
      (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
-     (add-hook 'python-mode-hook 'pyenv-mode))
+     (add-hook 'python-mode-hook 'pyenv-mode)
+     (add-hook 'python-mode-hook 'pyenv-init)) 
 
  (use-package jedi
      :ensure t
@@ -1095,21 +1104,20 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
  Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
  #+begin_src emacs-lisp :tangle yes
 
- (use-package company
- :diminish company-mode
- :ensure t
- :defer t
- :config
-     ;; (setq company-frontends nil)
-     (use-package company-c-headers)
- :hook
- (after-init . global-company-mode))
+   (use-package company
+   :diminish company-mode
+   :ensure t
+   :defer t
+   :config
+       ;; (setq company-frontends nil)
+       (use-package company-c-headers)
+   :hook
+   (after-init . global-company-mode))
 
- (use-package helm-company
-     :general (general-def
-             :keymaps '(company-mode-map company-active-map)
-             "TAB" #'helm-company
-             "<tab>" #'helm-company))
+   ;; (use-package helm-company
+   ;;     :general (general-def
+   ;;             :keymaps '(company-mode-map company-active-map)
+   ;;             "<tab>" #'helm-company))
  #+end_src
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
@@ -1381,6 +1389,7 @@ This sets the window title to buffer name. Use =%f= for full path.
      :prefix "SPC"
          "gs" '(magit-status :which-key "status")
          "gi" '(magit-init :which-key "init")
+         "gt" '(git-timemachine-toggle :which-key "timemachine")
          "gr" '(magit-remote-popup :which-key "remote")
          "gp" '(magit-push :which-key "push")
          "gf" '(with-editor-finish :which-key "finish"))
