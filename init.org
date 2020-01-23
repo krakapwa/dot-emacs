@@ -1190,6 +1190,19 @@ This sets the window title to buffer name. Use =%f= for full path.
 #+begin_src emacs-lisp :tangle yes
 (setq-default frame-title-format '("%b"))
 #+end_src
+** Parentheses
+#+begin_src emacs-lisp :tangle yes
+(use-package paren
+;; highlights matching parent parentheses
+  :config
+  (show-paren-mode +1))
+
+(use-package elec-pair
+;; insert matching parentheses automatically
+  :config
+  (electric-pair-mode +1))
+#+end_src
+
 ** Hydra
 #+begin_src emacs-lisp :tangle yes
 (use-package hydra
