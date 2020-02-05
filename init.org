@@ -380,16 +380,6 @@ To change output directory,
  (general-define-key :states '(normal emacs)
                      "C-s" 'swiper-helm))
   
-(use-package avy
-  :ensure t
-  :defer t
-     :general
-     (:keymaps 'override
-     :states '(normal visual)
-     :prefix "SPC"
-     :which-key "avy"
-         "s" '(avy-goto-char-timer :which-key "avy")))
-  
  (use-package evil-surround
      :config (global-evil-surround-mode))
 
@@ -725,7 +715,18 @@ To change output directory,
 
      (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
      "Python breakpoint string used by `python-insert-breakpoint'")
-
+ 
+    ;; Auto remove unused imports in python
+    (defun python-remove-unused-imports()
+    "Use Autoflake to remove unused function"
+    "autoflake --remove-all-unused-imports -i unused_imports.py"
+    (interactive)
+    (shell-command
+    (format "autoflake --remove-all-unused-imports -i %s"
+            (shell-quote-argument (buffer-file-name)))
+    )
+    (revert-buffer t t t)
+    )
      (defun python-add-breakpoint ()
      "Inserts a python breakpoint using `pdb'"
          (interactive)
@@ -796,6 +797,7 @@ To change output directory,
      "mm" 'python-switch-to-master-file
      "mr" 'python-run-master-file
      "me" 'python-rerun-master-file
+     "mu" 'python-remove-unused-imports
      "md" 'python-add-breakpoint
      "mg" 'elpy-goto-definition
      "mf" 'elpy-yapf-fix-code
