@@ -600,7 +600,7 @@ To change output directory,
  (add-hook 'org-mode-hook
          '(lambda ()
          (delete '("\\.pdf\\'" . default) org-file-apps)
-         (add-to-list 'org-file-apps '("\\.pdf\\'" . "evince %s"))))
+         (add-to-list 'org-file-apps '("\\.pdf\\'" . "zathura %s"))))
 
  (general-define-key :states '(normal emacs)
                      :major-mode 'org-agenda-mode
@@ -620,7 +620,32 @@ To change output directory,
      :init
          (setq org-reveal-mathjax t)
          (setq org-src-fontify-natively t))
-
+         
+(use-package ox-latex
+  :after ox
+  :config
+  (setq org-latex-listings 'listings
+        ;; org-latex-prefer-user-labels t
+        )
+  (add-to-list 'org-latex-packages-alist '("" "listings"))
+  (add-to-list 'org-latex-packages-alist '("" "color"))
+  (add-to-list 'org-latex-classes
+               '("IEEEtran" "\\documentclass[11pt]{IEEEtran}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+               t)
+            (add-to-list 'org-latex-classes
+            '("koma-article" "\\documentclass{scrartcl}"
+                ("\\section{%s}" . "\\section*{%s}")
+                ("\\subsection{%s}" . "\\subsection*{%s}")
+                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+)  
+               
  (use-package htmlize
  :defer t
  :ensure t)
@@ -939,7 +964,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
       (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
       :config
       (setq reftex-ref-macro-prompt nil)
-      (setq TeX-view-program-list '(("Zathura" "zathura --page=%(outpage) %o"))) 
+      (setq TeX-view-program-selection (quote ((output-pdf "Zathura") (output-dvi "xdvi"))))
       (progn
           (use-package auto-complete
           :config
@@ -1041,14 +1066,17 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
               ("Add keywords to entries" . org-ref-helm-tag-entries)
               ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
               ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
+              (setq org-latex-pdf-process
+      '("pdflatex -interaction nonstopmode -output-directory %o %f"
+        "bibtex %b"
+        "pdflatex -interaction nonstopmode -output-directory %o %f"
+        "pdflatex -interaction nonstopmode -output-directory %o %f"))
           (setq org-ref-bibliography-notes "~/Documents/paper-notes/paper-notes.org"
               org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
               bibtex-completion-bibliography org-ref-default-bibliography
               org-ref-pdf-directory "~/Nextcloud/papers/"
               bibtex-completion-library-path "~/Nextcloud/papers"
               bibtex-completion-notes-path "~/Documents/paper-notes/paper-notes.org"
-              org-latex-pdf-process
-      "latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"
             bibtex-completion-pdf-open-function
             (lambda (fpath)
             (call-process "zathura" nil 0 nil fpath))
