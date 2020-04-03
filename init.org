@@ -125,27 +125,28 @@ tangled, and the tangled file is compiled."
 
 (use-package general
 :ensure t
+:after ivy
 :config
 
-  (defun my-term ()
-    (interactive)
-    (term "/usr/bin/zsh"))
-    
+     (defun my/reload-init-file ()
+         (interactive)
+         (load-file user-init-file))
+
 (general-evil-setup t)
+
 (general-define-key
   :states '(normal visual)
   :keymaps 'override
   :prefix "SPC"
         "fs" 'save-buffer
-        "tw" 'whitespace-mode
         "qr" 'restart-emacs
+        "qt" 'counsel-load-theme
+        "tw" 'whitespace-mode
         "qq" 'save-buffers-kill-emacs
         "w" 'make-frame-command
         "TAB" 'ace-window
-        "n" 'neotree
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
-        "af" 'helm-ag-this-file
         "hb" 'describe-bindings
         "ut" 'my-term
         "ud" 'deer
@@ -178,11 +179,9 @@ To change output directory,
 (use-package shackle
 :ensure t
 :config
-    (setq helm-display-function 'pop-to-buffer) ; make helm play nice
         
     (setq shackle-rules
         '(("*Help*" :align t :select t)
-            ("\\`\\*helm.*?\\*\\'" :regexp t :align t)
             ("\\`\\*scratch.*?\\*\\'" :regexp t :ignore t)
             ((compilation-mode "\\`\\*magit-diff: .*?\\'") :regexp t :noselect t)
             ((dashboard-mode) :select t)
@@ -196,44 +195,6 @@ To change output directory,
  #+begin_src emacs-lisp :tangle yes
 
  (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
-
- (use-package general
-     :ensure t
-     :after helm
-     :config
-
-     (defun my-term ()
-         (interactive)
-         (term "/usr/bin/zsh"))
-
-     (defun my/reload-init-file ()
-         (interactive)
-         (load-file user-init-file))
-
-     (general-evil-setup t)
-
-     (define-key helm-map (kbd "C-j") 'helm-next-line)
-     (define-key helm-map (kbd "C-k") 'helm-previous-line)
-
-
-     (general-define-key
-     :states '(normal visual)
-     :keymaps 'override
-     :prefix "SPC"
-             "fs" 'save-buffer
-             "qr" 'restart-emacs
-             "qq" 'save-buffers-kill-emacs
-             "w" 'make-frame-command
-             "x" 'kill-this-buffer
-             "z" '(hydra-zoom/body :which-key "zoom")
-             "af" 'helm-ag-this-file
-             "hb" 'describe-bindings
-             "ut" 'my-term
-             "hv" 'describe-variable
-             "hf" 'describe-function
-             "hp" 'describe-package
-             "qc"  'my/reload-init-file
-             ))
 
  (which-key-add-key-based-replacements
      "SPC a" "ag"
@@ -372,24 +333,11 @@ To change output directory,
  (use-package evil-matchit
      :config (global-evil-matchit-mode))
     
-(use-package swiper-helm
-  :ensure t
-  :defer t
-  :init
-
- (general-define-key :states '(normal emacs)
-                     "C-s" 'swiper-helm))
-  
  (use-package evil-surround
      :config (global-evil-surround-mode))
 
  (use-package evil-visualstar
      :init (global-evil-visualstar-mode))
-
- (use-package helm-projectile
-     :after projectile
-     :defer t
-     :ensure t)
 
  ;; projectile
  (use-package projectile
@@ -402,84 +350,60 @@ To change output directory,
      :states '(normal visual emacs)
      :prefix "SPC"
      :which-key "projectile"
-         "pf" '(helm-projectile :which-key "find-file")
+         "pf" '(counsel-projectile :which-key "find-file")
          "pb" '(projectile-compile-project :which-key "build")
          "pr" '(projectile-replace :which-key "replace")
          "pi" '(projectile-invalidate-cache :which-key "invalidate-cache")
-         "pa" '(helm-projectile-ag :which-key "ag")
-         "pg" '(helm-projectile-grep :which-key "grep")
-         "ps" '(helm-projectile :which-key "switch-project"))
+         "pa" '(counsel-projectile-ag :which-key "ag")
+         "pg" '(counsel-projectile-grep :which-key "grep")
+         "ps" '(counsel-projectile-switch-project :which-key "switch-project"))
      :config
-     (defun my/projectile-switch-project-action ()
-     (interactive)
-     (helm-projectile))
-
      (setq projectile-switch-project-action
          'my/projectile-switch-project-action)
 
      (which-key-add-key-based-replacements
          "SPC p" "projectile")
-     (setq projectile-enable-caching t
-         projectile-mode t
-         projectile-completion-system 'helm)
      (projectile-mode))
 
  #+end_src
- * Helm
+ * Ivy
  #+begin_src emacs-lisp :tangle yes
- (use-package helm
- :ensure helm
- :defer t
- :diminish helm-mode
- :general
- (:keymaps 'override
+ (use-package ivy
+   :diminish ivy-mode
+     :general
+  (general-define-key
+   :keymaps 'ivy-minibuffer-map
+   "C-j" 'ivy-next-line
+   "C-k" 'ivy-previous-line)
+     (:keymaps 'override
      :states '(normal visual emacs)
      :prefix "SPC"
-         "b" '(helm-mini :which-key "buffer")
-         "as" 'helm-ag-project-root
-         "ff" '(helm-find-files :which-key "find-files"))
- :config
- (which-key-add-key-based-replacements
-     "SPC f" "file")
- (require 'helm-config)
- (setq helm-mini-default-sources
-     '(helm-source-buffers-list
-         helm-source-bookmarks
-         helm-source-recentf
-         helm-source-buffer-not-found))
- (general-define-key
- :keymaps 'helm-map
- "C-c !" 'helm-toggle-suspend-update
- "<tab>" 'helm-execute-persistent-action
- "C-i" 'helm-execute-persistent-action
- "C-z" 'helm-select-action)
- (global-unset-key (kbd "C-x c"))
- :init (progn
-     (require 'helm-config)
-     (helm-mode t)
-     (global-set-key (kbd "M-x") 'helm-M-x)
-     (use-package helm-themes   :ensure t :defer t)
-     (use-package helm-ag
-         :commands (helm-ag)
-         :config
-         ;; fix https://github.com/bbatsov/projectile/issues/837
-         (setq grep-find-ignored-files nil
-                 grep-find-ignored-directories nil))
-     (use-package helm-descbinds
-     :config (helm-descbinds-mode))
+     :which-key "buffer"
+         "b" '(ivy-switch-buffer :which-key "switch-buffer"))
+   :config
+   (ivy-mode)) 
+   
+(use-package counsel
+  :ensure t
+:init
+:general
+(:keymaps 'override
+:states '(normal visual emacs)
+:prefix "SPC"
+:which-key "file"
+    "ff" '(counsel-find-file :which-key "find-file"))
+  :bind*
+  (("M-x" . counsel-M-x)))
 
-     (use-package helm-gitignore)))
+(use-package counsel-projectile
+  :ensure t
+  :config
+  (counsel-projectile-mode))
  #+end_src
  * Org
  #+begin_src emacs-lisp :tangle yes
  ;; org mode extensions
 
- (use-package helm-org-rifle
- :ensure t
- :config
- (setq org-directory '("~/Nextcloud/org"))
-
- )
  (use-package org
      :ensure t
      :defer t
@@ -498,8 +422,7 @@ To change output directory,
      :which-key "org"
      "me" 'org-export-dispatch
      "mr" 'org-refile
-     "mo" 'org-open-at-point
-     "mc" 'org-ref-helm-insert-cite-link)
+     "mo" 'org-open-at-point)
      (:keymaps 'override
      :states '(normal visual)
      :prefix "SPC"
@@ -620,31 +543,6 @@ To change output directory,
      :init
          (setq org-reveal-mathjax t)
          (setq org-src-fontify-natively t))
-         
-(use-package ox-latex
-  :after ox
-  :config
-  (setq org-latex-listings 'listings
-        ;; org-latex-prefer-user-labels t
-        )
-  (add-to-list 'org-latex-packages-alist '("" "listings"))
-  (add-to-list 'org-latex-packages-alist '("" "color"))
-  (add-to-list 'org-latex-classes
-               '("IEEEtran" "\\documentclass[11pt]{IEEEtran}"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-               t)
-            (add-to-list 'org-latex-classes
-            '("koma-article" "\\documentclass{scrartcl}"
-                ("\\section{%s}" . "\\section*{%s}")
-                ("\\subsection{%s}" . "\\subsection*{%s}")
-                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-)  
                
  (use-package htmlize
  :defer t
@@ -911,7 +809,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
     (setq rtags-autostart-diagnostics t)
     (rtags-diagnostics)
     (setq rtags-completions-enabled t)
-    (setq rtags-use-helm t)
 
     (use-package flycheck-rtags
       :ensure t
@@ -955,7 +852,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
           :which-key "Latex"
           "mm" 'TeX-command-master
           "mv" 'TeX-command-run-all
-          "mc" 'helm-bibtex-with-local-bibliography
           "mt" 'reftex-toc
           "mr" 'reftex-reference
           "ml" 'reftex-label
@@ -1017,28 +913,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
           :config
           (company-auctex-init))
 
-      (use-package helm-bibtex
-      :ensure t
-      :defer t
-      :after helm
-      :config
-      
-        (defun bibtex-completion-exit-notes-buffer ()
-        " Trigger org-refile,
-        Exit notes buffer and delete its window.
-        This will also disable `bibtex-completion-notes-mode' and remove the header
-        line."
-        (interactive)
-        (org-refile)
-        (widen)
-        (bibtex-completion-notes-global-mode -1)
-        (setq-local
-        header-line-format nil)
-        (save-buffer)
-        (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
-            (if (and window (not (one-window-p window)))
-                (delete-window window)))))
-
       (use-package org-ref
           :after org
           :ensure t
@@ -1049,23 +923,8 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
               :major-mode 'bibtex-mode
               :prefix "SPC"
               :which-key "bibtex"
-              "mo" 'org-ref-bibtex-pdf :which-key "open pdf"
-              "mc" 'helm-bibtex)
+              "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
           :init
-          (setq org-ref-bibtex-completion-actions
-          (quote
-              (("Edit notes" . helm-bibtex-edit-notes)
-              ("Open PDF, URL or DOI" . helm-bibtex-open-any)
-              ("Open URL or DOI in browser" . helm-bibtex-open-url-or-doi)
-              ("Show entry" . helm-bibtex-show-entry)
-              ("Insert citation" . helm-bibtex-insert-citation)
-              ("Insert reference" . helm-bibtex-insert-reference)
-              ("Insert BibTeX key" . helm-bibtex-insert-key)
-              ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-              ("Attach PDF to email" . helm-bibtex-add-PDF-attachment)
-              ("Add keywords to entries" . org-ref-helm-tag-entries)
-              ("Copy entry to clipboard" . bibtex-completion-copy-candidate)
-              ("Add PDF to library" . helm-bibtex-add-pdf-to-library))))
               (setq org-latex-pdf-process
       '("pdflatex -interaction nonstopmode -output-directory %o %f"
         "bibtex %b"
@@ -1144,10 +1003,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
    :hook
    (after-init . global-company-mode))
 
-   ;; (use-package helm-company
-   ;;     :general (general-def
-   ;;             :keymaps '(company-mode-map company-active-map)
-   ;;             "<tab>" #'helm-company))
  #+end_src
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
@@ -1274,7 +1129,7 @@ This sets the window title to buffer name. Use =%f= for full path.
     (use-package doom-themes
       :init
       ;;(load-theme 'doom-dracula t)
-      (load-theme 'doom-nord t)
+      (load-theme 'doom-palenight t)
       :config
       (progn
           (doom-themes-neotree-config)
