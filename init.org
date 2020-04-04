@@ -355,11 +355,8 @@ To change output directory,
          "pa" '(counsel-projectile-ag :which-key "ag")
          "pg" '(counsel-projectile-grep :which-key "grep")
          "ps" '(counsel-projectile-switch-project :which-key "switch-project"))
-
      (which-key-add-key-based-replacements
-         "SPC p" "projectile")
-     (projectile-mode))
-
+         "SPC p" "projectile"))
  #+end_src
  * Ivy
  #+begin_src emacs-lisp :tangle yes
@@ -509,7 +506,6 @@ To change output directory,
     (defun my/org-refile-and-jump ()
         (interactive)
         (if (derived-mode-p 'org-capture-mode)
-        (org-capture-refile)
         (call-interactively 'org-refile))
         (org-refile-goto-last-stored))
         (eval-after-load 'org-capture
@@ -592,7 +588,6 @@ To change output directory,
     (electric-indent-local-mode -1)
     ;; (delete 'elpy-module-highlight-indentation elpy-modules)
     (delete 'elpy-module-flymake elpy-modules)
-    (setq elpy-shell-use-project-root nil)
     (setq elpy-rpc-backend "jedi")
     (setq elpy-rpc-virtualenv-path "~/.pyenv/versions/my-3.7")
     (setq python-shell-interpreter "ipython")
@@ -644,18 +639,7 @@ To change output directory,
 
     (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
     "Python breakpoint string used by `python-insert-breakpoint'")
-
-   ;; Auto remove unused imports in python
-   (defun python-remove-unused-imports()
-   "Use Autoflake to remove unused function"
-   "autoflake --remove-all-unused-imports -i unused_imports.py"
-   (interactive)
-   (shell-command
-   (format "autoflake --remove-all-unused-imports -i %s"
-           (shell-quote-argument (buffer-file-name)))
-   )
-   (revert-buffer t t t)
-   )
+        
     (defun python-add-breakpoint ()
     "Inserts a python breakpoint using `pdb'"
         (interactive)
@@ -671,6 +655,9 @@ To change output directory,
     (condition-case err
         (elpy-goto-definition)
         ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
+        
+(use-package pyimport
+    :defer t)
 
 (use-package pyenv-mode
     :ensure t
@@ -684,8 +671,7 @@ To change output directory,
    "Initialize pyenv's current version to the global one."
    (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
        (message (concat "Setting pyenv version to " global-pyenv))
-       (pyenv-mode-set global-pyenv)
-       (setq pyenv-current-version global-pyenv)))
+       (pyenv-mode-set global-pyenv)))
 
     (defun projectile-pyenv-mode-set ()
         "Set pyenv version matching project name."
@@ -726,7 +712,7 @@ To change output directory,
     "mm" 'python-switch-to-master-file
     "mr" 'python-run-master-file
     "me" 'python-rerun-master-file
-    "mu" 'python-remove-unused-imports
+    "mu" 'pyimport-remove-unused
     "md" 'python-add-breakpoint
     "mg" 'elpy-goto-definition
     "mf" 'elpy-yapf-fix-code
@@ -974,9 +960,16 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
     :config
         ;; (setq company-frontends nil)
         (use-package company-c-headers)
+        (setq company-backends
+                '((company-files          ; files & directory
+                company-keywords       ; keywords
+                company-capf
+                company-jedi
+                company-yasnippet
+                )
+                (company-abbrev company-dabbrev)))
     :hook
     (after-init . global-company-mode))
-
 #+end_src
 ** Restart emacs
 #+begin_src emacs-lisp :tangle yes
@@ -1083,7 +1076,7 @@ This sets the window title to buffer name. Use =%f= for full path.
   (electric-pair-mode +1))
 #+end_src
 
-** Hydra
+** Zoom
 #+begin_src emacs-lisp :tangle yes
 (use-package hydra
   :ensure t
@@ -1115,113 +1108,95 @@ This sets the window title to buffer name. Use =%f= for full path.
 
 ** Themes
 #+begin_src emacs-lisp :tangle yes
-        (use-package doom-modeline
-          :ensure t
-          :defer t
-          :hook (after-init . doom-modeline-init))
+(setq myfont "source code pro semibold")
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
+
+(set-face-attribute 'default nil :font myfont :height 116)
+
+;; more context when scrolling
+(setq next-screen-context-lines 4)
+      
+(use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1))
 
 
-      (use-package doom-themes
-        :init
-        ;;(load-theme 'doom-dracula t)
-        (load-theme 'doom-one t)
-        :config
-        (progn
-            (doom-themes-neotree-config)
-            (doom-themes-org-config)))
-
-          (global-linum-mode t)
-          ;; (global-visual-line-mode 1)
-          ;; (diminish 'visual-line-mode)
-          (diminish 'hi-lock-mode)
-
-          ;;Maximize on startup
-          (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-          (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-          (global-hl-line-mode +1)
-          (blink-cursor-mode 0)
-
-          ;;; appearance
-        (tool-bar-mode 0)
-        (scroll-bar-mode 0)
-
-
-  (use-package hlinum
+(use-package doom-themes
+    :init
+    ;;(load-theme 'doom-dracula t)
+    (load-theme 'doom-one t)
     :config
-    (hlinum-activate)) 
-    (setq myfont "source code pro semibold")
-  
-    ;; (setq myfont "hack")
-    (cond
-    ((string-equal system-name "multichouette")
-      (set-face-attribute 'default nil :font myfont :height 116))
-    ((string-equal system-name "tc")
-      (set-face-attribute 'default nil :font myfont :height 116)))
+    (progn
+        (doom-themes-neotree-config)
+        (doom-themes-org-config)))
 
-        (set-face-attribute 'default nil :font myfont :height 116)
-        ;; more context when scrolling
-        (setq next-screen-context-lines 4)
+(global-linum-mode t)
+;; (global-visual-line-mode 1)
+;; (diminish 'visual-line-mode)
+(diminish 'hi-lock-mode)
 
-          ;; y/n for yes/no
-          (defalias 'yes-or-no-p 'y-or-n-p)
+;;Maximize on startup
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-          ;; start week on Monday
-          (setq calendar-week-start-day 1)
+(global-hl-line-mode +1)
+(blink-cursor-mode 0)
 
-          ;; window undo/redo
-          (winner-mode)
 
-          ;; tabs are truly evil
-          (setq-default indent-tabs-mode nil)
+(use-package hlinum
+  :config
+  (hlinum-activate)) 
 
-          ;; sentences end with one space
-          (setq sentence-end-double-space nil)
+        ;; y/n for yes/no
+        (defalias 'yes-or-no-p 'y-or-n-p)
 
-          ;;; settings
-          ;; enable all commands
-          (setq disabled-command-function nil)
+        ;; start week on Monday
+        (setq calendar-week-start-day 1)
 
-          ;; default truncate lines
-          (setq-default truncate-lines t)
+        ;; window undo/redo
+        (winner-mode)
 
-          ;; disable bell
-          (setq ring-bell-function 'ignore
-                  visible-bell t)
+        ;; tabs are truly evil
+        (setq-default indent-tabs-mode nil)
 
-          ;; increase garbage collection threshold
-          (setq gc-cons-threshold (* 10 1024 1024))
+        ;; sentences end with one space
+        (setq sentence-end-double-space nil)
 
-          ;; inhibit startup message
-          (setq inhibit-startup-message t)
+        ;;; settings
+        ;; enable all commands
+        (setq disabled-command-function nil)
 
-          ;; kill settings
-          (setq save-interprogram-paste-before-kill t
-                  kill-do-not-save-duplicates t
-                  kill-whole-line t)
+        ;; default truncate lines
+        (setq-default truncate-lines t)
 
-          ;; repeat mark pop
-          (setq-default set-mark-command-repeat-pop t)
+        ;; disable bell
+        (setq ring-bell-function 'ignore
+                visible-bell t)
 
-          ;; set terminfo
-          (setq system-uses-terminfo nil)
+        ;; increase garbage collection threshold
+        (setq gc-cons-threshold (* 10 1024 1024))
 
-          ;;; extensions
-          ;; adaptive word wrapping
-          (use-package adaptive-wrap
-              :config (adaptive-wrap-prefix-mode)
-              :diminish adaptive-wrap-prefix-mode
-          )
-        
-     (setq company-backends
-             '((company-files          ; files & directory
-             company-keywords       ; keywords
-             company-capf
-             company-jedi
-             company-yasnippet
-             )
-             (company-abbrev company-dabbrev)
-     ))
+        ;; inhibit startup message
+        (setq inhibit-startup-message t)
+
+        ;; kill settings
+        (setq save-interprogram-paste-before-kill t
+                kill-do-not-save-duplicates t
+                kill-whole-line t)
+
+        ;; repeat mark pop
+        (setq-default set-mark-command-repeat-pop t)
+
+        ;; set terminfo
+        (setq system-uses-terminfo nil)
+
+        ;;; extensions
+        ;; adaptive word wrapping
+        (use-package adaptive-wrap
+            :config (adaptive-wrap-prefix-mode)
+            :diminish adaptive-wrap-prefix-mode
+        )
  #+end_src
  ** Demangle
  demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
@@ -1264,41 +1239,37 @@ This sets the window title to buffer name. Use =%f= for full path.
  :commands (flyspell-mode flyspell-prog-mode)
  :config (setq ispell-program-name (executable-find "aspell")
              ispell-extra-args '("--sug-mode=ultra")))
-
  #+end_src
 
- ** Magit
- Magit is an interface to the version control system Git, implemented as an Emacs package.
- #+begin_src emacs-lisp :tangle yes
- ;; magit
- (use-package magit
- :defer t
- :commands (magit-status projectile-vc)
+** Magit
+Magit is an interface to the version control system Git, implemented as an Emacs package.
+#+begin_src emacs-lisp :tangle yes
+(use-package magit
+:defer t
+:commands (magit-status projectile-vc)
 
- :general
-     (:keymaps 'override
-     :states '(normal visual emacs)
-     :prefix "SPC"
-         "gs" '(magit-status :which-key "status")
-         "gi" '(magit-init :which-key "init")
-         "gt" '(git-timemachine-toggle :which-key "timemachine")
-         "gr" '(magit-remote-popup :which-key "remote")
-         "gp" '(magit-push :which-key "push")
-         "gf" '(with-editor-finish :which-key "finish"))
-     :config
-     (which-key-add-key-based-replacements
-         "SPC g" "git")
- (use-package evil-magit)
- (add-to-list 'magit-log-arguments "--no-abbrev-commit")
- (setq magit-popup-use-prefix-argument 'default))
+:general
+    (:keymaps 'override
+    :states '(normal visual emacs)
+    :prefix "SPC"
+        "gs" '(magit-status :which-key "status")
+        "gi" '(magit-init :which-key "init")
+        "gt" '(git-timemachine-toggle :which-key "timemachine")
+        "gr" '(magit-remote-popup :which-key "remote")
+        "gp" '(magit-push :which-key "push")
+        "gf" '(with-editor-finish :which-key "finish"))
+    :config
+    (which-key-add-key-based-replacements
+        "SPC g" "git")
+(use-package evil-magit)
+(setq magit-popup-use-prefix-argument 'default))
 
- (global-git-commit-mode)
+(global-git-commit-mode)
 
- ;; git
- (use-package git-timemachine
- :defer t)
+(use-package git-timemachine
+:defer t)
 
- #+end_src
+#+end_src
 
 ** Dashboard
  #+begin_src emacs-lisp :tangle yes
