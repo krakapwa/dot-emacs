@@ -147,11 +147,11 @@ tangled, and the tangled file is compiled."
         "TAB" 'ace-window
         "x" 'kill-this-buffer
         "z" '(hydra-zoom/body :which-key "zoom")
-        "hb" 'describe-bindings
         "ut" 'my-term
         "ud" 'deer
-        "hv" 'describe-variable
-        "hf" 'describe-function
+        "hv" 'counsel-describe-variable
+        "hb" 'counsel-descbinds
+        "hf" 'counsel-describe-function
         "hp" 'describe-package
         "qc"  'my/reload-init-file
         ))
@@ -247,12 +247,10 @@ To change output directory,
      :prefix "SPC"
          "cl" 'list-bookmarks
          "cd" 'bookmark-delete
-         "cd" 'bookmark-delete
          "cw" 'bookmark-save
          "cs" 'bookmark-set))
  #+end_src
- #
- * Evil
+* Evil
  #+begin_src emacs-lisp :tangle yes
  (setq evil-want-C-i-jump nil)
 
@@ -357,9 +355,6 @@ To change output directory,
          "pa" '(counsel-projectile-ag :which-key "ag")
          "pg" '(counsel-projectile-grep :which-key "grep")
          "ps" '(counsel-projectile-switch-project :which-key "switch-project"))
-     :config
-     (setq projectile-switch-project-action
-         'my/projectile-switch-project-action)
 
      (which-key-add-key-based-replacements
          "SPC p" "projectile")
@@ -379,9 +374,11 @@ To change output directory,
      :states '(normal visual emacs)
      :prefix "SPC"
      :which-key "buffer"
-         "b" '(ivy-switch-buffer :which-key "switch-buffer"))
+         "b" '(ivy-switch-buffer :which-key "switch-buffer")
+         "s" '(swiper :which-key "swiper"))
    :config
-   (ivy-mode)) 
+   (ivy-mode)
+   (setq ivy-height 15)) 
    
 (use-package counsel
   :ensure t
@@ -421,6 +418,7 @@ To change output directory,
      :prefix "SPC"
      :which-key "org"
      "me" 'org-export-dispatch
+     "mc" 'ivy-bibtex
      "mr" 'org-refile
      "mo" 'org-open-at-point)
      (:keymaps 'override
@@ -429,9 +427,8 @@ To change output directory,
      :which-key "org"
          "oa" '(my-pop-to-org-agenda :which-key "agenda")
          "oc" 'org-capture
-         "os" 'org-save-all-org-buffers
-         "ol" 'org-insert-link
-         )
+         "ol" 'org-capture-goto-last-stored
+         "os" 'org-save-all-org-buffers)
      :config
      (which-key-add-key-based-replacements
          "SPC o" "org")
@@ -508,6 +505,16 @@ To change output directory,
      ;;(setq org-time-stamp-custom-formats '("<%d-%m-%Y %a>" . "<%d-%m-%Y %a %H:%M>"))
      ;;open agenda in current window
      (setq org-agenda-window-setup (quote current-window))
+     
+    (defun my/org-refile-and-jump ()
+        (interactive)
+        (if (derived-mode-p 'org-capture-mode)
+        (org-capture-refile)
+        (call-interactively 'org-refile))
+        (org-refile-goto-last-stored))
+        (eval-after-load 'org-capture
+        '(bind-key "C-c C-r" 'my/org-refile-and-jump org-capture-mode-map)) 
+ 
      (setq org-capture-templates
      '(("t" "todo" entry (file+headline "~/Nextcloud/org/agenda/tasks.org" "Tasks")
          "* TODO [#A] %? \n %T")
@@ -534,8 +541,7 @@ To change output directory,
                      "C-j" 'org-priority-up
                      "S-k" 'org-timestamp-down
                      "S-j" 'org-timestamp-up
-                     "j" 'org-agenda-next-line
-                     "c" 'org-capture)
+                     "j" 'org-agenda-next-line)
 
  (use-package ox-reveal
      :ensure t
@@ -552,198 +558,198 @@ To change output directory,
 
  (menu-bar-mode -1)
  #+end_src
- * Python
- #+begin_src emacs-lisp :tangle yes
+* Python
+#+begin_src emacs-lisp :tangle yes
 
- (use-package exec-path-from-shell
-     :disabled (not (equal system-type 'darwin))
-     :config
-     (progn
-     ;; For debugging
-     (when nil
-         (message "path: %s, setup: %s" (getenv "PATH")
-                 (getenv "ENVIRONMENT_SETUP_DONE"))
-         (setq exec-path-from-shell-debug t))
-     (setq exec-path-from-shell-arguments (list "-l"))
-     (setq exec-path-from-shell-check-startup-files nil)
-     (add-to-list 'exec-path-from-shell-variables "SHELL")
-     (add-to-list 'exec-path-from-shell-variables "GOPATH")
-     (add-to-list 'exec-path-from-shell-variables "ENVIRONMENT_SETUP_DONE")
-     (add-to-list 'exec-path-from-shell-variables "PYTHONPATH")
-     (exec-path-from-shell-initialize)))
+(use-package exec-path-from-shell
+    :disabled (not (equal system-type 'darwin))
+    :config
+    (progn
+    ;; For debugging
+    (when nil
+        (message "path: %s, setup: %s" (getenv "PATH")
+                (getenv "ENVIRONMENT_SETUP_DONE"))
+        (setq exec-path-from-shell-debug t))
+    (setq exec-path-from-shell-arguments (list "-l"))
+    (setq exec-path-from-shell-check-startup-files nil)
+    (add-to-list 'exec-path-from-shell-variables "SHELL")
+    (add-to-list 'exec-path-from-shell-variables "GOPATH")
+    (add-to-list 'exec-path-from-shell-variables "ENVIRONMENT_SETUP_DONE")
+    (add-to-list 'exec-path-from-shell-variables "PYTHONPATH")
+    (exec-path-from-shell-initialize)))
 
- (use-package elpy
-     :defer t
-     :ensure t
-     :diminish elpy-mode
-     :after python
-     :commands elpy-enable
-     :init
-     (with-eval-after-load 'python (elpy-enable))
+(use-package elpy
+    :defer t
+    :ensure t
+    :diminish elpy-mode
+    :after python
+    :commands elpy-enable
+    :init
+    (with-eval-after-load 'python (elpy-enable))
 
-     :config
-     (add-hook 'elpy-mode-hook (lambda () (highlight-indentation-mode -1)))
-     (electric-indent-local-mode -1)
-     ;; (delete 'elpy-module-highlight-indentation elpy-modules)
-     (delete 'elpy-module-flymake elpy-modules)
-     (setq elpy-shell-use-project-root nil)
-     (setq elpy-rpc-backend "jedi")
-     (setq elpy-rpc-virtualenv-path "~/.pyenv/versions/my-3.7")
-     (setq python-shell-interpreter "ipython")
-     ;;(setq python-shell-interpreter-args "--simple-prompt -i")
+    :config
+    (add-hook 'elpy-mode-hook (lambda () (highlight-indentation-mode -1)))
+    (electric-indent-local-mode -1)
+    ;; (delete 'elpy-module-highlight-indentation elpy-modules)
+    (delete 'elpy-module-flymake elpy-modules)
+    (setq elpy-shell-use-project-root nil)
+    (setq elpy-rpc-backend "jedi")
+    (setq elpy-rpc-virtualenv-path "~/.pyenv/versions/my-3.7")
+    (setq python-shell-interpreter "ipython")
+    ;;(setq python-shell-interpreter-args "--simple-prompt -i")
 
-     (eval-when-compile
-         (defvar python-master-file))
+    (eval-when-compile
+        (defvar python-master-file))
 
-     (defun python-kill ()
-     (interactive)
-     (elpy-shell-kill)
-     (kill-buffer "*Python*"))
-
-     (defun python-quit-dbg ()
-     (interactive)
-     (elpy-shell-kill)
-     (kill-buffer "*Python*"))
-
-     (defun python-rerun-master-file ()
-     (interactive)
-     (python-switch-to-master-file)
-     (elpy-shell-kill)
-     (kill-buffer "*Python*")
-     (elpy-shell-send-region-or-buffer))
-  )
-
-     (defun python-shell-send-file-as-script ()
-     "Send current buffer to python shell as a script"
-     (interactive)
-     (elpy-shell-kill)
-     (run-python (format "%s -i --simple-prompt %s"
-                         (python-shell-calculate-command)
-                         (buffer-name))
-                 nil t))
-
-     (defun python-run-master-file ()
-     (interactive)
-     (python-switch-to-master-file)
-     (elpy-shell-send-region-or-buffer))
-
-     (defun python-set-master-file ()
-     (interactive)
-     (setq python-master-file (buffer-name))
-     (message "Set %s as python master file" (buffer-file-name)))
-
-     (defun python-switch-to-master-file ()
-     (interactive)
-     (switch-to-buffer python-master-file))
-
-     (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
-     "Python breakpoint string used by `python-insert-breakpoint'")
- 
-    ;; Auto remove unused imports in python
-    (defun python-remove-unused-imports()
-    "Use Autoflake to remove unused function"
-    "autoflake --remove-all-unused-imports -i unused_imports.py"
+    (defun python-kill ()
     (interactive)
-    (shell-command
-    (format "autoflake --remove-all-unused-imports -i %s"
-            (shell-quote-argument (buffer-file-name)))
-    )
-    (revert-buffer t t t)
-    )
-     (defun python-add-breakpoint ()
-     "Inserts a python breakpoint using `pdb'"
-         (interactive)
-         (back-to-indentation)
-         ;; this preserves the correct indentation in case the line above
-         ;; point is a nested block
-         (split-line)
-         (insert python--pdb-breakpoint-string)
-         (python-set-debug-highlight))
+    (elpy-shell-kill)
+    (kill-buffer "*Python*"))
 
-     (defun ha/elpy-goto-definition ()
-     (interactive)
-     (condition-case err
-         (elpy-goto-definition)
-         ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
+    (defun python-quit-dbg ()
+    (interactive)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*"))
 
- (use-package pyenv-mode
-     :ensure t
-     :init
-     (add-to-list 'exec-path "~/.pyenv/shims")
-     (setenv "WORKON_HOME" "~/.pyenv/versions/")
-     :config
-     (pyenv-mode)
-    
-    (defun pyenv-init()
-    "Initialize pyenv's current version to the global one."
-    (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
-        (message (concat "Setting pyenv version to " global-pyenv))
-        (pyenv-mode-set global-pyenv)
-        (setq pyenv-current-version global-pyenv)))
+    (defun python-rerun-master-file ()
+    (interactive)
+    (python-switch-to-master-file)
+    (elpy-shell-kill)
+    (kill-buffer "*Python*")
+    (elpy-shell-send-region-or-buffer))
+ )
 
-     (defun projectile-pyenv-mode-set ()
-         "Set pyenv version matching project name."
-         (let ((project (projectile-project-name)))
-         (if (member project (pyenv-mode-versions))
-             (pyenv-mode-set project)
-             (pyenv-mode-unset))))
+    (defun python-shell-send-file-as-script ()
+    "Send current buffer to python shell as a script"
+    (interactive)
+    (elpy-shell-kill)
+    (run-python (format "%s -i --simple-prompt %s"
+                        (python-shell-calculate-command)
+                        (buffer-name))
+                nil t))
 
-     (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
-     (add-hook 'python-mode-hook 'pyenv-mode)
-     (add-hook 'python-mode-hook 'pyenv-init)) 
+    (defun python-run-master-file ()
+    (interactive)
+    (python-switch-to-master-file)
+    (elpy-shell-send-region-or-buffer))
 
- (use-package jedi
-     :ensure t
-     :defer t
-     :init
-     (setq company-jedi-python-bin "~/.pyenv/shims/python")
-     :config
-     (use-package company-jedi
-     :ensure t
-     :init
-     (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
-     (setq company-jedi-python-bin "python")))
+    (defun python-set-master-file ()
+    (interactive)
+    (setq python-master-file (buffer-name))
+    (message "Set %s as python master file" (buffer-file-name)))
 
- (use-package python
-     :defer t
-     :general
-     (:keymaps '(python-mode-map inferior-python-mode-map)
-     :states '(normal visual emacs)
-     :major-mode '(python-mode inferior-python-mode)
-     :prefix "SPC"
-     :which-key "Python"
-     "mv" 'pyenv-mode-set
-     "mb" 'elpy-shell-send-region-or-buffer
-     "ma" 'python-shell-send-file-as-script
-     "mq" 'python-kill
-     "ms" 'python-set-master-file
-     "mm" 'python-switch-to-master-file
-     "mr" 'python-run-master-file
-     "me" 'python-rerun-master-file
-     "mu" 'python-remove-unused-imports
-     "md" 'python-add-breakpoint
-     "mg" 'elpy-goto-definition
-     "mf" 'elpy-yapf-fix-code
-     "mh" 'elpy-doc
-     "mi" 'run-python)
-     :config
-         (setq python-indent-offset 4)
-         (elpy-enable)
-         (add-hook 'python-mode-hook
-         (lambda ()
-             (setq flycheck-python-pylint-executable "/usr/bin/pylint")
-             (setq tab-width 4)
-             (setq flycheck-pylintrc "~/.pylintrc")))
-     (defun python-set-debug-highlight ()
-     (interactive)
-     (highlight-lines-matching-regexp "pdb" 'hi-red-b)
-     (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)))
+    (defun python-switch-to-master-file ()
+    (interactive)
+    (switch-to-buffer python-master-file))
 
-     (defun python-add-debug-highlight ()
-     "Adds a highlighter for use by `python--pdb-breakpoint-string'"
-     (interactive)
-     (python-set-debug-highlight)
-     (add-hook 'python-mode-hook 'python-add-debug-highlight))
+    (defvar python--pdb-breakpoint-string "import pdb; pdb.set_trace() ## DEBUG ##"
+    "Python breakpoint string used by `python-insert-breakpoint'")
+
+   ;; Auto remove unused imports in python
+   (defun python-remove-unused-imports()
+   "Use Autoflake to remove unused function"
+   "autoflake --remove-all-unused-imports -i unused_imports.py"
+   (interactive)
+   (shell-command
+   (format "autoflake --remove-all-unused-imports -i %s"
+           (shell-quote-argument (buffer-file-name)))
+   )
+   (revert-buffer t t t)
+   )
+    (defun python-add-breakpoint ()
+    "Inserts a python breakpoint using `pdb'"
+        (interactive)
+        (back-to-indentation)
+        ;; this preserves the correct indentation in case the line above
+        ;; point is a nested block
+        (split-line)
+        (insert python--pdb-breakpoint-string)
+        (python-set-debug-highlight))
+
+    (defun ha/elpy-goto-definition ()
+    (interactive)
+    (condition-case err
+        (elpy-goto-definition)
+        ('error (xref-find-definitions (symbol-name (symbol-at-point))))))
+
+(use-package pyenv-mode
+    :ensure t
+    :init
+    (add-to-list 'exec-path "~/.pyenv/shims")
+    (setenv "WORKON_HOME" "~/.pyenv/versions/")
+    :config
+    (pyenv-mode)
+   
+   (defun pyenv-init()
+   "Initialize pyenv's current version to the global one."
+   (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
+       (message (concat "Setting pyenv version to " global-pyenv))
+       (pyenv-mode-set global-pyenv)
+       (setq pyenv-current-version global-pyenv)))
+
+    (defun projectile-pyenv-mode-set ()
+        "Set pyenv version matching project name."
+        (let ((project (projectile-project-name)))
+        (if (member project (pyenv-mode-versions))
+            (pyenv-mode-set project)
+            (pyenv-mode-unset))))
+
+    (add-hook 'projectile-switch-project-hook 'projectile-pyenv-mode-set)
+    (add-hook 'python-mode-hook 'pyenv-mode)
+    (add-hook 'python-mode-hook 'pyenv-init)) 
+
+(use-package jedi
+    :ensure t
+    :defer t
+    :init
+    (setq company-jedi-python-bin "~/.pyenv/shims/python")
+    :config
+    (use-package company-jedi
+    :ensure t
+    :init
+    (add-hook 'python-mode-hook (lambda () (add-to-list 'company-backends 'company-jedi)))
+    (setq company-jedi-python-bin "python")))
+
+(use-package python
+    :defer t
+    :general
+    (:keymaps '(python-mode-map inferior-python-mode-map)
+    :states '(normal visual emacs)
+    :major-mode '(python-mode inferior-python-mode)
+    :prefix "SPC"
+    :which-key "Python"
+    "mv" 'pyenv-mode-set
+    "mb" 'elpy-shell-send-region-or-buffer
+    "ma" 'python-shell-send-file-as-script
+    "mq" 'python-kill
+    "ms" 'python-set-master-file
+    "mm" 'python-switch-to-master-file
+    "mr" 'python-run-master-file
+    "me" 'python-rerun-master-file
+    "mu" 'python-remove-unused-imports
+    "md" 'python-add-breakpoint
+    "mg" 'elpy-goto-definition
+    "mf" 'elpy-yapf-fix-code
+    "mh" 'elpy-doc
+    "mi" 'run-python)
+    :config
+        (setq python-indent-offset 4)
+        (elpy-enable)
+        (add-hook 'python-mode-hook
+        (lambda ()
+            (setq flycheck-python-pylint-executable "/usr/bin/pylint")
+            (setq tab-width 4)
+            (setq flycheck-pylintrc "~/.pylintrc")))
+    (defun python-set-debug-highlight ()
+    (interactive)
+    (highlight-lines-matching-regexp "pdb" 'hi-red-b)
+    (highlight-lines-matching-regexp "pdb[.]?" 'hi-red-b)))
+
+    (defun python-add-debug-highlight ()
+    "Adds a highlighter for use by `python--pdb-breakpoint-string'"
+    (interactive)
+    (python-set-debug-highlight)
+    (add-hook 'python-mode-hook 'python-add-debug-highlight))
 
  (general-define-key :states '(normal insert emacs)
                      :major-mode 'inferior-python-mode
@@ -761,8 +767,6 @@ To change output directory,
          (python-shell-completion-native-get-completions
          (get-buffer-process (current-buffer))
          nil "_"))))
-
-
  #+end_src
 * C/C++
 To use rtags, run cmake with flag CMAKE_EXPORT_COMPILE_COMMANDS, e.g.
@@ -839,171 +843,163 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
   :defer t
   :mode (("\\.lua\\'" . lua-mode)))
 #+end_src
+
 * Tex
 #+begin_src emacs-lisp :tangle yes
-      (use-package tex
-      :ensure auctex
-      :defer t
-      :general
-      (:keymaps 'LaTeX-mode-map
-          :states '(normal emacs)
-          :major-mode 'LaTeX-mode
-          :prefix "SPC"
-          :which-key "Latex"
-          "mm" 'TeX-command-master
-          "mv" 'TeX-command-run-all
-          "mt" 'reftex-toc
-          "mr" 'reftex-reference
-          "ml" 'reftex-label
-          )
-      :init
-      (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
-      :config
-      (setq reftex-ref-macro-prompt nil)
-      (setq TeX-view-program-selection (quote ((output-pdf "Zathura") (output-dvi "xdvi"))))
-      (progn
-          (use-package auto-complete
-          :config
-          (progn
-              (ac-flyspell-workaround)
-              (setq ac-auto-show-menu 0.01
-                  ac-auto-start 1
-                  ac-delay 0.01)))
+(use-package tex
+    :ensure auctex
+    :defer t
+    :general
+    (:keymaps 'LaTeX-mode-map
+        :states '(normal emacs)
+        :major-mode 'LaTeX-mode
+        :prefix "SPC"
+        :which-key "Latex"
+        "mm" 'TeX-command-master
+        "mv" 'TeX-command-run-all
+        "mt" 'reftex-toc
+        "mr" 'reftex-reference
+        "ml" 'reftex-label
+        )
+    :init
+    (progn (add-hook 'LaTeX-mode-hook 'turn-on-reftex))
+    :config
+    
+    (setq Tex-auto-save t)
+    (setq Tex-parse-self t)
+    (setq TeX-save-query nil)
+    (setq reftex-ref-macro-prompt nil)
+    
+    (setq reftex-plug-into-AUCTeX t)
+    (setq TeX-view-program-selection (quote ((output-pdf "Zathura") (output-dvi "xdvi")))))
 
-          (use-package ispell
-          :ensure t
-          :defer t
-          :config
-          (progn
-              (make-local-variable 'ispell-parser)
-              (setq ispell-parser 'tex)))
-
-          (use-package ac-ispell
-          :ensure t
-          :defer t
-          :defer t
-          :requires auto-complete ispell
-          )
-
-          (use-package writegood-mode
-          :ensure t
-          :defer t
-          :diminish writegood-mode
-          :config
-          (writegood-mode))
-
-          (use-package smartparens-latex
-          :disabled t ;; Does not seem to be available
-          :ensure t
-          :defer t
-          :config
-          (smartparens-mode +1))
-
-          (use-package ac-math
-          :defer t
-          :ensure t)
-      (setq Tex-auto-save t)
-      (setq Tex-parse-self t)
-      (setq TeX-save-query nil)
-      (setq reftex-plug-into-AUCTeX t)))
-
-      (use-package company-auctex
-          :ensure t
-          :defer t
-          :config
-          (company-auctex-init))
-
-      (use-package org-ref
-          :after org
-          :ensure t
-          :defer t
-          :general
-          (:keymaps 'bibtex-mode-map
-              :states '(normal visual emacs)
-              :major-mode 'bibtex-mode
-              :prefix "SPC"
-              :which-key "bibtex"
-              "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
-          :init
-              (setq org-latex-pdf-process
-      '("pdflatex -interaction nonstopmode -output-directory %o %f"
-        "bibtex %b"
-        "pdflatex -interaction nonstopmode -output-directory %o %f"
-        "pdflatex -interaction nonstopmode -output-directory %o %f"))
-          (setq org-ref-bibliography-notes "~/Documents/paper-notes/paper-notes.org"
-              org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
-              bibtex-completion-bibliography org-ref-default-bibliography
-              org-ref-pdf-directory "~/Nextcloud/papers/"
-              bibtex-completion-library-path "~/Nextcloud/papers"
-              bibtex-completion-notes-path "~/Documents/paper-notes/paper-notes.org"
-            bibtex-completion-pdf-open-function
-            (lambda (fpath)
-            (call-process "zathura" nil 0 nil fpath))
-              ;; bibtex-completion-notes-template-one-file "* ${author-or-editor} (${year}): ${title} [[cite:${=key=}]] \n:PROPERTIES: \n :Custom_ID: ${=key=} \n :END:"
-  ))
-
-      (use-package reftex
-          :defer t
-          :diminish reftex-mode
-          :commands turn-on-reftex
-          :init
-          (progn
-          (setq reftex-plug-into-AUCTeX t))
-          :config
-          (reftex-mode))
- #+end_src
- * Others
- ** Ranger
- #+begin_src emacs-lisp :tangle yes
- (use-package ranger 
+(use-package ispell
     :ensure t
     :defer t
-  :commands (ranger)
-  :config
-  (setq ranger-cleanup-eagerly t)
-  )
+    :config
+        (progn
+            (make-local-variable 'ispell-parser)
+            (setq ispell-parser 'tex)))
 
- #+end_src
- ** Restart emacs
- #+begin_src emacs-lisp :tangle yes
- (use-package restart-emacs
-     :ensure t)
- #+end_src
- ** Yaml
- #+begin_src emacs-lisp :tangle yes
- ;; yaml
- (use-package yaml-mode
+(use-package ac-ispell
+    :ensure t
+    :defer t
+    :defer t
+    :requires auto-complete ispell)
+
+(use-package writegood-mode
+    :ensure t
+    :defer t
+    :diminish writegood-mode
+    :config
+        (writegood-mode))
+
+(use-package smartparens-latex
+    :disabled t ;; Does not seem to be available
+    :ensure t
+    :defer t
+    :config
+    (smartparens-mode +1))
+
+(use-package ac-math
 :defer t
- :mode "\\.ya?ml\'")
- #+end_src
+:ensure t)
 
- ** Anzu
- anzu.el provides a minor mode which displays current match and total matches information in the mode-line in various search modes.
- #+begin_src emacs-lisp :tangle yes
 
- ;; anzu
- (use-package anzu
- :commands (isearch-foward isearch-backward)
- :config (global-anzu-mode)
- :diminish anzu-mode
- )
+(use-package company-auctex
+    :ensure t
+    :defer t
+    :config
+    (company-auctex-init))
+          
+(use-package ivy-bibtex
+    :ensure t
+    :config
+        ;; default is to open pdf - change that to insert citation
+        (setq ivy-bibtex-default-action #'ivy-bibtex-insert-citation))
+    
 
- #+end_src
- ** Company
- Company is a text completion framework for Emacs. The name stands for "complete anything". It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
- #+begin_src emacs-lisp :tangle yes
+(use-package org-ref
+    :after org
+    :ensure t
+    :defer t
+    :general
+    (:keymaps 'bibtex-mode-map
+        :states '(normal visual emacs)
+        :major-mode 'bibtex-mode
+        :prefix "SPC"
+        :which-key "bibtex"
+        "mo" 'org-ref-bibtex-pdf :which-key "open pdf")
+    :init
+        (setq org-latex-pdf-process
+            '("pdflatex -interaction nonstopmode -output-directory %o %f"
+            "bibtex %b"
+            "pdflatex -interaction nonstopmode -output-directory %o %f"
+            "pdflatex -interaction nonstopmode -output-directory %o %f"))
+        (setq org-ref-bibliography-notes "~/Documents/paper-notes/paper-notes.org"
+            org-ref-default-bibliography "~/Documents/paper-notes/refs.bib"
+            bibtex-completion-bibliography org-ref-default-bibliography
+            org-ref-pdf-directory "~/Nextcloud/papers/"
+            bibtex-completion-library-path "~/Nextcloud/papers"
+            bibtex-completion-notes-path "~/Documents/paper-notes/paper-notes.org"
+            bibtex-completion-pdf-open-function
+                (lambda (fpath)
+                (call-process "zathura" nil 0 nil fpath))))
 
-   (use-package company
-   :diminish company-mode
-   :ensure t
-   :defer t
-   :config
-       ;; (setq company-frontends nil)
-       (use-package company-c-headers)
-   :hook
-   (after-init . global-company-mode))
+(use-package reftex
+    :defer t
+    :diminish reftex-mode
+    :commands turn-on-reftex
+    :init
+    (progn
+    (setq reftex-plug-into-AUCTeX t))
+    :config
+    (reftex-mode))
+#+end_src
+* Others
+** Autocomplete
+#+begin_src emacs-lisp :tangle yes
+(use-package auto-complete
+    :config
+    (progn
+        (ac-flyspell-workaround)
+        (setq ac-auto-show-menu 0.01
+            ac-auto-start 1
+            ac-delay 0.01)))
 
- #+end_src
+(use-package company
+    :diminish company-mode
+    :ensure t
+    :defer t
+    :config
+        ;; (setq company-frontends nil)
+        (use-package company-c-headers)
+    :hook
+    (after-init . global-company-mode))
+
+#+end_src
+** Restart emacs
+#+begin_src emacs-lisp :tangle yes
+(use-package restart-emacs
+    :ensure t)
+#+end_src
+** Yaml
+#+begin_src emacs-lisp :tangle yes
+;; yaml
+(use-package yaml-mode
+    :defer t
+    :mode "\\.ya?ml\'")
+#+end_src
+** Anzu
+anzu.el provides a minor mode which displays current match and total matches information in the mode-line in various search modes.
+#+begin_src emacs-lisp :tangle yes
+
+;; anzu
+(use-package anzu
+:commands (isearch-foward isearch-backward)
+:config (global-anzu-mode)
+:diminish anzu-mode)
+#+end_src
 ** Ace-window
 #+begin_src emacs-lisp :tangle yes
 (use-package ace-window
@@ -1016,7 +1012,6 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
         (add-to-list 'aw-ignored-buffers buffer)))
 #+end_src
 ** Iflipb
-
 #+begin_src emacs-lisp :tangle yes
   (use-package iflipb
   :ensure t
@@ -1047,7 +1042,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 ** Expand-region
 #+begin_src emacs-lisp :tangle yes
 (use-package expand-region
-:defer t
+    :defer t
   :general
   (:keymaps 'override
     :states '(normal visual emacs)
@@ -1120,114 +1115,113 @@ This sets the window title to buffer name. Use =%f= for full path.
 
 ** Themes
 #+begin_src emacs-lisp :tangle yes
-      (use-package doom-modeline
-        :ensure t
-        :defer t
-        :hook (after-init . doom-modeline-init))
+        (use-package doom-modeline
+          :ensure t
+          :defer t
+          :hook (after-init . doom-modeline-init))
 
 
-    (use-package doom-themes
-      :init
-      ;;(load-theme 'doom-dracula t)
-      (load-theme 'doom-palenight t)
-      :config
-      (progn
-          (doom-themes-neotree-config)
-          (doom-themes-org-config)))
+      (use-package doom-themes
+        :init
+        ;;(load-theme 'doom-dracula t)
+        (load-theme 'doom-one t)
+        :config
+        (progn
+            (doom-themes-neotree-config)
+            (doom-themes-org-config)))
 
-        (global-linum-mode t)
-        (global-visual-line-mode 1)
-        (diminish 'visual-line-mode)
-        (diminish 'hi-lock-mode)
+          (global-linum-mode t)
+          ;; (global-visual-line-mode 1)
+          ;; (diminish 'visual-line-mode)
+          (diminish 'hi-lock-mode)
 
-        ;;Maximize on startup
-        (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-        (add-to-list 'default-frame-alist '(fullscreen . maximized))
+          ;;Maximize on startup
+          (add-to-list 'initial-frame-alist '(fullscreen . maximized))
+          (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-        (global-hl-line-mode +1)
-        (blink-cursor-mode 0)
+          (global-hl-line-mode +1)
+          (blink-cursor-mode 0)
 
-        ;;; appearance
-      (tool-bar-mode 0)
-      (scroll-bar-mode 0)
+          ;;; appearance
+        (tool-bar-mode 0)
+        (scroll-bar-mode 0)
 
- 
-  (setq myfont "source code pro semibold")
-  ;; (setq myfont "hack")
-  (cond
-  ((string-equal system-name "multichouette")
-    (set-face-attribute 'default nil :font myfont :height 116))
-  ((string-equal system-name "tc")
-    (set-face-attribute 'default nil :font myfont :height 116)))
 
-      (set-face-attribute 'default nil :font myfont :height 116)
-      ;; more context when scrolling
-      (setq next-screen-context-lines 4)
+  (use-package hlinum
+    :config
+    (hlinum-activate)) 
+    (setq myfont "source code pro semibold")
+  
+    ;; (setq myfont "hack")
+    (cond
+    ((string-equal system-name "multichouette")
+      (set-face-attribute 'default nil :font myfont :height 116))
+    ((string-equal system-name "tc")
+      (set-face-attribute 'default nil :font myfont :height 116)))
 
-        ;; y/n for yes/no
-        (defalias 'yes-or-no-p 'y-or-n-p)
+        (set-face-attribute 'default nil :font myfont :height 116)
+        ;; more context when scrolling
+        (setq next-screen-context-lines 4)
 
-        ;; start week on Monday
-        (setq calendar-week-start-day 1)
+          ;; y/n for yes/no
+          (defalias 'yes-or-no-p 'y-or-n-p)
 
-        ;; window undo/redo
-        (winner-mode)
+          ;; start week on Monday
+          (setq calendar-week-start-day 1)
 
-        ;; tabs are truly evil
-        (setq-default indent-tabs-mode nil)
+          ;; window undo/redo
+          (winner-mode)
 
-        ;; sentences end with one space
-        (setq sentence-end-double-space nil)
+          ;; tabs are truly evil
+          (setq-default indent-tabs-mode nil)
 
-        ;;; settings
-        ;; enable all commands
-        (setq disabled-command-function nil)
+          ;; sentences end with one space
+          (setq sentence-end-double-space nil)
 
-        ;; default truncate lines
-        (setq-default truncate-lines t)
+          ;;; settings
+          ;; enable all commands
+          (setq disabled-command-function nil)
 
-        ;; disable bell
-        (setq ring-bell-function 'ignore
-                visible-bell t)
+          ;; default truncate lines
+          (setq-default truncate-lines t)
 
-        ;; increase garbage collection threshold
-        (setq gc-cons-threshold (* 10 1024 1024))
+          ;; disable bell
+          (setq ring-bell-function 'ignore
+                  visible-bell t)
 
-        ;; inhibit startup message
-        (setq inhibit-startup-message t)
+          ;; increase garbage collection threshold
+          (setq gc-cons-threshold (* 10 1024 1024))
 
-        ;; kill settings
-        (setq save-interprogram-paste-before-kill t
-                kill-do-not-save-duplicates t
-                kill-whole-line t)
+          ;; inhibit startup message
+          (setq inhibit-startup-message t)
 
-        ;; repeat mark pop
-        (setq-default set-mark-command-repeat-pop t)
+          ;; kill settings
+          (setq save-interprogram-paste-before-kill t
+                  kill-do-not-save-duplicates t
+                  kill-whole-line t)
 
-        ;; set terminfo
-        (setq system-uses-terminfo nil)
+          ;; repeat mark pop
+          (setq-default set-mark-command-repeat-pop t)
 
-        ;;; extensions
-        ;; adaptive word wrapping
-        (use-package adaptive-wrap
-            :config (adaptive-wrap-prefix-mode)
-            :diminish adaptive-wrap-prefix-mode
-        )
+          ;; set terminfo
+          (setq system-uses-terminfo nil)
 
-        ;; which-key
-        (use-package which-key
-        :diminish which-key-mode
-        :config (which-key-mode))
-
-   (setq company-backends
-           '((company-files          ; files & directory
-           company-keywords       ; keywords
-           company-capf
-           company-jedi
-           company-yasnippet
-           )
-           (company-abbrev company-dabbrev)
-   ))
+          ;;; extensions
+          ;; adaptive word wrapping
+          (use-package adaptive-wrap
+              :config (adaptive-wrap-prefix-mode)
+              :diminish adaptive-wrap-prefix-mode
+          )
+        
+     (setq company-backends
+             '((company-files          ; files & directory
+             company-keywords       ; keywords
+             company-capf
+             company-jedi
+             company-yasnippet
+             )
+             (company-abbrev company-dabbrev)
+     ))
  #+end_src
  ** Demangle
  demangle-mode is an Emacs minor mode that automatically demangles C++ symbols.
